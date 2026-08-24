@@ -8,7 +8,7 @@ import (
 
 func TestDefault(t *testing.T) {
 	c := Default()
-	if c.Listen != "127.0.0.1:5353" {
+	if c.Listen != "127.0.0.1:5354" {
 		t.Errorf("Listen = %q", c.Listen)
 	}
 	want := []string{"quic://dns.comss.one", "quic://unfiltered.adguard-dns.com"}

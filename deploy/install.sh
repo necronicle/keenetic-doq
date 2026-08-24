@@ -10,7 +10,7 @@ REPO="necronicle/keenetic-doq"
 BIN=/opt/sbin/doqd
 CONF=/opt/etc/doqd.conf
 INIT=/opt/etc/init.d/S56doqd
-NS="127.0.0.1:5353"
+NS="127.0.0.1:5354"
 
 log() { echo "[keenetic-doq] $*"; }
 die() { echo "[keenetic-doq] ОШИБКА: $*" >&2; exit 1; }
