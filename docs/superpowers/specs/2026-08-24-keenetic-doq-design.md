@@ -40,8 +40,10 @@ KeeneticOS нативно поддерживает DoT и DoH, но не DNS-ove
   Без зависимостей от AdGuard dnsproxy.
 - Конфиг: `/opt/etc/doqd.conf` — адрес/порт слушателя, список апстримов,
   размер кеша, уровень логирования.
-- Апстримы по умолчанию: `quic://unfiltered.adguard-dns.com` (первый),
-  `quic://dns.adguard-dns.com` (резерв). Прокси сам ничего не фильтрует.
+- Апстримы по умолчанию: `quic://dns.comss.one` (первый; AdGuard DoQ/DoT
+  блокируется ТСПУ — подтверждено смоук-тестом 2026-08-24),
+  `quic://unfiltered.adguard-dns.com` (резерв через failover). Прокси сам
+  ничего не фильтрует.
 - Статические бинарники под все арки Keenetic: aarch64, mipsel, mips (BE).
 
 ## Компонент 2: интеграция с Keenetic
