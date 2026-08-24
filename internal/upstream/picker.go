@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -95,6 +96,15 @@ func (p *Picker) downStates() []*upstreamState {
 		}
 	}
 	return down
+}
+
+// Address позволяет использовать Picker всюду, где ждут одиночный Exchanger.
+func (p *Picker) Address() string {
+	parts := make([]string, 0, len(p.ups))
+	for _, st := range p.ups {
+		parts = append(parts, st.ex.Address())
+	}
+	return strings.Join(parts, ",")
 }
 
 func (p *Picker) Exchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
