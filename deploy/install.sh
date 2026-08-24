@@ -10,7 +10,7 @@ REPO="necronicle/keenetic-doq"
 BIN=/opt/sbin/doqd
 CONF=/opt/etc/doqd.conf
 INIT=/opt/etc/init.d/S56doqd
-NS="127.0.0.1:5354"
+PORT=5354
 
 log() { echo "[keenetic-doq] $*"; }
 die() { echo "[keenetic-doq] ОШИБКА: $*" >&2; exit 1; }
@@ -27,6 +27,13 @@ ndm_cmd() {
 }
 
 [ -f /opt/etc/init.d/rc.func ] || die "Entware не найден (/opt/etc/init.d/rc.func)"
+
+# KeeneticOS не принимает 127.0.0.1 в ip name-server (Dns::Manager: invalid
+# IP address) — слушаем и регистрируемся на LAN-адресе роутера (br0).
+LAN_IP=$(ip -4 -o addr show br0 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -1)
+[ -n "$LAN_IP" ] || LAN_IP=$(ifconfig br0 2>/dev/null | awk '/inet addr/{gsub("addr:","",$2); print $2}' | head -1)
+[ -n "$LAN_IP" ] || die "не удалось определить LAN-адрес (br0)"
+log "LAN-адрес: $LAN_IP"
 
 arch=$(opkg print-architecture | awk '!/all|noarch/ {print $2}' | head -1)
 case "$arch" in
@@ -58,9 +65,14 @@ chmod 755 "$BIN.new"
 mv "$BIN.new" "$BIN"
 
 script_dir=$(dirname "$0")
-[ -f "$CONF" ] || cp "$script_dir/doqd.conf" "$CONF"
+if [ ! -f "$CONF" ]; then
+    sed "s|^listen .*|listen $LAN_IP:$PORT|" "$script_dir/doqd.conf" > "$CONF"
+fi
 cp "$script_dir/S56doqd" "$INIT"
 chmod 755 "$INIT"
+# Регистрируем ровно тот адрес, на котором слушает doqd по конфигу
+NS=$(awk '/^listen /{print $2}' "$CONF")
+[ -n "$NS" ] || NS="$LAN_IP:$PORT"
 
 "$INIT" start
 sleep 1
