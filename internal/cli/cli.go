@@ -18,11 +18,6 @@ var subcommands = map[string]func(args []string) int{
 	"status": runStatus,
 }
 
-func IsSubcommand(s string) bool {
-	_, ok := subcommands[s]
-	return ok
-}
-
 func Run(args []string) int {
 	if len(args) == 0 {
 		usage(os.Stderr)

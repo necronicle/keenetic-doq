@@ -8,11 +8,8 @@ func TestRunUnknownCommand(t *testing.T) {
 	}
 }
 
-func TestIsSubcommand(t *testing.T) {
-	if IsSubcommand("frobnicate") {
-		t.Fatal("frobnicate must not be a subcommand")
-	}
-	if !IsSubcommand("help") {
-		t.Fatal("help must be a subcommand")
+func TestRunHelp(t *testing.T) {
+	if got := Run([]string{"help"}); got != 0 {
+		t.Fatalf("Run(help) = %d, want 0", got)
 	}
 }

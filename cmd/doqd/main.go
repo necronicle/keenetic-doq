@@ -24,7 +24,9 @@ import (
 var version = "dev" // подставляется при сборке через -ldflags "-X main.version=..."
 
 func main() {
-	if len(os.Args) > 1 && cli.IsSubcommand(os.Args[1]) {
+	// Всё, что не флаг, — обращение к утилите управления; неизвестная
+	// подкоманда должна получить usage, а не подняться демоном.
+	if !cli.IsDaemonArgs(os.Args) {
 		os.Exit(cli.Run(os.Args[1:]))
 	}
 
