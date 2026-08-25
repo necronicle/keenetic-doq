@@ -92,7 +92,7 @@ Add your own upstream — live-probed before it is written to the config
 ~ # doqd add quic://dns.quad9.net
 probing quic://dns.quad9.net ... OK (198 ms)
 added to /opt/etc/doqd.conf (upstream #3)
-restarting the daemon ... alive
+restarting the daemon ... alive (pid 20702)
 ```
 
 Remove — by number from `list` or by URL (the last upstream is
@@ -101,7 +101,7 @@ protected):
 ```sh
 ~ # doqd remove 3
 removed quic://dns.quad9.net
-restarting the daemon ... alive
+restarting the daemon ... alive (pid 20702)
 ```
 
 One-command diagnostics:

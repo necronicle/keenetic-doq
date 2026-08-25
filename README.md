@@ -92,7 +92,7 @@ probing quic://dns.quad9.net ... OK — answered in 213 ms
 ~ # doqd add quic://dns.quad9.net
 probing quic://dns.quad9.net ... OK (198 ms)
 added to /opt/etc/doqd.conf (upstream #3)
-restarting the daemon ... alive
+restarting the daemon ... alive (pid 20702)
 ```
 
 Удалить — по номеру из `list` или по URL (последний апстрим удалить
@@ -101,7 +101,7 @@ restarting the daemon ... alive
 ```sh
 ~ # doqd remove 3
 removed quic://dns.quad9.net
-restarting the daemon ... alive
+restarting the daemon ... alive (pid 20702)
 ```
 
 Диагностика одной командой:
