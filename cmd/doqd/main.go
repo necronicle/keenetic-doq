@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/necronicle/keenetic-doq/internal/cache"
+	"github.com/necronicle/keenetic-doq/internal/cli"
 	"github.com/necronicle/keenetic-doq/internal/config"
 	"github.com/necronicle/keenetic-doq/internal/resolver"
 	"github.com/necronicle/keenetic-doq/internal/server"
@@ -23,6 +24,10 @@ import (
 var version = "dev" // подставляется при сборке через -ldflags "-X main.version=..."
 
 func main() {
+	if len(os.Args) > 1 && cli.IsSubcommand(os.Args[1]) {
+		os.Exit(cli.Run(os.Args[1:]))
+	}
+
 	confPath := flag.String("c", "/opt/etc/doqd.conf", "path to config file")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
