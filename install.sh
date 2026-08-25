@@ -132,8 +132,23 @@ sleep 1
 "$INIT" check | grep -q alive || die "doqd did not start, check the logs"
 
 log "registering name-server $NS in KeeneticOS"
-ndm_cmd "ip name-server $NS"
-ndm_cmd "system configuration save"
+ndm_cmd "ip name-server $NS" || true
+ndm_cmd "system configuration save" || true
+
+# ndmc reports "Cli::Main: failed to initialize" yet still exits 0, so the
+# registration is verified by reading it back instead of trusting the code.
+if ndm_cmd "show ip name-server" 2>/dev/null | grep -q "${NS%:*}"; then
+    log "registration confirmed"
+else
+    echo "[keenetic-doq] WARNING: could not register the name-server via the router CLI." >&2
+    echo "[keenetic-doq] doqd is installed and running — only the registration is missing," >&2
+    echo "[keenetic-doq] so queries still go through the stock DNS, not through doqd." >&2
+    echo "[keenetic-doq] Finish it in the router Web CLI — open http://$LAN_IP/a and run:" >&2
+    echo "[keenetic-doq]     ip name-server $NS" >&2
+    echo "[keenetic-doq]     system configuration save" >&2
+    echo "[keenetic-doq] (ndmc over SSH fails this way when the session runs in the OPKG" >&2
+    echo "[keenetic-doq]  environment or the account has no command-line rights)" >&2
+fi
 
 log "done. Useful commands:"
 log "  doqd status                       # health check"

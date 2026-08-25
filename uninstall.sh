@@ -18,6 +18,11 @@ if [ -n "$NS" ]; then
     log "unregistering name-server $NS"
     ndm_cmd "no ip name-server $NS"
     ndm_cmd "system configuration save"
+    # ndmc can fail while still exiting 0 — verify by reading it back.
+    if ndm_cmd "show ip name-server" 2>/dev/null | grep -q "${NS%:*}"; then
+        log "WARNING: the name-server is still registered. Remove it in the router"
+        log "         Web CLI (http://${NS%:*}/a):  no ip name-server $NS"
+    fi
 else
     log "config not found — unregister manually: no ip name-server <address>"
 fi

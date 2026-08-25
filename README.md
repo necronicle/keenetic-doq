@@ -177,6 +177,21 @@ Quad9 — резерв. Проверьте свои: `doqd list` пробует 
 `doqd add quic://dns10.quad9.net` (Quad9 без блокировок) или
 `doqd add quic://unfiltered.adguard-dns.com`, если AdGuard у вас доступен.
 
+**`ndmc: system failed [0xcffd0062]` / `Cli::Main: failed to initialize`,
+а `doqd status` пишет `registration: NOT found`.** Это не про doqd — он
+установлен и работает, просто из вашей SSH-сессии недоступен CLI роутера
+(так бывает, если сессия идёт в OPKG-окружении или у учётной записи нет
+прав на командную строку). Допишите регистрацию через веб-интерфейс:
+откройте `http://<адрес-роутера>/a` (Web CLI) и выполните две команды:
+
+```
+ip name-server <LAN-IP>:5354
+system configuration save
+```
+
+После этого `doqd status` покажет `registration: present`. Пока
+регистрации нет, запросы идут мимо doqd — через штатный DNS.
+
 **Почему порт 5354, а не 5353?** 5353 на Keenetic занят avahi-daemon
 (mDNS).
 

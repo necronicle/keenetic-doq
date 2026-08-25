@@ -3,6 +3,18 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версии — [SemVer](https://semver.org/lang/ru/).
 
+## [0.2.4] — 2026-08-25
+
+### Fixed
+- Инсталлер рапортовал `done`, даже когда регистрация name-server не
+  прошла: `ndmc` пишет `system failed [0xcffd0062]` /
+  `Cli::Main: failed to initialize`, но возвращает код 0. Теперь
+  регистрация проверяется чтением `show ip name-server`, а при неудаче
+  выводится инструкция — дописать её в Web CLI роутера
+  (`http://<LAN-IP>/a`). То же самое в `uninstall.sh` при снятии.
+- `doqd status` подсказывает и путь через Web CLI, а не только `ndmc`.
+- В FAQ обоих README добавлен разбор этой ошибки.
+
 ## [0.2.3] — 2026-08-25
 
 ### Fixed

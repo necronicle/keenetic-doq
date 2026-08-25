@@ -46,7 +46,8 @@ func runStatus(args []string) int {
 	} else if strings.Contains(out, host) && (port == "" || strings.Contains(out, port)) {
 		fmt.Println("registration:    present in KeeneticOS name-servers")
 	} else {
-		fmt.Printf("registration:    NOT found — run: ndmc -c 'ip name-server %s'\n", listen)
+		fmt.Printf("registration:    NOT found — add it: ip name-server %s\n", listen)
+		fmt.Printf("                 (router CLI, or Web CLI at http://%s/a if ndmc fails here)\n", dialHost(host))
 	}
 
 	// Прямо в doqd — проверяет сам слушатель и путь до DoQ-апстрима.

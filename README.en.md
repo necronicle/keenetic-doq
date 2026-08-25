@@ -178,6 +178,22 @@ plain resolving with nobody's blocklists, add an unfiltered server:
 `doqd add quic://dns10.quad9.net` (Quad9 without blocking) or
 `doqd add quic://unfiltered.adguard-dns.com` where AdGuard is reachable.
 
+**`ndmc: system failed [0xcffd0062]` / `Cli::Main: failed to initialize`,
+and `doqd status` says `registration: NOT found`.** This is not about
+doqd — it is installed and running; your SSH session simply cannot reach
+the router CLI (typical when the session runs inside the OPKG environment
+or the account has no command-line rights). Add the registration through
+the web interface instead: open `http://<router-address>/a` (Web CLI) and
+run two commands:
+
+```
+ip name-server <LAN-IP>:5354
+system configuration save
+```
+
+`doqd status` will then report `registration: present`. Until it does,
+queries bypass doqd and go through the stock DNS.
+
 **Why port 5354 and not 5353?** 5353 on Keenetic is taken by avahi-daemon
 (mDNS).
 
