@@ -37,7 +37,11 @@ upstream — the local doqd with its cache wins on merit.
 
 ## Requirements
 
-A Keenetic router with [Entware](https://help.keenetic.com/hc/en-us/articles/360021214160) installed.
+A Keenetic router with [Entware](https://help.keenetic.com/hc/en-us/articles/360021214160)
+and the `curl` package (`opkg install curl`) — downloads need it. The
+busybox `wget` on Keenetic is built without TLS and cannot open
+`https://`, hence curl specifically. Everything else doqd and its scripts
+use comes from busybox and is always present.
 
 | Entware architecture | Binary |
 |---|---|
@@ -146,12 +150,12 @@ The registration in detail, and proof that the traffic really goes over
 QUIC:
 
 ```sh
-ndmc -c 'show ip name-server'        # should list <LAN-IP>:5354
-tcpdump -ni any 'udp port 853'       # upstream exchange during a query
+ndmc -c 'show ip name-server'        # stock utility, always present
+tcpdump -ni any 'udp port 853'       # needs a package: opkg install tcpdump
 ```
 
-If you prefer `dig`: Entware does not ship it — install it separately
-(`opkg install bind-dig`) or run it from a computer on the same network:
+Entware does not ship `dig` either: `opkg install bind-dig`, or run it
+from a computer on the same network:
 
 ```sh
 dig @192.168.1.1 -p 5354 example.com   # straight to doqd, repeat is cached

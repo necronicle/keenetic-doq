@@ -40,6 +40,13 @@ fetch() { # $1 = url, $2 = output file
 
 [ -f /opt/etc/init.d/rc.func ] || die "Entware not found (/opt/etc/init.d/rc.func)"
 
+# curl is an Entware package, not a busybox applet, and the busybox wget
+# on Keenetic is built without TLS — so downloads need curl specifically.
+if [ "$1" != "--local" ] && ! command -v curl >/dev/null 2>&1; then
+    die "curl not found — install it first: opkg install curl
+     (or copy the binary to the router and run: sh install.sh --local ./doqd-linux-<arch>)"
+fi
+
 # KeeneticOS rejects 127.0.0.1 in `ip name-server`, so doqd listens on
 # the router's LAN address (br0) and that same address is registered.
 LAN_IP=$(ip -4 -o addr show br0 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -1)

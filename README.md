@@ -37,7 +37,11 @@ Entware-проекты. `keenetic-doq` работает иначе:
 
 ## Требования
 
-Keenetic с установленным [Entware](https://help.keenetic.com/hc/ru/articles/360000925139).
+Keenetic с установленным [Entware](https://help.keenetic.com/hc/ru/articles/360000925139)
+и пакетом `curl` (`opkg install curl`) — он нужен для скачивания.
+Встроенный в busybox `wget` на Keenetic собран без TLS и `https://` не
+открывает, поэтому именно curl. Всё остальное, что использует doqd и его
+скрипты, входит в busybox и есть всегда.
 
 | Архитектура Entware | Бинарник |
 |---|---|
@@ -145,13 +149,12 @@ resolve via :53:  NOERROR, 40 ms
 Регистрация подробно и доказательство, что трафик реально идёт по QUIC:
 
 ```sh
-ndmc -c 'show ip name-server'        # должен быть <LAN-IP>:5354
-tcpdump -ni any 'udp port 853'       # обмен с апстримом при запросе
+ndmc -c 'show ip name-server'        # штатная утилита, есть всегда
+tcpdump -ni any 'udp port 853'       # нужен пакет: opkg install tcpdump
 ```
 
-Хочется проверить `dig`-ом — учтите, что в Entware его нет; ставится
-отдельно (`opkg install bind-dig`) либо запускается с компьютера в той же
-сети:
+`dig` в Entware тоже не входит: либо `opkg install bind-dig`, либо
+запускайте его с компьютера в той же сети:
 
 ```sh
 dig @192.168.1.1 -p 5354 example.com   # прямо в doqd, повтор — из кеша

@@ -3,6 +3,23 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версии — [SemVer](https://semver.org/lang/ru/).
 
+## [0.2.3] — 2026-08-25
+
+### Fixed
+- `install.sh` молча падал на роутере без `curl`. Теперь проверяет его
+  наличие заранее и объясняет, что делать (`opkg install curl` либо режим
+  `--local`). Обойтись busybox-овским `wget` нельзя: на Keenetic он
+  собран без TLS и `https://` не открывает.
+- В требованиях README не был указан `curl` — а он пакет Entware, не
+  часть busybox, и вся установка одной командой держится на нём.
+- README предлагал `tcpdump` без оговорки, что это тоже отдельный пакет
+  (`opkg install tcpdump`), — на чистом роутере команда падает с
+  `tcpdump: not found`.
+
+Проверено на живом Keenetic: каждая внешняя команда из README и обоих
+скриптов классифицирована — busybox (есть всегда), утилита прошивки
+(`ndmc`) или пакет Entware (`curl`, `tcpdump`, `bind-dig`).
+
 ## [0.2.2] — 2026-08-25
 
 ### Added
