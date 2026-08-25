@@ -111,7 +111,8 @@ One-command diagnostics:
 daemon:          running (pid 9772, uptime 72h3m10s)
 listen:          192.168.1.1:5354 (udp+tcp)
 registration:    present in KeeneticOS name-servers
-resolve via :53: NOERROR, 41 ms
+resolve via doqd: NOERROR, 148 ms
+resolve via :53:  NOERROR, 40 ms
 ```
 
 ## Configuration — `/opt/etc/doqd.conf`
@@ -129,18 +130,32 @@ edits run `/opt/etc/init.d/S56doqd restart`.
 
 ## Verifying
 
+`doqd status` covers it all — it resolves both straight through doqd and
+through the stock `:53`, and checks the registration:
+
 ```sh
-# direct query to doqd (port 5354); repeat is served from the cache
-dig @192.168.1.1 -p 5354 example.com
+~ # doqd status
+daemon:          running (pid 15644, uptime 3d1h)
+listen:          192.168.1.1:5354 (udp+tcp)
+registration:    present in KeeneticOS name-servers
+resolve via doqd: NOERROR, 148 ms
+resolve via :53:  NOERROR, 40 ms
+```
 
-# end-to-end path through the stock DNS
-dig @192.168.1.1 example.com
+The registration in detail, and proof that the traffic really goes over
+QUIC:
 
-# registration in the system DNS
+```sh
 ndmc -c 'show ip name-server'        # should list <LAN-IP>:5354
+tcpdump -ni any 'udp port 853'       # upstream exchange during a query
+```
 
-# proof of QUIC: on the router
-tcpdump -ni any 'udp port 853'
+If you prefer `dig`: Entware does not ship it — install it separately
+(`opkg install bind-dig`) or run it from a computer on the same network:
+
+```sh
+dig @192.168.1.1 -p 5354 example.com   # straight to doqd, repeat is cached
+dig @192.168.1.1 example.com           # end-to-end via the stock DNS
 ```
 
 ## FAQ

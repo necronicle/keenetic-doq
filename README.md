@@ -111,7 +111,8 @@ restarting the daemon ... alive (pid 20702)
 daemon:          running (pid 9772, uptime 72h3m10s)
 listen:          192.168.1.1:5354 (udp+tcp)
 registration:    present in KeeneticOS name-servers
-resolve via :53: NOERROR, 41 ms
+resolve via doqd: NOERROR, 148 ms
+resolve via :53:  NOERROR, 40 ms
 ```
 
 ## Конфигурация — `/opt/etc/doqd.conf`
@@ -129,18 +130,32 @@ resolve via :53: NOERROR, 41 ms
 
 ## Проверка работы
 
+Всё нужное делает `doqd status` — он резолвит и напрямую через doqd, и
+через штатный `:53`, и проверяет регистрацию:
+
 ```sh
-# прямой запрос в doqd (порт 5354), повторный — из кеша
-dig @192.168.1.1 -p 5354 example.com
+~ # doqd status
+daemon:          running (pid 15644, uptime 3d1h)
+listen:          192.168.1.1:5354 (udp+tcp)
+registration:    present in KeeneticOS name-servers
+resolve via doqd: NOERROR, 148 ms
+resolve via :53:  NOERROR, 40 ms
+```
 
-# сквозной путь через штатный DNS
-dig @192.168.1.1 example.com
+Регистрация подробно и доказательство, что трафик реально идёт по QUIC:
 
-# регистрация в системном DNS
+```sh
 ndmc -c 'show ip name-server'        # должен быть <LAN-IP>:5354
+tcpdump -ni any 'udp port 853'       # обмен с апстримом при запросе
+```
 
-# доказательство QUIC: на роутере
-tcpdump -ni any 'udp port 853'
+Хочется проверить `dig`-ом — учтите, что в Entware его нет; ставится
+отдельно (`opkg install bind-dig`) либо запускается с компьютера в той же
+сети:
+
+```sh
+dig @192.168.1.1 -p 5354 example.com   # прямо в doqd, повтор — из кеша
+dig @192.168.1.1 example.com           # сквозной путь через штатный DNS
 ```
 
 ## FAQ
