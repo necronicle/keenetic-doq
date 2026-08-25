@@ -187,8 +187,10 @@ CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o doqd ./cmd/do
 
 ## Limitations
 
-- Client-side DoQ only (outgoing queries). An incoming DoQ server is out
-  of scope.
+- The encrypted leg is "router → upstream resolver" — the one your ISP
+  sees. Inside the LAN devices talk to the router over plain DNS: doqd
+  does not accept DoQ connections from LAN clients. The stock DoT/DoH in
+  KeeneticOS work exactly the same way.
 - No filtering or blocking of any kind: whatever the upstream answers is
   returned as is.
 - doqd listens only on the router's LAN address — nothing is exposed to
