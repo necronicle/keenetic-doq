@@ -20,6 +20,8 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w -X main.version=$V" -o dist/doqd-linux-arm64 ./cmd/doqd
           CGO_ENABLED=0 GOOS=linux GOARCH=mipsle GOMIPS=softfloat go build -ldflags "-s -w -X main.version=$V" -o dist/doqd-linux-mipsle ./cmd/doqd
           CGO_ENABLED=0 GOOS=linux GOARCH=mips GOMIPS=softfloat go build -ldflags "-s -w -X main.version=$V" -o dist/doqd-linux-mips ./cmd/doqd
+      - name: checksums
+        run: cd dist && sha256sum doqd-linux-* > SHA256SUMS
       - uses: softprops/action-gh-release@v2
         with:
           files: dist/*
