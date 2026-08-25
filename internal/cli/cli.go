@@ -15,6 +15,7 @@ var subcommands = map[string]func(args []string) int{
 	"list":   runList,
 	"add":    runAdd,
 	"remove": runRemove,
+	"status": runStatus,
 }
 
 func IsSubcommand(s string) bool {
