@@ -1,12 +1,17 @@
 # keenetic-doq
 
+[English](README.en.md)
+
+![CI](https://github.com/necronicle/keenetic-doq/actions/workflows/ci.yml/badge.svg)
+![Release](https://img.shields.io/github/v/release/necronicle/keenetic-doq)
+
 DNS-over-QUIC (RFC 9250) для роутеров Keenetic — **рядом** со штатными
 DoT/DoH, а не вместо них.
 
 KeeneticOS умеет DoT и DoH, но не DoQ, и добавлять его не планирует.
 Существующие решения (AdGuard Home, dnsproxy) требуют `opkg dns-override`:
 захватывают порт 53, вытесняют штатный `ndnproxy` и ломают соседние
-проекты. `keenetic-doq` работает иначе:
+Entware-проекты. `keenetic-doq` работает иначе:
 
 ```
 клиенты LAN → ndnproxy :53 → [штатные DoT/DoH апстримы]
@@ -26,30 +31,88 @@ KeeneticOS умеет DoT и DoH, но не DoQ, и добавлять его н
 - Несколько апстримов: EWMA-статистика RTT, запрос идёт в быстрейший живой,
   мгновенный failover, фоновый health-check возвращает ожившие.
 - Кеш ответов по TTL с LRU-вытеснением (память роутера бережётся).
-- Статические бинарники: aarch64, mipsel, mips (BE). Без зависимостей.
+- CLI-утилита в том же бинарнике: `doqd add/remove/list/test/status` —
+  свои DoQ-серверы без правки файлов, с живой проверкой до применения.
+- Статические бинарники без зависимостей.
 
-## Установка
+## Требования
 
-Нужен Entware. На роутере:
+Keenetic с установленным [Entware](https://help.keenetic.com/hc/ru/articles/360000925139).
+
+| Архитектура Entware | Бинарник |
+|---|---|
+| `aarch64-*` | `doqd-linux-arm64` |
+| `mipsel-*` | `doqd-linux-mipsle` |
+| `mips-*` (BE) | `doqd-linux-mips` |
+
+## Установка одной командой
+
+На роутере (по SSH):
 
 ```sh
-cd /opt/tmp
-curl -fsSLO https://raw.githubusercontent.com/necronicle/keenetic-doq/main/deploy/install.sh
-curl -fsSLO https://raw.githubusercontent.com/necronicle/keenetic-doq/main/deploy/doqd.conf
-curl -fsSLO https://raw.githubusercontent.com/necronicle/keenetic-doq/main/deploy/S56doqd
-sh install.sh                     # скачает бинарник из GitHub Releases
+curl -fsSL https://raw.githubusercontent.com/necronicle/keenetic-doq/main/install.sh | sh
 ```
 
-Либо, если бинарник уже скопирован на роутер (например, пока репозиторий
-приватный):
+Инсталлер: определяет архитектуру, скачивает бинарник из релиза и сверяет
+SHA256, ставит `/opt/sbin/doqd`, пишет конфиг `/opt/etc/doqd.conf`
+(подставляя LAN-адрес) и автозапуск `/opt/etc/init.d/S56doqd`, запускает
+демона и регистрирует name-server. Существующий конфиг при переустановке
+не перезаписывается.
+
+Оффлайн-вариант (бинарник уже скопирован на роутер):
 
 ```sh
 sh install.sh --local ./doqd-linux-arm64
 ```
 
-Инсталлер: определяет архитектуру, ставит `/opt/sbin/doqd`, кладёт конфиг
-`/opt/etc/doqd.conf` (подставляя LAN-адрес) и автозапуск
-`/opt/etc/init.d/S56doqd`, запускает демон и регистрирует name-server.
+## Управление апстримами
+
+Всё управление — тем же бинарником, без правки файлов руками:
+
+```sh
+~ # doqd list
+UPSTREAMS (/opt/etc/doqd.conf):
+ 1. quic://dns.comss.one                       alive  rtt 34 ms
+ 2. quic://unfiltered.adguard-dns.com          down   (dial unfiltered.adguard-dns.com:853: context deadline exceeded)
+
+listen: 192.168.1.1:5354   daemon: running (pid 9772)
+```
+
+Проверить любой сервер, ничего не меняя:
+
+```sh
+~ # doqd test quic://dns.quad9.net
+probing quic://dns.quad9.net ... OK — answered in 213 ms
+```
+
+Добавить свой апстрим — с живой проверкой до записи в конфиг (мёртвый
+сервер случайно не попадёт; обходится флагом `--force`):
+
+```sh
+~ # doqd add quic://dns.quad9.net
+probing quic://dns.quad9.net ... OK (198 ms)
+added to /opt/etc/doqd.conf (upstream #3)
+restarting the daemon ... alive
+```
+
+Удалить — по номеру из `list` или по URL (последний апстрим удалить
+нельзя):
+
+```sh
+~ # doqd remove 3
+removed quic://dns.quad9.net
+restarting the daemon ... alive
+```
+
+Диагностика одной командой:
+
+```sh
+~ # doqd status
+daemon:          running (pid 9772, uptime 72h3m10s)
+listen:          192.168.1.1:5354 (udp+tcp)
+registration:    present in KeeneticOS name-servers
+resolve via :53: NOERROR, 41 ms
+```
 
 ## Конфигурация — `/opt/etc/doqd.conf`
 
@@ -61,12 +124,10 @@ sh install.sh --local ./doqd-linux-arm64
 | `min_ttl` / `max_ttl` | `60` / `86400` | границы TTL кеша, сек |
 | `log` | `info` | debug / info / warn / error |
 
-После правки: `/opt/etc/init.d/S56doqd restart`.
+Через `doqd add`/`doqd remove` демон перезапускается автоматически; после
+ручной правки — `/opt/etc/init.d/S56doqd restart`.
 
-Почему comss первым: AdGuard DoQ/DoT в ряде сетей РФ блокируется ТСПУ;
-failover это переживает, но быстрее, когда первым стоит доступный сервер.
-
-## Проверка
+## Проверка работы
 
 ```sh
 # прямой запрос в doqd (порт 5354), повторный — из кеша
@@ -82,13 +143,32 @@ ndmc -c 'show ip name-server'        # должен быть <LAN-IP>:5354
 tcpdump -ni any 'udp port 853'
 ```
 
+## FAQ
+
+**Почему comss первым, а не AdGuard?** В ряде сетей РФ AdGuard DNS
+блокируется ТСПУ и по DoQ, и по DoT — `doqd test quic://dns.adguard-dns.com`
+покажет таймаут рукопожатия. Failover это переживает, но быстрее, когда
+первым стоит доступный сервер. Проверьте свои: `doqd list` пробует каждый
+сервер живым запросом.
+
+**Почему порт 5354, а не 5353?** 5353 на Keenetic занят avahi-daemon
+(mDNS).
+
+**Почему LAN-адрес, а не 127.0.0.1?** KeeneticOS не принимает loopback в
+`ip name-server` (`Dns::Manager: invalid IP address`).
+
+**Добавил сервер, а он down.** `doqd list` показывает живость и RTT
+каждого апстрима; `doqd remove <номер>` убирает лишний. При добавлении
+`doqd add` сам проверяет сервер и не даст записать мёртвый без `--force`.
+
 ## Удаление
 
 ```sh
-sh /opt/tmp/keenetic-doq/uninstall.sh
+curl -fsSL https://raw.githubusercontent.com/necronicle/keenetic-doq/main/uninstall.sh | sh
 ```
 
-Снимает регистрацию name-server, останавливает и удаляет демон.
+Снимает регистрацию name-server, останавливает и удаляет демон. Конфиг
+`/opt/etc/doqd.conf` остаётся.
 
 ## Сборка из исходников
 
@@ -102,5 +182,8 @@ CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o doqd ./cmd/do
 - Только клиентская сторона DoQ (исходящие запросы). Входящий DoQ-сервер —
   вне объёма.
 - Никакой фильтрации и блокировок: что ответил апстрим, то и вернулось.
-- KeeneticOS не принимает `127.0.0.1` в `ip name-server`, поэтому doqd
-  слушает LAN-адрес; порт 5353 занят avahi (mDNS), поэтому 5354.
+- doqd слушает только LAN-адрес роутера — наружу (WAN) не торчит.
+
+## Лицензия
+
+[GPL-3.0](LICENSE)
