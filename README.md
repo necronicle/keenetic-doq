@@ -73,7 +73,7 @@ sh install.sh --local ./doqd-linux-arm64
 ~ # doqd list
 UPSTREAMS (/opt/etc/doqd.conf):
  1. quic://dns.comss.one                       alive  rtt 34 ms
- 2. quic://unfiltered.adguard-dns.com          down   (dial unfiltered.adguard-dns.com:853: context deadline exceeded)
+ 2. quic://dns.quad9.net                       alive  rtt 193 ms
 
 listen: 192.168.1.1:5354   daemon: running (pid 9772)
 ```
@@ -119,7 +119,7 @@ resolve via :53: NOERROR, 41 ms
 | Ключ | По умолчанию | Что делает |
 |---|---|---|
 | `listen` | `<LAN-IP>:5354` | адрес:порт слушателя (UDP+TCP) |
-| `upstream` | `quic://dns.comss.one`, `quic://unfiltered.adguard-dns.com` | DoQ-апстрим, строка на сервер; первая строка отменяет дефолты |
+| `upstream` | `quic://dns.comss.one`, `quic://dns.quad9.net` | DoQ-апстрим, строка на сервер; первая строка отменяет дефолты |
 | `cache_size` | `4096` | максимум записей кеша |
 | `min_ttl` / `max_ttl` | `60` / `86400` | границы TTL кеша, сек |
 | `log` | `info` | debug / info / warn / error |
@@ -145,11 +145,19 @@ tcpdump -ni any 'udp port 853'
 
 ## FAQ
 
-**Почему comss первым, а не AdGuard?** В ряде сетей РФ AdGuard DNS
-блокируется ТСПУ и по DoQ, и по DoT — `doqd test quic://dns.adguard-dns.com`
-покажет таймаут рукопожатия. Failover это переживает, но быстрее, когда
-первым стоит доступный сервер. Проверьте свои: `doqd list` пробует каждый
-сервер живым запросом.
+**Почему в дефолтах comss и Quad9, а не AdGuard?** В ряде сетей РФ AdGuard
+DNS блокируется ТСПУ и по DoQ, и по DoT — `doqd test
+quic://dns.adguard-dns.com` покажет таймаут рукопожатия, а держать в
+дефолтах заведомо мёртвый сервер незачем. comss стоит первым как самый
+быстрый из проверенных (~130 мс с роутера против ~200 мс у Quad9),
+Quad9 — резерв. Проверьте свои: `doqd list` пробует каждый сервер живым
+запросом.
+
+**Оба дефолтных сервера что-то фильтруют.** comss режет рекламу, трекеры и
+вредоносные домены, `dns.quad9.net` блокирует малварные. Нужен чистый
+резолвинг без чужих списков — возьмите нефильтрующие варианты:
+`doqd add quic://dns10.quad9.net` (Quad9 без блокировок) или
+`doqd add quic://unfiltered.adguard-dns.com`, если AdGuard у вас доступен.
 
 **Почему порт 5354, а не 5353?** 5353 на Keenetic занят avahi-daemon
 (mDNS).

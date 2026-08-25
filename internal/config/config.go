@@ -23,7 +23,7 @@ type Config struct {
 func Default() *Config {
 	return &Config{
 		Listen:    "127.0.0.1:5354",
-		Upstreams: []string{"quic://dns.comss.one", "quic://unfiltered.adguard-dns.com"},
+		Upstreams: []string{"quic://dns.comss.one", "quic://dns.quad9.net"},
 		CacheSize: 4096,
 		MinTTL:    60 * time.Second,
 		MaxTTL:    24 * time.Hour,

@@ -73,7 +73,7 @@ All management is done with the same binary — no manual file editing:
 ~ # doqd list
 UPSTREAMS (/opt/etc/doqd.conf):
  1. quic://dns.comss.one                       alive  rtt 34 ms
- 2. quic://unfiltered.adguard-dns.com          down   (dial unfiltered.adguard-dns.com:853: context deadline exceeded)
+ 2. quic://dns.quad9.net                       alive  rtt 193 ms
 
 listen: 192.168.1.1:5354   daemon: running (pid 9772)
 ```
@@ -119,7 +119,7 @@ resolve via :53: NOERROR, 41 ms
 | Key | Default | Meaning |
 |---|---|---|
 | `listen` | `<LAN-IP>:5354` | listener address:port (UDP+TCP) |
-| `upstream` | `quic://dns.comss.one`, `quic://unfiltered.adguard-dns.com` | DoQ upstream, one line per server; the first line overrides the built-in defaults |
+| `upstream` | `quic://dns.comss.one`, `quic://dns.quad9.net` | DoQ upstream, one line per server; the first line overrides the built-in defaults |
 | `cache_size` | `4096` | max cache entries |
 | `min_ttl` / `max_ttl` | `60` / `86400` | cache TTL bounds, seconds |
 | `log` | `info` | debug / info / warn / error |
@@ -145,11 +145,19 @@ tcpdump -ni any 'udp port 853'
 
 ## FAQ
 
-**Why comss first instead of AdGuard?** In a number of Russian networks
-AdGuard DNS is blocked by DPI (TSPU) on both DoQ and DoT —
-`doqd test quic://dns.adguard-dns.com` will show a handshake timeout.
-Failover survives that, but things are faster when a reachable server
-comes first. Check yours: `doqd list` live-probes every server.
+**Why comss and Quad9 as defaults, not AdGuard?** In a number of Russian
+networks AdGuard DNS is blocked by DPI (TSPU) on both DoQ and DoT —
+`doqd test quic://dns.adguard-dns.com` will show a handshake timeout, and
+shipping a knowingly dead server as a default helps no one. comss comes
+first as the fastest of the tested ones (~130 ms from the router vs
+~200 ms for Quad9), Quad9 is the failover. Check yours: `doqd list`
+live-probes every server.
+
+**Both defaults filter something.** comss blocks ads, trackers and
+malicious domains; `dns.quad9.net` blocks malware domains. If you want
+plain resolving with nobody's blocklists, add an unfiltered server:
+`doqd add quic://dns10.quad9.net` (Quad9 without blocking) or
+`doqd add quic://unfiltered.adguard-dns.com` where AdGuard is reachable.
 
 **Why port 5354 and not 5353?** 5353 on Keenetic is taken by avahi-daemon
 (mDNS).

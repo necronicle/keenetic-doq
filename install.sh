@@ -89,7 +89,7 @@ listen $LAN_IP:$PORT
 
 # DoQ upstreams, in order of preference. Manage with: doqd add / doqd remove
 upstream quic://dns.comss.one
-upstream quic://unfiltered.adguard-dns.com
+upstream quic://dns.quad9.net
 
 # cache: max entries / TTL bounds in seconds
 cache_size 4096

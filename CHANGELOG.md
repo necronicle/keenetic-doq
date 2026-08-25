@@ -3,6 +3,16 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версии — [SemVer](https://semver.org/lang/ru/).
 
+## [0.2.1] — 2026-08-25
+
+### Changed
+- Резервный апстрим по умолчанию — `quic://dns.quad9.net` вместо
+  `quic://unfiltered.adguard-dns.com`: AdGuard блокируется ТСПУ в тех же
+  сетях, где нужен DoQ, и в дефолтах был заведомо мёртвым. Затрагивает
+  только новые установки; существующий `/opt/etc/doqd.conf` не меняется —
+  для замены вручную: `doqd add quic://dns.quad9.net` и
+  `doqd remove quic://unfiltered.adguard-dns.com`.
+
 ## [0.2.0] — 2026-08-25
 
 ### Added

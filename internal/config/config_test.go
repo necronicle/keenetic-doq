@@ -11,7 +11,7 @@ func TestDefault(t *testing.T) {
 	if c.Listen != "127.0.0.1:5354" {
 		t.Errorf("Listen = %q", c.Listen)
 	}
-	want := []string{"quic://dns.comss.one", "quic://unfiltered.adguard-dns.com"}
+	want := []string{"quic://dns.comss.one", "quic://dns.quad9.net"}
 	if len(c.Upstreams) != 2 || c.Upstreams[0] != want[0] || c.Upstreams[1] != want[1] {
 		t.Errorf("Upstreams = %v", c.Upstreams)
 	}
