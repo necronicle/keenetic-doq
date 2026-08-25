@@ -3,7 +3,7 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версии — [SemVer](https://semver.org/lang/ru/).
 
-## [Unreleased]
+## [0.2.0] — 2026-08-25
 
 ### Added
 - CLI-утилита управления в том же бинарнике: `doqd list`, `doqd test`,
