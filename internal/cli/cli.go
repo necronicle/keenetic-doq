@@ -11,6 +11,7 @@ const defaultConf = "/opt/etc/doqd.conf"
 
 var subcommands = map[string]func(args []string) int{
 	"help": func([]string) int { usage(os.Stdout); return 0 },
+	"test": runTest,
 }
 
 func IsSubcommand(s string) bool {
