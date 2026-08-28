@@ -26,13 +26,14 @@ func runList(args []string) int {
 		fmt.Printf("config %s not found — showing built-in defaults\n\n", *conf)
 	}
 
+	boot := confBootstrap(lines)
 	results := make([]probeResult, len(ups))
 	var wg sync.WaitGroup
 	for i, u := range ups {
 		wg.Add(1)
 		go func(i int, u string) {
 			defer wg.Done()
-			results[i] = probe(u)
+			results[i] = probe(u, boot)
 		}(i, u)
 	}
 	wg.Wait()

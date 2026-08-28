@@ -55,6 +55,10 @@ func main() {
 	}
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})))
 
+	// Имена апстримов резолвятся через bootstrap, а не через системный
+	// резолвер: на Keenetic тот указывает на ndnproxy, в списке серверов
+	// которого прописан сам doqd — запрос вернулся бы нам же.
+	boot := upstream.NewBootstrap(cfg.Bootstrap)
 	var ups []upstream.Exchanger
 	for _, raw := range cfg.Upstreams {
 		u, err := upstream.NewDoQ(raw)
@@ -62,6 +66,7 @@ func main() {
 			slog.Error("bad upstream", "err", err)
 			os.Exit(1)
 		}
+		u.SetBootstrap(boot)
 		ups = append(ups, u)
 	}
 	picker := upstream.NewPicker(ups)
@@ -77,7 +82,8 @@ func main() {
 		slog.Error("listen failed", "addr", cfg.Listen, "err", err)
 		os.Exit(1)
 	}
-	slog.Info("doqd started", "version", version, "listen", srv.Addr(), "upstreams", cfg.Upstreams)
+	slog.Info("doqd started", "version", version, "listen", srv.Addr(),
+		"upstreams", cfg.Upstreams, "bootstrap", cfg.Bootstrap)
 
 	<-ctx.Done()
 	slog.Info("shutting down")

@@ -8,8 +8,10 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/binary"
+	"errors"
 	"io"
 	"math/big"
+	"net"
 	"sync"
 	"testing"
 	"time"
@@ -172,5 +174,70 @@ func TestNewDoQParse(t *testing.T) {
 	}
 	if _, err := NewDoQ("tls://dns.example.com"); err == nil {
 		t.Error("non-quic scheme must fail")
+	}
+}
+
+type fakeBootstrap struct {
+	ip    net.IP
+	calls int
+}
+
+func (f *fakeBootstrap) LookupIP(ctx context.Context, host string) (net.IP, error) {
+	f.calls++
+	return f.ip, nil
+}
+
+// Ключевой инвариант: quic-дозвон получает IP-литерал, а не имя. Иначе адрес
+// резолвит системный резолвер — на Keenetic это 127.0.0.1:53, тот самый
+// ndnproxy, в списке серверов которого прописан сам doqd: запрос апстрима
+// возвращается в doqd и DNS роутера встаёт колом.
+func TestDialTargetIsBootstrapIPNotHostname(t *testing.T) {
+	u, err := NewDoQ("quic://dns.example.test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	boot := &fakeBootstrap{ip: net.ParseIP("192.0.2.7")}
+	u.SetBootstrap(boot)
+	var got string
+	u.dialAddr = func(ctx context.Context, addr string, tc *tls.Config, qc *quic.Config) (quic.Connection, error) {
+		got = addr
+		return nil, errors.New("dial stopped by test")
+	}
+	q := new(dns.Msg)
+	q.SetQuestion("example.com.", dns.TypeA)
+	u.Exchange(context.Background(), q)
+
+	if got != "192.0.2.7:853" {
+		t.Errorf("dial target = %q, want %q", got, "192.0.2.7:853")
+	}
+	if boot.calls == 0 {
+		t.Error("bootstrap was not consulted")
+	}
+	if u.TLSConfig.ServerName != "dns.example.test" {
+		t.Errorf("SNI = %q, want the hostname", u.TLSConfig.ServerName)
+	}
+}
+
+func TestIPLiteralUpstreamNeedsNoBootstrap(t *testing.T) {
+	u, err := NewDoQ("quic://192.0.2.8:853")
+	if err != nil {
+		t.Fatal(err)
+	}
+	boot := &fakeBootstrap{ip: net.ParseIP("203.0.113.1")}
+	u.SetBootstrap(boot)
+	var got string
+	u.dialAddr = func(ctx context.Context, addr string, tc *tls.Config, qc *quic.Config) (quic.Connection, error) {
+		got = addr
+		return nil, errors.New("dial stopped by test")
+	}
+	q := new(dns.Msg)
+	q.SetQuestion("example.com.", dns.TypeA)
+	u.Exchange(context.Background(), q)
+
+	if got != "192.0.2.8:853" {
+		t.Errorf("dial target = %q, want the literal address", got)
+	}
+	if boot.calls != 0 {
+		t.Errorf("bootstrap calls = %d, want 0 for an IP upstream", boot.calls)
 	}
 }

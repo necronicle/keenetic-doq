@@ -9,6 +9,7 @@ import (
 
 	"github.com/miekg/dns"
 
+	"github.com/necronicle/keenetic-doq/internal/config"
 	"github.com/necronicle/keenetic-doq/internal/upstream"
 )
 
@@ -23,11 +24,12 @@ type probeResult struct {
 }
 
 // probe делает один живой DoQ-запрос к серверу и меряет RTT.
-func probe(rawURL string) probeResult {
+func probe(rawURL string, boot []string) probeResult {
 	u, err := upstream.NewDoQ(rawURL)
 	if err != nil {
 		return probeResult{Err: err}
 	}
+	u.SetBootstrap(upstream.NewBootstrap(boot))
 	defer u.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), probeTimeout)
 	defer cancel()
@@ -38,6 +40,15 @@ func probe(rawURL string) probeResult {
 		return probeResult{Err: err}
 	}
 	return probeResult{RTT: time.Since(start)}
+}
+
+// bootstrapFor достаёт bootstrap-серверы из конфига; нет конфига — дефолты.
+func bootstrapFor(conf string) []string {
+	lines, exists, err := readConfLines(conf)
+	if err != nil || !exists {
+		return config.Default().Bootstrap
+	}
+	return confBootstrap(lines)
 }
 
 func runTest(args []string) int {
@@ -53,7 +64,7 @@ func runTest(args []string) int {
 		return 1
 	}
 	fmt.Printf("probing %s ... ", url)
-	r := probe(url)
+	r := probe(url, bootstrapFor(defaultConf))
 	if r.Err != nil {
 		fmt.Println("FAIL")
 		fmt.Fprintln(os.Stderr, "error:", r.Err)

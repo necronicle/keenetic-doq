@@ -3,7 +3,7 @@ package cli
 import "testing"
 
 func TestProbeBadURL(t *testing.T) {
-	if r := probe("https://not-quic.example"); r.Err == nil {
+	if r := probe("https://not-quic.example", nil); r.Err == nil {
 		t.Fatal("non-quic scheme must fail")
 	}
 }

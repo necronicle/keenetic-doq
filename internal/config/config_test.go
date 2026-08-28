@@ -54,3 +54,58 @@ func TestParseErrors(t *testing.T) {
 		}
 	}
 }
+
+func TestBootstrapDefaultsToBuiltInServers(t *testing.T) {
+	cfg, err := Parse(strings.NewReader("listen 127.0.0.1:5354\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(cfg.Bootstrap) == 0 {
+		t.Fatal("Bootstrap must have defaults, otherwise upstream names fall back to the system resolver")
+	}
+}
+
+func TestBootstrapOverridesDefaultsAndGetsDefaultPort(t *testing.T) {
+	cfg, err := Parse(strings.NewReader("bootstrap 9.9.9.9\nbootstrap 8.8.4.4:5300\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"9.9.9.9:53", "8.8.4.4:5300"}
+	if len(cfg.Bootstrap) != len(want) {
+		t.Fatalf("Bootstrap = %v, want %v", cfg.Bootstrap, want)
+	}
+	for i := range want {
+		if cfg.Bootstrap[i] != want[i] {
+			t.Errorf("Bootstrap[%d] = %q, want %q", i, cfg.Bootstrap[i], want[i])
+		}
+	}
+}
+
+// Имя в bootstrap само требует резолва — то есть системного резолвера, то есть
+// той самой петли, ради которой bootstrap и появился.
+func TestBootstrapRejectsHostname(t *testing.T) {
+	if _, err := Parse(strings.NewReader("bootstrap dns.example.com\n")); err == nil {
+		t.Error("hostname in bootstrap must be rejected")
+	}
+}
+
+// Прямой автоголос: bootstrap, указывающий на сам doqd, замыкает петлю.
+func TestBootstrapRejectsOwnListenAddress(t *testing.T) {
+	in := "listen 192.168.1.1:5354\nbootstrap 192.168.1.1:5354\n"
+	if _, err := Parse(strings.NewReader(in)); err == nil {
+		t.Error("bootstrap pointing at our own listener must be rejected")
+	}
+}
+
+// Любой DNS на самом роутере — это ndnproxy, а в его списке серверов стоит
+// doqd. Резолвить через него имена апстримов значит спрашивать самого себя.
+func TestBootstrapRejectsRouterLocalServers(t *testing.T) {
+	for _, in := range []string{
+		"listen 192.168.1.1:5354\nbootstrap 127.0.0.1\n",
+		"listen 192.168.1.1:5354\nbootstrap 192.168.1.1\n",
+	} {
+		if _, err := Parse(strings.NewReader(in)); err == nil {
+			t.Errorf("must be rejected:\n%s", in)
+		}
+	}
+}

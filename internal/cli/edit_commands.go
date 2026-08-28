@@ -24,7 +24,7 @@ func runAdd(args []string) int {
 	}
 
 	fmt.Printf("probing %s ... ", url)
-	if r := probe(url); r.Err != nil {
+	if r := probe(url, bootstrapFor(*conf)); r.Err != nil {
 		fmt.Println("FAIL")
 		if !*force {
 			fmt.Fprintf(os.Stderr, "error: %v\nnot added — re-run with --force to add anyway\n", r.Err)

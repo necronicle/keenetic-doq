@@ -22,7 +22,12 @@ const defaultDoQPort = "853"
 type DoQ struct {
 	addr      string // host:port для dial
 	host      string // SNI
+	port      string
 	TLSConfig *tls.Config
+
+	bootstrap Bootstrap
+	// dialAddr подменяется в тестах; в бою — quic.DialAddr.
+	dialAddr func(ctx context.Context, addr string, tlsConf *tls.Config, conf *quic.Config) (quic.Connection, error)
 
 	mu        sync.Mutex
 	conn      quic.Connection
@@ -47,11 +52,30 @@ func NewDoQ(rawURL string) (*DoQ, error) {
 	return &DoQ{
 		addr:      net.JoinHostPort(host, port),
 		host:      host,
+		port:      port,
 		TLSConfig: &tls.Config{ServerName: host, NextProtos: []string{"doq"}},
+		bootstrap: NewBootstrap(nil),
+		dialAddr:  quic.DialAddr,
 	}, nil
 }
 
+// SetBootstrap задаёт резолвер имени апстрима.
+func (u *DoQ) SetBootstrap(b Bootstrap) { u.bootstrap = b }
+
 func (u *DoQ) Address() string { return u.addr }
+
+// dialTarget всегда возвращает IP:порт. Передать сюда имя значит отдать резолв
+// системному резолверу — на Keenetic это петля doqd → ndnproxy → doqd.
+func (u *DoQ) dialTarget(ctx context.Context) (string, error) {
+	if net.ParseIP(u.host) != nil {
+		return u.addr, nil
+	}
+	ip, err := u.bootstrap.LookupIP(ctx, u.host)
+	if err != nil {
+		return "", err
+	}
+	return net.JoinHostPort(ip.String(), u.port), nil
+}
 
 func (u *DoQ) getConn(ctx context.Context) (quic.Connection, error) {
 	u.mu.Lock()
@@ -64,7 +88,11 @@ func (u *DoQ) getConn(ctx context.Context) (quic.Connection, error) {
 		MaxIdleTimeout:  90 * time.Second,
 		KeepAlivePeriod: 20 * time.Second,
 	}
-	conn, err := quic.DialAddr(ctx, u.addr, u.TLSConfig, conf)
+	target, err := u.dialTarget(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn, err := u.dialAddr(ctx, target, u.TLSConfig, conf)
 	if err != nil {
 		return nil, fmt.Errorf("dial %s: %w", u.addr, err)
 	}

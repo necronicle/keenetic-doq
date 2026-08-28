@@ -108,3 +108,24 @@ func TestDefaultConfLinesParse(t *testing.T) {
 		t.Fatalf("defaults mismatch: %+v vs %+v", cfg, config.Default())
 	}
 }
+
+func TestConfBootstrap(t *testing.T) {
+	lines := []string{"listen 192.168.1.1:5354", "bootstrap 9.9.9.9", "bootstrap 8.8.4.4:5300"}
+	got := confBootstrap(lines)
+	want := []string{"9.9.9.9:53", "8.8.4.4:5300"}
+	if len(got) != len(want) {
+		t.Fatalf("confBootstrap = %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("[%d] = %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+func TestConfBootstrapFallsBackToDefaults(t *testing.T) {
+	got := confBootstrap([]string{"listen 192.168.1.1:5354"})
+	if len(got) == 0 {
+		t.Fatal("want built-in bootstrap servers when the config names none")
+	}
+}

@@ -49,6 +49,24 @@ func confUpstreams(lines []string) []string {
 	return ups
 }
 
+// confBootstrap читает bootstrap-серверы прямо из строк конфига, чтобы пробы
+// CLI ходили за адресами апстримов туда же, куда и демон.
+func confBootstrap(lines []string) []string {
+	var out []string
+	for _, l := range lines {
+		fields := strings.Fields(l)
+		if len(fields) >= 2 && fields[0] == "bootstrap" {
+			if addr, err := config.BootstrapAddr(fields[1]); err == nil {
+				out = append(out, addr)
+			}
+		}
+	}
+	if len(out) == 0 {
+		return config.Default().Bootstrap
+	}
+	return out
+}
+
 func confListen(lines []string) string {
 	for _, l := range lines {
 		fields := strings.Fields(l)
@@ -149,6 +167,9 @@ func defaultConfLines() []string {
 	}
 	for _, u := range def.Upstreams {
 		lines = append(lines, "upstream "+u)
+	}
+	for _, b := range def.Bootstrap {
+		lines = append(lines, "bootstrap "+b)
 	}
 	return append(lines,
 		fmt.Sprintf("cache_size %d", def.CacheSize),

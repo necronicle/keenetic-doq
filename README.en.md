@@ -125,6 +125,7 @@ resolve via :53:  NOERROR, 40 ms
 |---|---|---|
 | `listen` | `<LAN-IP>:5354` | listener address:port (UDP+TCP) |
 | `upstream` | `quic://dns.comss.one`, `quic://dns.quad9.net` | DoQ upstream, one line per server; the first line overrides the built-in defaults |
+| `bootstrap` | `77.88.8.8`, `8.8.8.8`, `1.1.1.1` | plain DNS servers used to resolve the upstream names; IPs only, tried in order |
 | `cache_size` | `4096` | max cache entries |
 | `min_ttl` / `max_ttl` | `60` / `86400` | cache TTL bounds, seconds |
 | `log` | `info` | debug / info / warn / error |
@@ -194,7 +195,22 @@ system configuration save
 `doqd status` will then report `registration: present`. Until it does,
 queries bypass doqd and go through the stock DNS.
 
-**doqd stops working after a router reboot.** Since 0.2.5 the daemon waits
+**Internet is gone after a router reboot: raw IPs ping, names do not
+resolve, and `doqd list` reports `lookup dns.comss.one on 127.0.0.1:53:
+i/o timeout`.** A bug in releases before 0.3.0. doqd resolved its upstream
+names through the system resolver, which on Keenetic is `127.0.0.1` — the
+router's own DNS proxy, whose name-server list contains doqd itself. While
+the WAN is up the ISP's servers answer first and the loop never closes; at
+boot, before the connection is established, doqd is the only name-server,
+so its own query for `dns.comss.one` comes right back to it and the
+router's DNS wedges. Fix by upgrading: `curl -fsSL
+https://raw.githubusercontent.com/necronicle/keenetic-doq/main/install.sh | sh`
+— since 0.3.0 upstream names are resolved through separate `bootstrap`
+servers, bypassing the router's DNS. No config change needed, but if your
+ISP blocks outbound port 53, set your own with `bootstrap <IP>` in
+`/opt/etc/doqd.conf`.
+
+**doqd does not come up after a router reboot.** Since 0.2.5 the daemon waits
 for its address: at boot `/opt` is mounted before the interface gets its
 address, and a single bind attempt used to kill the daemon for good (the
 Entware init script never retries). If it still does not come up on 0.2.5,

@@ -98,6 +98,13 @@ listen $LAN_IP:$PORT
 upstream quic://dns.comss.one
 upstream quic://dns.quad9.net
 
+# Plain-DNS servers used ONLY to resolve the upstream names above. They must
+# be external: any DNS on the router itself is the router's own proxy, which
+# forwards to doqd — asking it would mean asking ourselves.
+bootstrap 77.88.8.8
+bootstrap 8.8.8.8
+bootstrap 1.1.1.1
+
 # cache: max entries / TTL bounds in seconds
 cache_size 4096
 min_ttl 60
