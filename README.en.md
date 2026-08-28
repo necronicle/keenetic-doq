@@ -194,6 +194,16 @@ system configuration save
 `doqd status` will then report `registration: present`. Until it does,
 queries bypass doqd and go through the stock DNS.
 
+**doqd stops working after a router reboot.** Since 0.2.5 the daemon waits
+for its address: at boot `/opt` is mounted before the interface gets its
+address, and a single bind attempt used to kill the daemon for good (the
+Entware init script never retries). If it still does not come up on 0.2.5,
+check `doqd status` — it says so plainly when the `listen` address is not
+on any interface. That usually means the router's LAN address comes from an
+upstream DHCP server (Relay mode) and changed across the reboot: give the
+router a fixed LAN address, fix `listen` in `/opt/etc/doqd.conf` and
+re-register it with `ip name-server <new-address>:5354`.
+
 **Why port 5354 and not 5353?** 5353 on Keenetic is taken by avahi-daemon
 (mDNS).
 

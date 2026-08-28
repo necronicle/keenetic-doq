@@ -41,6 +41,11 @@ func runStatus(args []string) int {
 		host = listen
 		_, port, _ = net.SplitHostPort(config.Default().Listen)
 	}
+	if addrs, err := net.InterfaceAddrs(); err == nil && !hostOnInterfaces(host, addrs) {
+		fmt.Printf("                 WARNING: %s is not on any interface — the router's LAN\n", host)
+		fmt.Printf("                 address has changed, so doqd cannot bind. Fix `listen` in the\n")
+		fmt.Printf("                 config and re-register: ip name-server <new-address>:%s\n", port)
+	}
 	if out, ok := ndmShow("show ip name-server"); !ok {
 		fmt.Println("registration:    unknown (ndmc/ndmq not found — not on the router?)")
 	} else if strings.Contains(out, host) && (port == "" || strings.Contains(out, port)) {
@@ -55,6 +60,21 @@ func runStatus(args []string) int {
 	// Через штатный ndnproxy — проверяет интеграцию с системным DNS.
 	reportResolve("resolve via :53: ", net.JoinHostPort(dialHost(host), "53"))
 	return 0
+}
+
+// hostOnInterfaces сообщает, поднят ли адрес хоть на одном интерфейсе. Не-IP
+// и джокеры проверять нечего — они займутся при любом раскладе.
+func hostOnInterfaces(host string, addrs []net.Addr) bool {
+	ip := net.ParseIP(host)
+	if ip == nil || ip.IsUnspecified() {
+		return true
+	}
+	for _, a := range addrs {
+		if n, ok := a.(*net.IPNet); ok && n.IP.Equal(ip) {
+			return true
+		}
+	}
+	return false
 }
 
 // dialHost подменяет адрес-джокер на loopback: к 0.0.0.0 не подключиться.

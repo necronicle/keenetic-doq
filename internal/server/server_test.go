@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 	"errors"
+	"net"
+	"syscall"
 	"testing"
 	"time"
 
@@ -59,5 +61,79 @@ func TestServfailOnResolverError(t *testing.T) {
 	}
 	if resp.Rcode != dns.RcodeServerFailure {
 		t.Errorf("Rcode = %d, want SERVFAIL", resp.Rcode)
+	}
+}
+
+// Загрузка роутера: /opt монтируется раньше, чем интерфейс получает адрес,
+// и bind падает с EADDRNOTAVAIL. Демон обязан дождаться адреса, а не выйти:
+// rc.func запускает init-скрипт один раз и повторять не будет.
+func TestStartWaitRetriesUntilAddressAppears(t *testing.T) {
+	s := New("127.0.0.1:0", &fakeResolver{})
+	s.retryMin, s.retryMax = time.Millisecond, time.Millisecond
+	var attempts int
+	s.listenPacket = func(network, addr string) (net.PacketConn, error) {
+		attempts++
+		if attempts < 3 {
+			return nil, &net.OpError{Op: "listen", Net: network, Err: syscall.EADDRNOTAVAIL}
+		}
+		return net.ListenPacket(network, addr)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := s.StartWait(ctx); err != nil {
+		t.Fatalf("StartWait: %v", err)
+	}
+	t.Cleanup(s.Shutdown)
+	if attempts != 3 {
+		t.Errorf("attempts = %d, want 3", attempts)
+	}
+	c := &dns.Client{Net: "udp", Timeout: 2 * time.Second}
+	q := new(dns.Msg)
+	q.SetQuestion("example.com.", dns.TypeA)
+	if _, _, err := c.Exchange(q, s.Addr()); err != nil {
+		t.Fatalf("сервер не отвечает после ожидания адреса: %v", err)
+	}
+}
+
+// Занятый порт — не «адрес ещё не поднялся»: ждать нечего, и молча крутиться
+// вместо выхода нельзя, иначе rc.func отрапортует «alive» о немом демоне.
+func TestStartWaitFailsFastOnOtherErrors(t *testing.T) {
+	busy := New("127.0.0.1:0", &fakeResolver{})
+	if err := busy.Start(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(busy.Shutdown)
+
+	s := New(busy.Addr(), &fakeResolver{})
+	s.retryMin, s.retryMax = time.Millisecond, time.Millisecond
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	err := s.StartWait(ctx)
+	if err == nil {
+		t.Fatal("ожидалась ошибка на занятом адресе")
+	}
+	if ctx.Err() != nil {
+		t.Error("StartWait крутился до истечения контекста вместо быстрого выхода")
+	}
+}
+
+// Пока адреса нет, демон должен уходить по SIGTERM, а не висеть в ретраях.
+func TestStartWaitStopsOnContextCancel(t *testing.T) {
+	s := New("127.0.0.1:0", &fakeResolver{})
+	s.retryMin, s.retryMax = 10*time.Millisecond, 10*time.Millisecond
+	s.listenPacket = func(network, addr string) (net.PacketConn, error) {
+		return nil, &net.OpError{Op: "listen", Net: network, Err: syscall.EADDRNOTAVAIL}
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() { time.Sleep(30 * time.Millisecond); cancel() }()
+	done := make(chan error, 1)
+	go func() { done <- s.StartWait(ctx) }()
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Error("StartWait вернул nil, хотя адрес так и не появился")
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("StartWait не завершился после отмены контекста")
 	}
 }

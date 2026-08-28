@@ -71,7 +71,9 @@ func main() {
 
 	res := resolver.New(cache.New(cfg.CacheSize, cfg.MinTTL, cfg.MaxTTL), picker)
 	srv := server.New(cfg.Listen, res)
-	if err := srv.Start(); err != nil {
+	// StartWait, а не Start: на загрузке роутера адрес интерфейса может ещё
+	// не подняться, а второго шанса init-скрипт не даёт.
+	if err := srv.StartWait(ctx); err != nil {
 		slog.Error("listen failed", "addr", cfg.Listen, "err", err)
 		os.Exit(1)
 	}
