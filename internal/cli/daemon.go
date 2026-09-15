@@ -163,14 +163,28 @@ func daemonUptime(pid int) (time.Duration, bool) {
 }
 
 // ndmShow выполняет команду CLI KeeneticOS через ndmc (или старый ndmq).
-func ndmShow(cmd string) (string, bool) {
-	if p, err := exec.LookPath("ndmc"); err == nil {
-		out, _ := exec.Command(p, "-c", cmd).CombinedOutput()
-		return string(out), true
+// found=false — утилиты нет (не роутер); err — утилита есть, но команда
+// завершилась ошибкой. Вывод возвращается в обоих случаях: ndmc печатает
+// свои ошибки в stdout/stderr и не всегда меняет код возврата.
+func ndmShow(cmd string) (out string, found bool, err error) {
+	if p, e := exec.LookPath("ndmc"); e == nil {
+		b, e := exec.Command(p, "-c", cmd).CombinedOutput()
+		return string(b), true, e
 	}
-	if p, err := exec.LookPath("ndmq"); err == nil {
-		out, _ := exec.Command(p, "-p", cmd).CombinedOutput()
-		return string(out), true
+	if p, e := exec.LookPath("ndmq"); e == nil {
+		b, e := exec.Command(p, "-p", cmd).CombinedOutput()
+		return string(b), true, e
 	}
-	return "", false
+	return "", false, nil
+}
+
+// ndmSessionFailed распознаёт, что ndmc не смог открыть сессию CLI — так
+// бывает в шелле, запущенном через `exec sh` из самого CLI роутера: сессия
+// уже занята родителем, вложенную ndm не даёт (`system failed [0xcffd0062]`,
+// `Cli::Main: failed to initialize`). Код возврата при этом бывает и 1, и 0,
+// поэтому смотрим и на него, и на текст.
+func ndmSessionFailed(out string, err error) bool {
+	return err != nil ||
+		strings.Contains(out, "failed to initialize") ||
+		strings.Contains(out, "system failed")
 }

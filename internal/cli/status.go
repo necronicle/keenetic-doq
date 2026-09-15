@@ -46,8 +46,16 @@ func runStatus(args []string) int {
 		fmt.Printf("                 address has changed, so doqd cannot bind. Fix `listen` in the\n")
 		fmt.Printf("                 config and re-register: ip name-server <new-address>:%s\n", port)
 	}
-	if out, ok := ndmShow("show ip name-server"); !ok {
+	if out, found, err := ndmShow("show ip name-server"); !found {
 		fmt.Println("registration:    unknown (ndmc/ndmq not found — not on the router?)")
+	} else if ndmSessionFailed(out, err) {
+		fmt.Println("registration:    unknown — ndmc cannot open a CLI session from this shell")
+		fmt.Println("                 (a shell started with `exec sh` inside the router CLI?)")
+		fmt.Println("                 Type `exit` to get back to the (config)> prompt and run there:")
+		fmt.Printf("                     show ip name-server            # check\n")
+		fmt.Printf("                     ip name-server %s   # add if missing\n", listen)
+		fmt.Println("                     system configuration save")
+		fmt.Printf("                 (or use Web CLI at http://%s/a, or the Entware SSH session on port 222)\n", dialHost(host))
 	} else if strings.Contains(out, host) && (port == "" || strings.Contains(out, port)) {
 		fmt.Println("registration:    present in KeeneticOS name-servers")
 	} else {

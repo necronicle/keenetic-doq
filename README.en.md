@@ -180,20 +180,26 @@ plain resolving with nobody's blocklists, add an unfiltered server:
 `doqd add quic://unfiltered.adguard-dns.com` where AdGuard is reachable.
 
 **`ndmc: system failed [0xcffd0062]` / `Cli::Main: failed to initialize`,
-and `doqd status` says `registration: NOT found`.** This is not about
-doqd — it is installed and running; your SSH session simply cannot reach
-the router CLI (typical when the session runs inside the OPKG environment
-or the account has no command-line rights). Add the registration through
-the web interface instead: open `http://<router-address>/a` (Web CLI) and
-run two commands:
+and `doqd status` says `registration: NOT found` or `registration: unknown`.**
+This is not about doqd — it is installed and running. This is what an
+install from a shell opened with `exec sh` inside the stock router CLI
+looks like (SSH to port 22 as admin, then `exec sh`): the CLI session is
+already taken by the parent, `ndmc` cannot open a nested one, so the
+installer could not register the name-server and `doqd status` from that
+same shell cannot check it. You are already in the router CLI — you do
+not need `ndmc`. Type `exit` to get back to the `(config)>` prompt and
+run there:
 
 ```
 ip name-server <LAN-IP>:5354
 system configuration save
+show ip name-server
 ```
 
-`doqd status` will then report `registration: present`. Until it does,
-queries bypass doqd and go through the stock DNS.
+The same commands work in the Web CLI (`http://<router-address>/a`), and
+`ndmc` and `doqd status` work normally from the Entware session — SSH to
+port 222 as root. Until the registration is there, queries bypass doqd
+and go through the stock DNS.
 
 **Internet is gone after a router reboot: raw IPs ping, names do not
 resolve, and `doqd list` reports `lookup dns.comss.one on 127.0.0.1:53:

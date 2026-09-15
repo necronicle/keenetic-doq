@@ -3,6 +3,20 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версии — [SemVer](https://semver.org/lang/ru/).
 
+## [Unreleased]
+
+### Fixed
+- `doqd status` из шелла, открытого через `exec sh` внутри штатного CLI
+  роутера, показывал `registration: NOT found` даже при живой регистрации:
+  `ndmc` там не может открыть вложенную сессию CLI (`system failed
+  [0xcffd0062]`, `Cli::Main: failed to initialize`), а его текст ошибки
+  принимался за пустой список серверов. Теперь это отдельный случай
+  `registration: unknown` с подсказкой: выйти по `exit` в `(config)>` и
+  проверить/зарегистрировать там.
+- Инсталлер и README называют настоящую причину `Cli::Main: failed to
+  initialize` — шелл из `exec sh`, а не «OPKG-окружение»: из
+  Entware-сессии на порту 222 `ndmc` работает.
+
 ## [0.3.0] — 2026-08-28
 
 ### Fixed
