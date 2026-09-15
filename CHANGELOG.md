@@ -3,7 +3,7 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версии — [SemVer](https://semver.org/lang/ru/).
 
-## [Unreleased]
+## [0.3.1] — 2026-09-15
 
 ### Fixed
 - `doqd status` из шелла, открытого через `exec sh` внутри штатного CLI
