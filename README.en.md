@@ -27,10 +27,21 @@ upstream — the local doqd with its cache wins on merit.
 ## Features
 
 - RFC 9250 DoQ client: long-lived QUIC connections (stream per query,
-  connection reuse, keep-alive), message ID 0 on the wire.
-- Multiple upstreams: EWMA RTT stats, queries go to the fastest live
-  server, instant failover, background health checks revive dead ones.
-- TTL-based response cache with LRU eviction (router memory is precious).
+  connection reuse, keep-alive, TLS session resumption), message ID 0 on
+  the wire.
+- Servers with several addresses: the dial races them in a staggered
+  fashion, a dead address doesn't hold up a live one; the winner is
+  remembered.
+- Multiple upstreams: queries go to the fastest live server; if it hasn't
+  answered within ~3× its usual time, the same query goes to the next one in
+  parallel. A dead upstream neither eats the query's time budget nor comes
+  back to the front on its own — the background check brings it back. All
+  upstreams are probed at startup.
+- A connection that stops answering (e.g. after a WAN reconnect) is checked
+  and replaced; one slow answer doesn't tear it down.
+- TTL-based response cache with LRU eviction; identical concurrent queries go
+  upstream once. If the upstreams are unreachable or take longer than 1.8 s,
+  a stale cached answer is served (RFC 8767, up to a day old, TTL 30 s).
 - Management CLI in the same binary: `doqd add/remove/list/test/status` —
   your own DoQ servers without editing files, live-probed before applying.
 - Static binaries with no dependencies.
@@ -86,7 +97,11 @@ Probe any server without changing anything:
 
 ```sh
 ~ # doqd test quic://dns.quad9.net
-probing quic://dns.quad9.net ... OK — answered in 213 ms
+probing quic://dns.quad9.net
+  bootstrap  2 address(es) from 1.1.1.1:53 over udp in 25 ms: 149.112.112.112, 9.9.9.9
+  connect    149.112.112.112:853  OK in 145 ms
+  query      keenetic.com A  answered in 43 ms
+OK — answered in 215 ms
 ```
 
 Add your own upstream — live-probed before it is written to the config
@@ -244,6 +259,17 @@ older config add `bootstrap 77.88.8.8:1253` to `/opt/etc/doqd.conf` and run
 77.88.8.8` stays silent, while `doqd test quic://<name>` answers after the
 change. Before 0.3.2 the error in this situation named the last server in the
 list (`1.1.1.1:53: dial udp ... i/o timeout`), which had nothing to do with it.
+
+**`doqd list` shows an upstream down with `dial ...: context deadline
+exceeded` or `no address answered`.** The server's address was found, but
+the QUIC connection (udp/853) didn't come up. `doqd test quic://<name>`
+shows step by step which addresses were tried and how each attempt ended. If
+the server works from other networks, your ISP is almost certainly blocking
+it — this happens to censorship-bypass servers and to AdGuard. doqd can't
+help there, but DNS keeps working: since 0.3.3 an unreachable upstream moves
+to the back of the queue and doesn't delay queries (before 0.3.3 it came back
+to the front every 30 seconds and a burst of queries got SERVFAIL). You can
+drop it with `doqd remove <number>`.
 
 **I added a server and it shows down.** `doqd list` shows liveness and RTT
 for every upstream; `doqd remove <number>` drops the bad one. `doqd add`
