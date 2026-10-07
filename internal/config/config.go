@@ -17,6 +17,9 @@ import (
 type Config struct {
 	Listen    string
 	Upstreams []string
+	// Fallbacks спрашиваются, только когда отказали все Upstreams: ответы
+	// серверов обхода геоблокировок не должен перебивать обычный резолвер.
+	Fallbacks []string
 	Bootstrap []string
 	CacheSize int
 	MinTTL    time.Duration
@@ -26,8 +29,11 @@ type Config struct {
 
 func Default() *Config {
 	return &Config{
-		Listen:    "127.0.0.1:5354",
-		Upstreams: []string{"quic://dns.comss.one", "quic://dns.quad9.net"},
+		Listen: "127.0.0.1:5354",
+		// Серверы обхода геоблокировок: для заблокированных по геолокации
+		// сервисов они отдают адреса своих прокси.
+		Upstreams: []string{"quic://dns.comss.one", "quic://geohide.ru", "quic://dns.dns-ai.ru"},
+		Fallbacks: []string{"quic://dns.quad9.net"},
 		Bootstrap: append([]string(nil), upstream.DefaultBootstrapServers...),
 		CacheSize: 4096,
 		MinTTL:    60 * time.Second,
@@ -55,12 +61,18 @@ func Parse(r io.Reader) (*Config, error) {
 		switch key {
 		case "listen":
 			cfg.Listen = val
-		case "upstream":
+		case "upstream", "fallback":
+			// Первая же строка любого из двух ключей отменяет оба дефолта:
+			// иначе свой список молча дополнялся бы встроенным.
 			if !sawUpstream {
-				cfg.Upstreams = nil
+				cfg.Upstreams, cfg.Fallbacks = nil, nil
 				sawUpstream = true
 			}
-			cfg.Upstreams = append(cfg.Upstreams, val)
+			if key == "upstream" {
+				cfg.Upstreams = append(cfg.Upstreams, val)
+			} else {
+				cfg.Fallbacks = append(cfg.Fallbacks, val)
+			}
 		case "bootstrap":
 			addr, err := BootstrapAddr(val)
 			if err != nil {
@@ -95,6 +107,10 @@ func Parse(r io.Reader) (*Config, error) {
 	}
 	if err := sc.Err(); err != nil {
 		return nil, err
+	}
+	if len(cfg.Upstreams) == 0 {
+		return nil, fmt.Errorf("fallback servers need at least one upstream: " +
+			"a fallback is asked only when every upstream has failed")
 	}
 	listenHost, _, err := net.SplitHostPort(cfg.Listen)
 	if err != nil {

@@ -11,9 +11,11 @@ func TestDefault(t *testing.T) {
 	if c.Listen != "127.0.0.1:5354" {
 		t.Errorf("Listen = %q", c.Listen)
 	}
-	want := []string{"quic://dns.comss.one", "quic://dns.quad9.net"}
-	if len(c.Upstreams) != 2 || c.Upstreams[0] != want[0] || c.Upstreams[1] != want[1] {
+	if len(c.Upstreams) != 3 || c.Upstreams[0] != "quic://dns.comss.one" {
 		t.Errorf("Upstreams = %v", c.Upstreams)
+	}
+	if len(c.Fallbacks) != 1 || c.Fallbacks[0] != "quic://dns.quad9.net" {
+		t.Errorf("Fallbacks = %v", c.Fallbacks)
 	}
 	if c.CacheSize != 4096 || c.MinTTL != 60*time.Second || c.MaxTTL != 24*time.Hour || c.LogLevel != "info" {
 		t.Errorf("defaults wrong: %+v", c)
@@ -44,6 +46,26 @@ log debug
 	// первая же строка upstream ЗАМЕНЯЕТ дефолтные, а не дополняет
 	if len(c.Upstreams) != 2 || c.Upstreams[0] != "quic://dns.example.com" {
 		t.Errorf("Upstreams = %v", c.Upstreams)
+	}
+	// ...и дефолтный fallback тоже: свой список не дополняется встроенным
+	if len(c.Fallbacks) != 0 {
+		t.Errorf("Fallbacks = %v, want none", c.Fallbacks)
+	}
+}
+
+func TestParseFallback(t *testing.T) {
+	c, err := Parse(strings.NewReader("fallback quic://f.example\nupstream quic://u.example\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(c.Upstreams) != 1 || c.Upstreams[0] != "quic://u.example" {
+		t.Errorf("Upstreams = %v", c.Upstreams)
+	}
+	if len(c.Fallbacks) != 1 || c.Fallbacks[0] != "quic://f.example" {
+		t.Errorf("Fallbacks = %v", c.Fallbacks)
+	}
+	if _, err := Parse(strings.NewReader("fallback quic://f.example\n")); err == nil {
+		t.Error("fallback without any upstream: want error")
 	}
 }
 

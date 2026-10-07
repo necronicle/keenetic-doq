@@ -60,17 +60,20 @@ func main() {
 	// резолвер: на Keenetic тот указывает на ndnproxy, в списке серверов
 	// которого прописан сам doqd — запрос вернулся бы нам же.
 	boot := upstream.NewBootstrap(cfg.Bootstrap)
-	var ups []upstream.Exchanger
-	for _, raw := range cfg.Upstreams {
-		u, err := upstream.NewDoQ(raw)
-		if err != nil {
-			slog.Error("bad upstream", "err", err)
-			os.Exit(1)
+	build := func(urls []string) []upstream.Exchanger {
+		var out []upstream.Exchanger
+		for _, raw := range urls {
+			u, err := upstream.NewDoQ(raw)
+			if err != nil {
+				slog.Error("bad upstream", "err", err)
+				os.Exit(1)
+			}
+			u.SetBootstrap(boot)
+			out = append(out, u)
 		}
-		u.SetBootstrap(boot)
-		ups = append(ups, u)
+		return out
 	}
-	picker := upstream.NewPicker(ups)
+	picker := upstream.NewPicker(build(cfg.Upstreams), build(cfg.Fallbacks)...)
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 	picker.StartHealthCheck(ctx, 30*time.Second)
@@ -84,7 +87,7 @@ func main() {
 		os.Exit(1)
 	}
 	slog.Info("doqd started", "version", version, "listen", srv.Addr(),
-		"upstreams", cfg.Upstreams, "bootstrap", cfg.Bootstrap)
+		"upstreams", cfg.Upstreams, "fallbacks", cfg.Fallbacks, "bootstrap", cfg.Bootstrap)
 
 	<-ctx.Done()
 	slog.Info("shutting down")

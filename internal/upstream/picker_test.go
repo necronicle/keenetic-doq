@@ -17,6 +17,7 @@ type fakeUp struct {
 	hang     bool // висит до отмены — как апстрим, до которого не доходит QUIC
 	hangOnce bool // виснет только на первом вызове (мёртвое соединение после смены WAN)
 	rcode    int
+	ip       string // если задан — ответ несёт A-запись с этим адресом и TTL 3600
 	delay    time.Duration
 	slowNext atomic.Int64 // разовая добавка к задержке, нс
 	n        atomic.Int64
@@ -41,7 +42,21 @@ func (f *fakeUp) Exchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
 	resp := new(dns.Msg)
 	resp.SetReply(m)
 	resp.Rcode = f.rcode
+	if f.ip != "" {
+		rr, _ := dns.NewRR(m.Question[0].Name + " 3600 IN A " + f.ip)
+		resp.Answer = append(resp.Answer, rr)
+	}
 	return resp, nil
+}
+
+// answeredBy — адрес из A-записи ответа: по нему видно, какой апстрим ответил.
+func answeredBy(t *testing.T, resp *dns.Msg) (string, uint32) {
+	t.Helper()
+	if len(resp.Answer) == 0 {
+		t.Fatal("answer has no records")
+	}
+	a := resp.Answer[0].(*dns.A)
+	return a.A.String(), a.Hdr.Ttl
 }
 
 func query() *dns.Msg {
@@ -416,5 +431,139 @@ func TestFastServfailUpstreamIsDemoted(t *testing.T) {
 	}
 	if broken.calls() != before {
 		t.Errorf("broken upstream still asked first (%d more calls)", broken.calls()-before)
+	}
+}
+
+// Главное обещание резерва: пока основной (сервер обхода геоблокировок) жив,
+// резерв не обгоняет его подстраховкой — даже если основной медленный, а
+// резерв быстрый. Иначе для заблокированного сервиса вернулся бы настоящий
+// адрес вместо адреса прокси.
+func TestFallbackDoesNotOvertakeSlowPrimary(t *testing.T) {
+	fastPicker(t)
+	geo := &fakeUp{name: "geo", ip: "10.0.0.1", delay: 3 * unmeasuredHedge}
+	plain := &fakeUp{name: "plain", ip: "10.0.0.2"}
+	p := NewPicker([]Exchanger{geo}, plain)
+	for i := 0; i < 3; i++ {
+		resp, err := p.Exchange(context.Background(), query())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if ip, _ := answeredBy(t, resp); ip != "10.0.0.1" {
+			t.Fatalf("query %d answered by %s, want the primary", i, ip)
+		}
+	}
+	if plain.calls() != 0 {
+		t.Errorf("fallback asked %d times while the primary was answering", plain.calls())
+	}
+}
+
+// Резерв ждёт все попытки основных, а не только последнюю: медленный
+// основной ещё отвечает, второй основной (запущенный подстраховкой) отказал —
+// резерв всё равно не спрашивается.
+func TestFallbackWaitsForEveryPrimary(t *testing.T) {
+	fastPicker(t)
+	slow := &fakeUp{name: "slow", ip: "10.0.0.1", delay: 3 * unmeasuredHedge}
+	dead := &fakeUp{name: "dead", fail: true}
+	plain := &fakeUp{name: "plain", ip: "10.0.0.2"}
+	p := NewPicker([]Exchanger{slow, dead}, plain)
+	resp, err := p.Exchange(context.Background(), query())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ip, _ := answeredBy(t, resp); ip != "10.0.0.1" {
+		t.Fatalf("answered by %s, want the second primary", ip)
+	}
+	if plain.calls() != 0 {
+		t.Error("fallback asked while a primary was still answering")
+	}
+}
+
+// Основные лежат — отвечает резерв, сразу, а не через таймаут на каждом
+// запросе; TTL его ответа урезан, чтобы настоящий адрес не застрял в кешах.
+func TestFallbackAnswersWhenPrimariesFail(t *testing.T) {
+	fastPicker(t)
+	geo := &fakeUp{name: "geo", hang: true}
+	plain := &fakeUp{name: "plain", ip: "10.0.0.2"}
+	p := NewPicker([]Exchanger{geo}, plain)
+	resp, err := p.Exchange(context.Background(), query())
+	if err != nil {
+		t.Fatal(err)
+	}
+	ip, ttl := answeredBy(t, resp)
+	if ip != "10.0.0.2" {
+		t.Fatalf("answered by %s, want the fallback", ip)
+	}
+	if ttl != fallbackMaxTTL {
+		t.Errorf("fallback answer TTL %d, want capped to %d", ttl, fallbackMaxTTL)
+	}
+	start, before := time.Now(), geo.calls()
+	if _, err := p.Exchange(context.Background(), query()); err != nil {
+		t.Fatal(err)
+	}
+	if d := time.Since(start); d > unmeasuredHedge {
+		t.Errorf("next query took %v: the dead primary is still asked first", d)
+	}
+	if geo.calls() != before {
+		t.Error("dead primary asked before the healthy fallback")
+	}
+}
+
+// SERVFAIL основного — не повод отдавать SERVFAIL клиенту: спросить резерв.
+func TestFallbackAskedAfterPrimaryServfail(t *testing.T) {
+	fastPicker(t)
+	geo := &fakeUp{name: "geo", rcode: dns.RcodeServerFailure}
+	plain := &fakeUp{name: "plain", ip: "10.0.0.2"}
+	p := NewPicker([]Exchanger{geo}, plain)
+	resp, err := p.Exchange(context.Background(), query())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.Rcode != dns.RcodeSuccess {
+		t.Fatalf("rcode %s, want the fallback's answer", dns.RcodeToString[resp.Rcode])
+	}
+}
+
+// Ожившего основного фоновая проверка возвращает вперёд резерва, даже если
+// резерв быстрее.
+func TestRecoveredPrimaryGoesBeforeFallback(t *testing.T) {
+	fastPicker(t)
+	geo := &fakeUp{name: "geo", ip: "10.0.0.1", delay: 30 * time.Millisecond}
+	plain := &fakeUp{name: "plain", ip: "10.0.0.2"}
+	p := NewPicker([]Exchanger{geo}, plain)
+	st := p.ups[0]
+	p.markDown(st)
+	p.markSuccess(p.ups[1], time.Millisecond)
+	if o := p.ordered(); o[0].ex != plain {
+		t.Fatalf("order[0] = %s, want the fallback while the primary is down", o[0].ex.Address())
+	}
+	p.probe(context.Background(), st, false)
+	if o := p.ordered(); o[0].ex != geo {
+		t.Fatalf("order[0] = %s, want the recovered primary", o[0].ex.Address())
+	}
+	resp, err := p.Exchange(context.Background(), query())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ip, ttl := answeredBy(t, resp); ip != "10.0.0.1" || ttl != 3600 {
+		t.Errorf("answered by %s with TTL %d, want the primary with its own TTL", ip, ttl)
+	}
+}
+
+// Когда отказали все, последней надеждой основные всё равно идут раньше
+// резервных — и в cooldown, и после него.
+func TestFailedPrimaryStaysBeforeFailedFallback(t *testing.T) {
+	geo := &fakeUp{name: "geo"}
+	plain := &fakeUp{name: "plain"}
+	p := NewPicker([]Exchanger{geo}, plain)
+	now := time.Now()
+	p.now = func() time.Time { return now }
+	p.markDown(p.ups[1])
+	p.markDown(p.ups[0])
+	if o := p.ordered(); o[0].ex != geo {
+		t.Errorf("in cooldown: order[0] = %s, want the primary", o[0].ex.Address())
+	}
+	now = now.Add(2 * downCooldown)
+	if o := p.ordered(); o[0].ex != geo {
+		t.Errorf("after cooldown: order[0] = %s, want the primary", o[0].ex.Address())
 	}
 }

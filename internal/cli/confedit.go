@@ -29,24 +29,40 @@ func readConfLines(path string) ([]string, bool, error) {
 	return lines, true, sc.Err()
 }
 
-// isUpstreamLine распознаёт строку "upstream <url>" по тем же правилам,
-// что и config.Parse (первые два поля).
-func isUpstreamLine(line string) (string, bool) {
-	fields := strings.Fields(line)
-	if len(fields) >= 2 && fields[0] == "upstream" {
-		return fields[1], true
-	}
-	return "", false
+// confServer — DoQ-сервер из конфига: основной (upstream) или резервный
+// (fallback).
+type confServer struct {
+	URL      string
+	Fallback bool
 }
 
-func confUpstreams(lines []string) []string {
-	var ups []string
+func (c confServer) key() string {
+	if c.Fallback {
+		return "fallback"
+	}
+	return "upstream"
+}
+
+// serverLine распознаёт строку "upstream <url>" или "fallback <url>" по тем же
+// правилам, что и config.Parse (первые два поля).
+func serverLine(line string) (confServer, bool) {
+	fields := strings.Fields(line)
+	if len(fields) >= 2 && (fields[0] == "upstream" || fields[0] == "fallback") {
+		return confServer{URL: fields[1], Fallback: fields[0] == "fallback"}, true
+	}
+	return confServer{}, false
+}
+
+// confServers — все серверы в порядке строк конфига; по этому порядку
+// нумерует `doqd list` и выбирает `doqd remove`.
+func confServers(lines []string) []confServer {
+	var out []confServer
 	for _, l := range lines {
-		if u, ok := isUpstreamLine(l); ok {
-			ups = append(ups, u)
+		if s, ok := serverLine(l); ok {
+			out = append(out, s)
 		}
 	}
-	return ups
+	return out
 }
 
 // confBootstrap читает bootstrap-серверы прямо из строк конфига, чтобы пробы
@@ -77,57 +93,81 @@ func confListen(lines []string) string {
 	return config.Default().Listen
 }
 
-func addUpstream(lines []string, url string) ([]string, error) {
-	last := -1
+// addServer вставляет сервер после последней строки того же вида. Первый
+// резервный встаёт после последнего основного, первый основной — перед
+// первым резервным; если серверов нет вовсе — в конец.
+func addServer(lines []string, srv confServer) ([]string, error) {
+	same, anyLast, firstFallback := -1, -1, -1
 	for i, l := range lines {
-		u, ok := isUpstreamLine(l)
+		s, ok := serverLine(l)
 		if !ok {
 			continue
 		}
-		if u == url {
-			return nil, fmt.Errorf("upstream %s is already in the config", url)
+		if s.URL == srv.URL {
+			return nil, fmt.Errorf("%s is already in the config (as %s)", srv.URL, s.key())
 		}
-		last = i
+		if s.Fallback == srv.Fallback {
+			same = i
+		}
+		if s.Fallback && firstFallback == -1 {
+			firstFallback = i
+		}
+		anyLast = i
 	}
-	entry := "upstream " + url
+	at := len(lines) // индекс, перед которым вставить
+	switch {
+	case same != -1:
+		at = same + 1
+	case !srv.Fallback && firstFallback != -1:
+		at = firstFallback
+	case anyLast != -1:
+		at = anyLast + 1
+	}
 	out := make([]string, 0, len(lines)+1)
-	if last == -1 {
-		out = append(out, lines...)
-		return append(out, entry), nil
-	}
-	out = append(out, lines[:last+1]...)
-	out = append(out, entry)
-	return append(out, lines[last+1:]...), nil
+	out = append(out, lines[:at]...)
+	out = append(out, srv.key()+" "+srv.URL)
+	return append(out, lines[at:]...), nil
 }
 
-func removeUpstream(lines []string, sel string) ([]string, string, error) {
-	ups := confUpstreams(lines)
-	if len(ups) == 0 {
-		return nil, "", fmt.Errorf("no upstreams in the config")
+func removeServer(lines []string, sel string) ([]string, confServer, error) {
+	servers := confServers(lines)
+	if len(servers) == 0 {
+		return nil, confServer{}, fmt.Errorf("no upstreams in the config")
 	}
-	target := sel
+	var target confServer
 	if n, err := strconv.Atoi(sel); err == nil {
-		if n < 1 || n > len(ups) {
-			return nil, "", fmt.Errorf("no upstream #%d (config has %d)", n, len(ups))
+		if n < 1 || n > len(servers) {
+			return nil, confServer{}, fmt.Errorf("no upstream #%d (config has %d)", n, len(servers))
 		}
-		target = ups[n-1]
-	}
-	found := false
-	for _, u := range ups {
-		if u == target {
-			found = true
+		target = servers[n-1]
+	} else {
+		found := false
+		for _, s := range servers {
+			if s.URL == sel {
+				target, found = s, true
+				break
+			}
+		}
+		if !found {
+			return nil, confServer{}, fmt.Errorf("upstream %s not found in the config", sel)
 		}
 	}
-	if !found {
-		return nil, "", fmt.Errorf("upstream %s not found in the config", target)
-	}
-	if len(ups) == 1 {
-		return nil, "", fmt.Errorf("refusing to remove the last upstream — add another one first: doqd add quic://...")
+	if !target.Fallback {
+		primaries := 0
+		for _, s := range servers {
+			if !s.Fallback {
+				primaries++
+			}
+		}
+		if primaries == 1 {
+			return nil, confServer{}, fmt.Errorf("refusing to remove the last upstream — " +
+				"add another one first: doqd add quic://...")
+		}
 	}
 	var out []string
 	removed := false
 	for _, l := range lines {
-		if u, ok := isUpstreamLine(l); ok && u == target && !removed {
+		if s, ok := serverLine(l); ok && s.URL == target.URL && !removed {
 			removed = true
 			continue
 		}
@@ -167,6 +207,9 @@ func defaultConfLines() []string {
 	}
 	for _, u := range def.Upstreams {
 		lines = append(lines, "upstream "+u)
+	}
+	for _, u := range def.Fallbacks {
+		lines = append(lines, "fallback "+u)
 	}
 	for _, b := range def.Bootstrap {
 		lines = append(lines, "bootstrap "+b)

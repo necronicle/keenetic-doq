@@ -58,6 +58,13 @@ func runStatus(args []string) int {
 		fmt.Printf("                 (or use Web CLI at http://%s/a, or the Entware SSH session on port 222)\n", dialHost(host))
 	} else if strings.Contains(out, host) && (port == "" || strings.Contains(out, port)) {
 		fmt.Println("registration:    present in KeeneticOS name-servers")
+		if others := otherNameServers(out, host, port); len(others) > 0 {
+			fmt.Printf("other DNS:       %s\n", strings.Join(others, ", "))
+			fmt.Println("                 the router asks these alongside doqd and takes the fastest")
+			fmt.Println("                 answer, so a geo-blocked service may resolve to its real")
+			fmt.Println("                 address instead of the unblocking one. To send every query")
+			fmt.Println("                 through doqd, see the README FAQ on geo-blocked services.")
+		}
 	} else {
 		fmt.Printf("registration:    NOT found — add it: ip name-server %s\n", listen)
 		fmt.Printf("                 (router CLI, or Web CLI at http://%s/a if ndmc fails here)\n", dialHost(host))
@@ -112,4 +119,52 @@ func reportResolve(label, addr string) {
 	default:
 		fmt.Printf("%s NOERROR, %d ms\n", label, time.Since(start).Milliseconds())
 	}
+}
+
+// otherNameServers — серверы из `show ip name-server`, которые ndnproxy
+// спрашивает наравне с doqd: всё, кроме самого doqd и серверов, заведённых
+// только для своего домена.
+func otherNameServers(out, host, port string) []string {
+	type server struct{ address, port, domain, iface string }
+	var all []server
+	for _, line := range strings.Split(out, "\n") {
+		k, v, ok := strings.Cut(strings.TrimSpace(line), ":")
+		if !ok {
+			continue
+		}
+		v = strings.TrimSpace(v)
+		if k == "server" {
+			all = append(all, server{})
+			continue
+		}
+		if len(all) == 0 {
+			continue
+		}
+		cur := &all[len(all)-1]
+		switch k {
+		case "address":
+			cur.address = v
+		case "port":
+			cur.port = v
+		case "domain":
+			cur.domain = v
+		case "interface":
+			cur.iface = v
+		}
+	}
+	var others []string
+	for _, s := range all {
+		if s.address == "" || s.domain != "" || (s.address == host && s.port == port) {
+			continue
+		}
+		name := s.address
+		if s.port != "" {
+			name = net.JoinHostPort(s.address, s.port)
+		}
+		if s.iface != "" {
+			name += " (" + s.iface + ")"
+		}
+		others = append(others, name)
+	}
+	return others
 }

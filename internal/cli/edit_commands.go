@@ -12,9 +12,10 @@ func runAdd(args []string) int {
 	fs := flag.NewFlagSet("doqd add", flag.ExitOnError)
 	conf := fs.String("c", defaultConf, "path to config file")
 	force := fs.Bool("force", false, "add even if the live probe fails")
+	fallback := fs.Bool("fallback", false, "add as a fallback: asked only when every upstream has failed")
 	fs.Parse(args)
 	if fs.NArg() != 1 {
-		fmt.Fprintln(os.Stderr, "usage: doqd add [--force] quic://host[:port]")
+		fmt.Fprintln(os.Stderr, "usage: doqd add [--force] [--fallback] quic://host[:port]")
 		return 2
 	}
 	url := fs.Arg(0)
@@ -44,7 +45,8 @@ func runAdd(args []string) int {
 		lines = defaultConfLines()
 		fmt.Printf("config %s not found — creating it with defaults, review the listen address\n", *conf)
 	}
-	lines, err = addUpstream(lines, url)
+	srv := confServer{URL: url, Fallback: *fallback}
+	lines, err = addServer(lines, srv)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		return 1
@@ -53,7 +55,11 @@ func runAdd(args []string) int {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		return 1
 	}
-	fmt.Printf("added to %s (upstream #%d)\n", *conf, len(confUpstreams(lines)))
+	for i, s := range confServers(lines) {
+		if s.URL == url {
+			fmt.Printf("added to %s as %s #%d\n", *conf, srv.key(), i+1)
+		}
+	}
 	if err := restartDaemon(); err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		return 1
@@ -77,7 +83,7 @@ func runRemove(args []string) int {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		return 1
 	}
-	lines, removed, err := removeUpstream(lines, fs.Arg(0))
+	lines, removed, err := removeServer(lines, fs.Arg(0))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		return 1
@@ -86,7 +92,7 @@ func runRemove(args []string) int {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		return 1
 	}
-	fmt.Printf("removed %s\n", removed)
+	fmt.Printf("removed %s %s\n", removed.key(), removed.URL)
 	if err := restartDaemon(); err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		return 1

@@ -19,10 +19,16 @@ func runList(args []string) int {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		return 1
 	}
-	ups, listen := confUpstreams(lines), confListen(lines)
+	ups, listen := confServers(lines), confListen(lines)
 	if !exists {
 		def := config.Default()
-		ups, listen = def.Upstreams, def.Listen
+		ups, listen = nil, def.Listen
+		for _, u := range def.Upstreams {
+			ups = append(ups, confServer{URL: u})
+		}
+		for _, u := range def.Fallbacks {
+			ups = append(ups, confServer{URL: u, Fallback: true})
+		}
 		fmt.Printf("config %s not found — showing built-in defaults\n\n", *conf)
 	}
 
@@ -34,17 +40,25 @@ func runList(args []string) int {
 		go func(i int, u string) {
 			defer wg.Done()
 			results[i] = probe(u, boot, listProbeTimeout)
-		}(i, u)
+		}(i, u.URL)
 	}
 	wg.Wait()
 
 	fmt.Printf("UPSTREAMS (%s):\n", *conf)
+	fallbacks := false
 	for i, u := range ups {
-		if results[i].Err != nil {
-			fmt.Printf(" %d. %-42s down   (%v)\n", i+1, u, results[i].Err)
-		} else {
-			fmt.Printf(" %d. %-42s alive  rtt %d ms\n", i+1, u, results[i].RTT.Milliseconds())
+		tag := ""
+		if u.Fallback {
+			tag, fallbacks = "  [fallback]", true
 		}
+		if results[i].Err != nil {
+			fmt.Printf(" %d. %-42s down   (%v)%s\n", i+1, u.URL, results[i].Err, tag)
+		} else {
+			fmt.Printf(" %d. %-42s alive  rtt %d ms%s\n", i+1, u.URL, results[i].RTT.Milliseconds(), tag)
+		}
+	}
+	if fallbacks {
+		fmt.Println("\n[fallback] is asked only when every other upstream has failed.")
 	}
 
 	if h := bootstrapHint(results); h != "" {

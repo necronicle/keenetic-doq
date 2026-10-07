@@ -20,6 +20,12 @@ type Exchanger interface {
 
 const downCooldown = 30 * time.Second
 
+// fallbackMaxTTL — потолок TTL ответа резервного апстрима. Пока основные
+// лежат, имена, которые нужно резолвить через сервер обхода геоблокировок,
+// получают от резерва настоящие адреса; короткий TTL не даёт им застрять в
+// кешах после того, как основной вернулся.
+const fallbackMaxTTL = 60
+
 var (
 	// attemptTimeout — предел одной попытки. Без него зависший апстрим съедал
 	// весь бюджет запроса, и до живого очередь не доходила.
@@ -37,6 +43,7 @@ const (
 
 type upstreamState struct {
 	ex        Exchanger
+	fallback  bool          // резервный: спрашивается, только когда основные отказали
 	rtt       time.Duration // EWMA; 0 = замеров ещё не было
 	downUntil time.Time
 	// failed — последний исход был отказом. Такой апстрим стоит за здоровыми
@@ -53,17 +60,23 @@ type Picker struct {
 	attemptTimeout, unmeasuredHedge time.Duration
 }
 
-func NewPicker(ups []Exchanger) *Picker {
+// NewPicker собирает пул из основных апстримов ups и резервных fallbacks.
+func NewPicker(ups []Exchanger, fallbacks ...Exchanger) *Picker {
 	p := &Picker{now: time.Now, attemptTimeout: attemptTimeout, unmeasuredHedge: unmeasuredHedge}
 	for _, u := range ups {
 		p.ups = append(p.ups, &upstreamState{ex: u})
 	}
+	for _, u := range fallbacks {
+		p.ups = append(p.ups, &upstreamState{ex: u, fallback: true})
+	}
 	return p
 }
 
-// ordered: здоровые по возрастанию EWMA RTT (незамеренные, rtt=0, пробуются
-// рано), затем отказавшие, чей cooldown истёк, затем те, что в cooldown, —
-// последней надеждой.
+// ordered: здоровые, затем отказавшие, чей cooldown истёк, затем те, что в
+// cooldown, — последней надеждой. Внутри каждой группы основные идут раньше
+// резервных (в p.ups они и так идут первыми), здоровые — по возрастанию
+// EWMA RTT (незамеренные, rtt=0, пробуются рано). Здоровый резерв стоит раньше отказавшего основного: тот
+// вернётся вперёд, как только ответит фоновой проверке.
 func (p *Picker) ordered() []*upstreamState {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -79,7 +92,12 @@ func (p *Picker) ordered() []*upstreamState {
 			healthy = append(healthy, st)
 		}
 	}
-	sort.SliceStable(healthy, func(i, j int) bool { return healthy[i].rtt < healthy[j].rtt })
+	sort.SliceStable(healthy, func(i, j int) bool {
+		if healthy[i].fallback != healthy[j].fallback {
+			return !healthy[i].fallback
+		}
+		return healthy[i].rtt < healthy[j].rtt
+	})
 	return append(append(healthy, suspect...), down...)
 }
 
@@ -193,7 +211,9 @@ type attempt struct {
 
 // Exchange спрашивает апстримы по очереди с подстраховкой: если текущий не
 // ответил за hedgeDelay (или уже отказал), тот же запрос уходит следующему,
-// а первый ещё может успеть. Побеждает первый полезный ответ, остальные
+// а первый ещё может успеть. Резервный апстрим подстраховкой не запускается,
+// пока ждётся ответ основного: обогнав медленный сервер обхода геоблокировок,
+// он вернул бы для заблокированного сервиса настоящий адрес. Побеждает первый полезный ответ, остальные
 // отменяются. У каждой попытки свой предел attemptTimeout. Если в круге кто-то
 // не дождался ответа, а время у запроса есть, делается второй круг: мёртвое
 // соединение к этому моменту уже заменено.
@@ -241,13 +261,25 @@ func (p *Picker) round(parent context.Context, m *dns.Msg, soft **dns.Msg) (resp
 			out <- a
 		}()
 	}
+	// mayLaunch: резерв ждёт, пока не кончатся попытки основных.
+	mayLaunch := func(st *upstreamState) bool {
+		if !st.fallback {
+			return true
+		}
+		for r := range running {
+			if !r.fallback {
+				return false
+			}
+		}
+		return true
+	}
 	launch(order[0])
 	next, pending := 1, 1
 	timer := time.NewTimer(p.hedgeDelay(order[0]))
 	defer timer.Stop()
 	for {
 		var tick <-chan time.Time
-		if next < len(order) {
+		if next < len(order) && mayLaunch(order[next]) {
 			tick = timer.C
 		}
 		select {
@@ -267,6 +299,9 @@ func (p *Picker) round(parent context.Context, m *dns.Msg, soft **dns.Msg) (resp
 				for st, start := range softs {
 					p.markSlow(st, time.Since(start))
 				}
+				if a.st.fallback && p.hasPrimary() {
+					capTTL(a.resp, fallbackMaxTTL)
+				}
 				return a.resp, false, nil
 			case a.err == nil: // SERVFAIL/REFUSED: запомнить и спросить следующего
 				if *soft == nil {
@@ -283,7 +318,7 @@ func (p *Picker) round(parent context.Context, m *dns.Msg, soft **dns.Msg) (resp
 				slog.Warn("upstream failed", "upstream", a.st.ex.Address(), "err", a.err)
 				p.markDown(a.st)
 			}
-			if next < len(order) {
+			if next < len(order) && mayLaunch(order[next]) {
 				launch(order[next])
 				timer.Reset(p.hedgeDelay(order[next]))
 				next++
@@ -301,6 +336,27 @@ func (p *Picker) round(parent context.Context, m *dns.Msg, soft **dns.Msg) (resp
 				lastErr = parent.Err()
 			}
 			return nil, timedOut, lastErr
+		}
+	}
+}
+
+// hasPrimary: есть ли основные апстримы — без них резервный и есть основной.
+func (p *Picker) hasPrimary() bool {
+	for _, st := range p.ups {
+		if !st.fallback {
+			return true
+		}
+	}
+	return false
+}
+
+// capTTL ограничивает TTL всех записей ответа сверху.
+func capTTL(m *dns.Msg, maxTTL uint32) {
+	for _, sec := range [][]dns.RR{m.Answer, m.Ns, m.Extra} {
+		for _, rr := range sec {
+			if h := rr.Header(); h.Rrtype != dns.TypeOPT && h.Ttl > maxTTL {
+				h.Ttl = maxTTL
+			}
 		}
 	}
 }

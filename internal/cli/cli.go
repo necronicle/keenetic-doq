@@ -42,6 +42,8 @@ Management commands:
   doqd list                       upstreams from the config with live probes
   doqd test quic://host[:port]    probe any DoQ server, config untouched
   doqd add [--force] quic://...   probe, add to config, restart the daemon
+  doqd add --fallback quic://...  same, as a fallback: asked only when every
+                                  other upstream has failed
   doqd remove <number|url>        remove an upstream, restart the daemon
   doqd status                     daemon, registration and resolve check
 

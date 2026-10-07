@@ -22,7 +22,7 @@ func TestRunAddRejectsBadURL(t *testing.T) {
 		t.Fatalf("add bad url = %d, want 1", got)
 	}
 	lines, _, _ := readConfLines(path)
-	if len(confUpstreams(lines)) != 2 {
+	if len(confServers(lines)) != 2 {
 		t.Fatal("config must be untouched")
 	}
 }
@@ -33,8 +33,8 @@ func TestRunRemoveByNumber(t *testing.T) {
 		t.Fatalf("remove = %d, want 0", got)
 	}
 	lines, _, _ := readConfLines(path)
-	ups := confUpstreams(lines)
-	if len(ups) != 1 || ups[0] != "quic://dns.comss.one" {
+	ups := confServers(lines)
+	if len(ups) != 1 || ups[0].URL != "quic://dns.comss.one" {
 		t.Fatalf("wrong config after remove: %v", ups)
 	}
 }

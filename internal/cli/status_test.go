@@ -37,3 +37,47 @@ func TestHostOnInterfaces(t *testing.T) {
 		}
 	}
 }
+
+// Вывод `show ip name-server` с тест-роутера: doqd плюс DNS провайдера,
+// пришедшие по PPPoE. Их ndnproxy спрашивает наравне с doqd.
+const showNameServers = `
+           server: 
+              address: 192.168.1.1
+                 port: 5354
+               domain: 
+               global: 0
+              service: Dns::Manager
+            interface: 
+
+           server: 
+              address: 88.87.64.6
+               domain: 
+               global: 32767
+              service: Network::Interface::Ppp-PPPoE0
+            interface: PPPoE0
+
+           server: 
+              address: 10.0.0.53
+               domain: corp.example
+               global: 0
+            interface: 
+
+           server: 
+              address: 5.3.3.3
+               domain: 
+               global: 32767
+              service: Network::Interface::Ppp-PPPoE0
+            interface: PPPoE0
+`
+
+func TestOtherNameServers(t *testing.T) {
+	got := otherNameServers(showNameServers, "192.168.1.1", "5354")
+	want := []string{"88.87.64.6 (PPPoE0)", "5.3.3.3 (PPPoE0)"}
+	if len(got) != len(want) || got[0] != want[0] || got[1] != want[1] {
+		t.Fatalf("otherNameServers = %q, want %q", got, want)
+	}
+	only := "server:\n address: 192.168.1.1\n port: 5354\n domain: \n"
+	if got := otherNameServers(only, "192.168.1.1", "5354"); len(got) != 0 {
+		t.Fatalf("doqd alone: got %q", got)
+	}
+}
