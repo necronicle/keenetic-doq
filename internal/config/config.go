@@ -33,7 +33,9 @@ func Default() *Config {
 		// Серверы обхода геоблокировок: для заблокированных по геолокации
 		// сервисов они отдают адреса своих прокси.
 		Upstreams: []string{"quic://dns.comss.one", "quic://geohide.ru", "quic://dns.dns-ai.ru"},
-		Fallbacks: []string{"quic://dns.quad9.net"},
+		// Резерв — обычные резолверы без фильтрации из разных сетей: Quad9
+		// и ControlD. AdGuard сюда не годится — его режет ТСПУ.
+		Fallbacks: []string{"quic://dns.quad9.net", "quic://p0.freedns.controld.com"},
 		Bootstrap: append([]string(nil), upstream.DefaultBootstrapServers...),
 		CacheSize: 4096,
 		MinTTL:    60 * time.Second,

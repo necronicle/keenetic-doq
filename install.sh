@@ -88,11 +88,11 @@ chmod 755 "$BIN.new"
 [ -x "$INIT" ] && "$INIT" stop >/dev/null 2>&1 || true
 mv "$BIN.new" "$BIN"
 
-# 0.3.4: Quad9 turns into a fallback. Before, queries went to whichever
-# upstream answered first, and Quad9 regularly overtook comss with the real
-# address of a geo-blocked service. A config still holding the old built-in
-# pair also gets the other two unblocking servers. Configs that already use
-# `fallback`, or where Quad9 is the only upstream, are left alone.
+# 0.3.4: Quad9 turns into a fallback, joined by ControlD. Before, queries went
+# to whichever upstream answered first, and Quad9 regularly overtook comss with
+# the real address of a geo-blocked service. A config still holding the old
+# built-in pair also gets the other two unblocking servers. Configs that
+# already use `fallback`, or where Quad9 is the only upstream, are left alone.
 migrate_conf() {
     grep -q '^fallback[[:space:]]' "$CONF" && return 0
     grep -qx 'upstream quic://dns.quad9.net' "$CONF" || return 0
@@ -101,12 +101,15 @@ migrate_conf() {
     add=no
     [ "$n" -eq 2 ] && grep -qx 'upstream quic://dns.comss.one' "$CONF" && add=yes
     last=$(grep -n '^upstream[[:space:]]' "$CONF" | tail -n 1 | cut -d: -f1)
-    awk -v last="$last" -v add="$add" '
+    controld=yes
+    grep -q '^upstream[[:space:]]*quic://p0.freedns.controld.com[[:space:]]*$' "$CONF" && controld=no
+    awk -v last="$last" -v add="$add" -v controld="$controld" '
         function fallback() {
             print ""
-            print "# Fallback: asked only when every upstream above has failed. It returns real"
-            print "# addresses, so it must never overtake them. Add with: doqd add --fallback"
+            print "# Fallbacks: asked only when every upstream above has failed. They return real"
+            print "# addresses, so they must never overtake them. Add with: doqd add --fallback"
             print "fallback quic://dns.quad9.net"
+            if (controld == "yes") print "fallback quic://p0.freedns.controld.com"
         }
         /^# DoQ upstreams, in order of preference/ || /^# DoQ-апстримы, в порядке предпочтения/ {
             print "# DoQ upstreams: queries go to the fastest live one. Manage with: doqd add / doqd remove"
@@ -121,6 +124,7 @@ migrate_conf() {
         NR == last { fallback() }
     ' "$CONF" > "$CONF.new" && mv "$CONF.new" "$CONF" || { rm -f "$CONF.new"; return 1; }
     log "config: quic://dns.quad9.net is now a fallback (asked only when the others fail)"
+    [ "$controld" = yes ] && log "config: added fallback quic://p0.freedns.controld.com"
     [ "$add" = yes ] && log "config: added upstreams quic://geohide.ru and quic://dns.dns-ai.ru"
     return 0
 }
@@ -139,9 +143,10 @@ upstream quic://dns.comss.one
 upstream quic://geohide.ru
 upstream quic://dns.dns-ai.ru
 
-# Fallback: asked only when every upstream above has failed. It returns real
-# addresses, so it must never overtake them. Add with: doqd add --fallback
+# Fallbacks: asked only when every upstream above has failed. They return real
+# addresses, so they must never overtake them. Add with: doqd add --fallback
 fallback quic://dns.quad9.net
+fallback quic://p0.freedns.controld.com
 
 # Plain-DNS servers used ONLY to resolve the upstream names above. They must
 # be external: any DNS on the router itself is the router's own proxy, which

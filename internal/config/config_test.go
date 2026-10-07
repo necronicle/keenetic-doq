@@ -14,7 +14,8 @@ func TestDefault(t *testing.T) {
 	if len(c.Upstreams) != 3 || c.Upstreams[0] != "quic://dns.comss.one" {
 		t.Errorf("Upstreams = %v", c.Upstreams)
 	}
-	if len(c.Fallbacks) != 1 || c.Fallbacks[0] != "quic://dns.quad9.net" {
+	if len(c.Fallbacks) != 2 || c.Fallbacks[0] != "quic://dns.quad9.net" ||
+		c.Fallbacks[1] != "quic://p0.freedns.controld.com" {
 		t.Errorf("Fallbacks = %v", c.Fallbacks)
 	}
 	if c.CacheSize != 4096 || c.MinTTL != 60*time.Second || c.MaxTTL != 24*time.Hour || c.LogLevel != "info" {
