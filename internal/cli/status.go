@@ -94,10 +94,14 @@ func dialHost(host string) string {
 	return host
 }
 
+// statusResolveTimeout — столько же, сколько демон даёт одному запросу: на
+// холодном старте ему может понадобиться дозвон.
+const statusResolveTimeout = 10 * time.Second
+
 func reportResolve(label, addr string) {
 	m := new(dns.Msg)
 	m.SetQuestion(probeName, dns.TypeA)
-	c := &dns.Client{Timeout: probeTimeout}
+	c := &dns.Client{Timeout: statusResolveTimeout}
 	start := time.Now()
 	resp, _, err := c.Exchange(m, addr)
 	switch {

@@ -33,7 +33,7 @@ func runList(args []string) int {
 		wg.Add(1)
 		go func(i int, u string) {
 			defer wg.Done()
-			results[i] = probe(u, boot)
+			results[i] = probe(u, boot, listProbeTimeout)
 		}(i, u)
 	}
 	wg.Wait()
