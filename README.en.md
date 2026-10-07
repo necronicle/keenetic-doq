@@ -125,7 +125,7 @@ resolve via :53:  NOERROR, 40 ms
 |---|---|---|
 | `listen` | `<LAN-IP>:5354` | listener address:port (UDP+TCP) |
 | `upstream` | `quic://dns.comss.one`, `quic://dns.quad9.net` | DoQ upstream, one line per server; the first line overrides the built-in defaults |
-| `bootstrap` | `77.88.8.8`, `8.8.8.8`, `1.1.1.1` | plain DNS servers used to resolve the upstream names; IPs only, tried in order |
+| `bootstrap` | `77.88.8.8`, `77.88.8.8:1253`, `8.8.8.8`, `1.1.1.1` | plain DNS servers used to resolve the upstream names; IPs only (a port may be given). All are asked at once, a server silent over UDP is retried over TCP; the answer is cached for its TTL |
 | `cache_size` | `4096` | max cache entries |
 | `min_ttl` / `max_ttl` | `60` / `86400` | cache TTL bounds, seconds |
 | `log` | `info` | debug / info / warn / error |
@@ -231,6 +231,19 @@ re-register it with `ip name-server <new-address>:5354`.
 
 **Why the LAN address and not 127.0.0.1?** KeeneticOS rejects loopback in
 `ip name-server` (`Dns::Manager: invalid IP address`).
+
+**`doqd list` shows an upstream down with `bootstrap lookup ...: no
+bootstrap server answered`.** The DoQ server itself may be perfectly fine:
+doqd could not learn its address. None of the bootstrap servers answered a
+plain DNS query for that upstream's name, over UDP or TCP. If other upstreams
+are alive, your ISP is almost certainly dropping port-53 DNS queries for the
+names of censorship-bypass services. A bootstrap server on another port
+helps — Yandex DNS also listens on 1253. New installs already have it; in an
+older config add `bootstrap 77.88.8.8:1253` to `/opt/etc/doqd.conf` and run
+`/opt/etc/init.d/S56doqd restart`. To check by hand: `nslookup <name>
+77.88.8.8` stays silent, while `doqd test quic://<name>` answers after the
+change. Before 0.3.2 the error in this situation named the last server in the
+list (`1.1.1.1:53: dial udp ... i/o timeout`), which had nothing to do with it.
 
 **I added a server and it shows down.** `doqd list` shows liveness and RTT
 for every upstream; `doqd remove <number>` drops the bad one. `doqd add`

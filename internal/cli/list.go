@@ -47,6 +47,10 @@ func runList(args []string) int {
 		}
 	}
 
+	if h := bootstrapHint(results); h != "" {
+		fmt.Printf("\n%s\n", h)
+	}
+
 	state := "not running"
 	if pid := daemonPID(); pid > 0 {
 		state = fmt.Sprintf("running (pid %d)", pid)

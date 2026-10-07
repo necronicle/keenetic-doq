@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -42,6 +43,21 @@ func probe(rawURL string, boot []string) probeResult {
 	return probeResult{RTT: time.Since(start)}
 }
 
+// bootstrapHint — подсказка, когда имя апстрима не нашлось: ни один bootstrap-
+// сервер не дал ответа. Типичная причина — провайдер выбрасывает DNS-запросы
+// на 53-й порт с именами сервисов обхода блокировок.
+func bootstrapHint(results []probeResult) string {
+	for _, r := range results {
+		if errors.Is(r.Err, upstream.ErrBootstrapNoAnswer) {
+			return "hint: no bootstrap server resolved the upstream name, the DoQ server itself\n" +
+				"was never contacted. If your ISP filters DNS on port 53, the bootstrap list in\n" +
+				defaultConf + " needs a server on another port, e.g. \"bootstrap 77.88.8.8:1253\"\n" +
+				"(Yandex DNS); after editing: /opt/etc/init.d/S56doqd restart"
+		}
+	}
+	return ""
+}
+
 // bootstrapFor достаёт bootstrap-серверы из конфига; нет конфига — дефолты.
 func bootstrapFor(conf string) []string {
 	lines, exists, err := readConfLines(conf)
@@ -68,6 +84,9 @@ func runTest(args []string) int {
 	if r.Err != nil {
 		fmt.Println("FAIL")
 		fmt.Fprintln(os.Stderr, "error:", r.Err)
+		if h := bootstrapHint([]probeResult{r}); h != "" {
+			fmt.Fprintln(os.Stderr, h)
+		}
 		return 1
 	}
 	fmt.Printf("OK — answered in %d ms\n", r.RTT.Milliseconds())

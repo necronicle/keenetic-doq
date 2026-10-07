@@ -150,10 +150,12 @@ func (u *DoQ) Exchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
 	}
 	var lastErr error
 	for attempt := 0; attempt < 2; attempt++ {
+		// Повтор нужен, когда умерло переиспользуемое соединение. Не нашёлся
+		// адрес или не удался дозвон — повторять нечего, а второй заход на
+		// исчерпанном контексте лишь подменил бы настоящую причину.
 		conn, err := u.getConn(ctx)
 		if err != nil {
-			lastErr = err
-			continue
+			return nil, err
 		}
 		resp, err := exchangeOnConn(ctx, conn, payload)
 		if err != nil {

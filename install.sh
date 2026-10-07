@@ -101,7 +101,11 @@ upstream quic://dns.quad9.net
 # Plain-DNS servers used ONLY to resolve the upstream names above. They must
 # be external: any DNS on the router itself is the router's own proxy, which
 # forwards to doqd — asking it would mean asking ourselves.
+# All are asked at once; a server silent over UDP is retried over TCP.
+# 77.88.8.8:1253 is Yandex DNS on a non-standard port, for ISPs that drop
+# port-53 queries for some names.
 bootstrap 77.88.8.8
+bootstrap 77.88.8.8:1253
 bootstrap 8.8.8.8
 bootstrap 1.1.1.1
 

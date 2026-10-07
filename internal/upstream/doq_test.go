@@ -12,6 +12,7 @@ import (
 	"io"
 	"math/big"
 	"net"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -179,12 +180,34 @@ func TestNewDoQParse(t *testing.T) {
 
 type fakeBootstrap struct {
 	ip    net.IP
+	err   error
 	calls int
 }
 
 func (f *fakeBootstrap) LookupIP(ctx context.Context, host string) (net.IP, error) {
 	f.calls++
-	return f.ip, nil
+	return f.ip, f.err
+}
+
+// Повтор в Exchange — для умершего переиспользуемого соединения. Если адрес не
+// нашёлся, повторять нечего: второй заход лишь перетирал настоящую ошибку
+// мгновенной "dial udp ...: i/o timeout" на исчерпанном контексте.
+func TestExchangeDoesNotRetryFailedBootstrap(t *testing.T) {
+	u, err := NewDoQ("quic://dns.example.test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	boot := &fakeBootstrap{err: errors.New("the real cause")}
+	u.SetBootstrap(boot)
+	q := new(dns.Msg)
+	q.SetQuestion("example.com.", dns.TypeA)
+	_, err = u.Exchange(context.Background(), q)
+	if err == nil || !strings.Contains(err.Error(), "the real cause") {
+		t.Errorf("err = %v, want the bootstrap error", err)
+	}
+	if boot.calls != 1 {
+		t.Errorf("bootstrap calls = %d, want 1", boot.calls)
+	}
 }
 
 // Ключевой инвариант: quic-дозвон получает IP-литерал, а не имя. Иначе адрес
