@@ -3,7 +3,7 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версии — [SemVer](https://semver.org/lang/ru/).
 
-## [Unreleased]
+## [0.3.2] — 2026-10-07
 
 ### Fixed
 - **Ложный виновник в `doqd list`.** Когда у пользователя не резолвились имена
