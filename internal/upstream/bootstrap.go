@@ -37,9 +37,9 @@ const (
 // провайдер.
 var ErrBootstrapNoAnswer = errors.New("no bootstrap server answered")
 
-// Bootstrap резолвит имя DoQ-апстрима в IP.
+// Bootstrap резолвит имя DoQ-апстрима во все его IPv4-адреса.
 type Bootstrap interface {
-	LookupIP(ctx context.Context, host string) (net.IP, error)
+	LookupIPs(ctx context.Context, host string) ([]net.IP, error)
 }
 
 // PlainDNS спрашивает обычным DNS явно заданные серверы — в обход системного
@@ -49,50 +49,101 @@ type Bootstrap interface {
 type PlainDNS struct {
 	Servers []string
 
-	mu    sync.Mutex
-	cache map[string]cachedIP
+	// Тайминги копируются при создании: фоновые обновления переживают вызовы.
+	timeout, tcpDelay time.Duration
+
+	mu         sync.Mutex
+	cache      map[string]cachedIPs
+	refreshing map[string]bool
 }
 
-type cachedIP struct {
-	ip    net.IP
+type cachedIPs struct {
+	ips   []net.IP
 	until time.Time
+}
+
+// Resolution — чем закончился поиск адресов: для `doqd test`, которому важно
+// показать, откуда взялся адрес.
+type Resolution struct {
+	IPs    []net.IP
+	Server string // кто ответил; пусто, если адреса из кеша
+	Proto  string // udp | tcp
+	Took   time.Duration
+	Cached bool // ответ из кеша (Stale — уже просроченного)
+	Stale  bool
 }
 
 func NewBootstrap(servers []string) *PlainDNS {
 	if len(servers) == 0 {
 		servers = DefaultBootstrapServers
 	}
-	return &PlainDNS{Servers: servers}
+	return &PlainDNS{Servers: servers, timeout: bootstrapTimeout, tcpDelay: tcpFallbackDelay}
 }
 
-// LookupIP отдаёт адрес из кеша, пока не истёк TTL, иначе спрашивает серверы.
-// Если никто не ответил, а адрес уже был известен, возвращает его: подмена тут
-// ничего не даёт — сертификат апстрима всё равно проверяется по имени.
-func (b *PlainDNS) LookupIP(ctx context.Context, host string) (net.IP, error) {
+func (b *PlainDNS) LookupIPs(ctx context.Context, host string) ([]net.IP, error) {
+	r, err := b.Resolve(ctx, host)
+	return r.IPs, err
+}
+
+// Resolve отдаёт адреса из кеша, пока не истёк TTL. Просроченные адреса
+// отдаются сразу, а обновляются в фоне: если bootstrap режет DPI, ожидание
+// стоило бы 3 с на каждом переподключении. Подмена тут ничего не даёт —
+// сертификат апстрима всё равно проверяется по имени. Спрашивать серверы и
+// ждать ответа приходится, только когда адресов ещё нет.
+func (b *PlainDNS) Resolve(ctx context.Context, host string) (Resolution, error) {
 	if ip := net.ParseIP(host); ip != nil {
-		return ip, nil
+		return Resolution{IPs: []net.IP{ip}}, nil
 	}
 	b.mu.Lock()
 	c, known := b.cache[host]
 	b.mu.Unlock()
 	if known && time.Now().Before(c.until) {
-		return c.ip, nil
+		return Resolution{IPs: c.ips, Cached: true}, nil
 	}
-	ip, ttl, err := b.query(ctx, host)
+	if known {
+		b.refreshInBackground(host)
+		return Resolution{IPs: c.ips, Cached: true, Stale: true}, nil
+	}
+	a, took, err := b.query(ctx, host)
 	if err != nil {
-		if known {
-			return c.ip, nil
-		}
-		return nil, err
+		return Resolution{Took: took}, err
 	}
-	ttl = min(max(ttl, minBootstrapTTL), maxBootstrapTTL)
+	b.store(host, a)
+	return Resolution{IPs: a.ips, Server: a.server, Proto: a.proto, Took: took}, nil
+}
+
+func (b *PlainDNS) store(host string, a bootAnswer) {
+	ttl := min(max(a.ttl, minBootstrapTTL), maxBootstrapTTL)
 	b.mu.Lock()
+	defer b.mu.Unlock()
 	if b.cache == nil {
-		b.cache = map[string]cachedIP{}
+		b.cache = map[string]cachedIPs{}
 	}
-	b.cache[host] = cachedIP{ip: ip, until: time.Now().Add(ttl)}
+	b.cache[host] = cachedIPs{ips: a.ips, until: time.Now().Add(ttl)}
+}
+
+// refreshInBackground обновляет адреса имени, не задерживая вызвавшего;
+// одновременно — не больше одного обновления на имя.
+func (b *PlainDNS) refreshInBackground(host string) {
+	b.mu.Lock()
+	if b.refreshing == nil {
+		b.refreshing = map[string]bool{}
+	}
+	if b.refreshing[host] {
+		b.mu.Unlock()
+		return
+	}
+	b.refreshing[host] = true
 	b.mu.Unlock()
-	return ip, nil
+	go func() {
+		a, _, err := b.query(context.Background(), host)
+		if err == nil {
+			b.store(host, a)
+		}
+		b.mu.Lock()
+		delete(b.refreshing, host)
+		b.mu.Unlock()
+	}()
 }
 
 // expireCache помечает все адреса устаревшими (для тестов).
@@ -107,16 +158,18 @@ func (b *PlainDNS) expireCache() {
 
 type bootAnswer struct {
 	server, proto string
-	ip            net.IP
+	ips           []net.IP
 	ttl           time.Duration
 	err           error
 }
 
 // query спрашивает все серверы параллельно — молчащий сервер не съедает время
-// остальных — и берёт первый ответ с A-записью.
-func (b *PlainDNS) query(ctx context.Context, host string) (net.IP, time.Duration, error) {
-	// Тайминги читаются один раз: горутины переживают этот вызов.
-	timeout, tcpDelay := bootstrapTimeout, tcpFallbackDelay
+// остальных — и берёт первый ответ с A-записями.
+func (b *PlainDNS) query(ctx context.Context, host string) (bootAnswer, time.Duration, error) {
+	timeout, tcpDelay := b.timeout, b.tcpDelay
+	if timeout == 0 { // PlainDNS собран литералом, без NewBootstrap
+		timeout, tcpDelay = bootstrapTimeout, tcpFallbackDelay
+	}
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	start := time.Now()
@@ -130,11 +183,12 @@ func (b *PlainDNS) query(ctx context.Context, host string) (net.IP, time.Duratio
 	for range 2 * len(b.Servers) {
 		a := <-out
 		if a.err == nil {
-			return a.ip, a.ttl, nil
+			return a, time.Since(start), nil
 		}
 		failed = append(failed, a)
 	}
-	return nil, 0, bootstrapError(host, b.Servers, failed, time.Since(start))
+	took := time.Since(start)
+	return bootAnswer{}, took, bootstrapError(host, b.Servers, failed, took)
 }
 
 // askServer спрашивает сервер по UDP, а если за tcpDelay ответа нет
@@ -177,11 +231,16 @@ func exchangePlain(ctx context.Context, proto, server, host string, timeout time
 	}
 	for _, rr := range resp.Answer {
 		if rec, ok := rr.(*dns.A); ok {
-			a.ip, a.ttl = rec.A, time.Duration(rec.Hdr.Ttl)*time.Second
-			return a
+			ttl := time.Duration(rec.Hdr.Ttl) * time.Second
+			if len(a.ips) == 0 || ttl < a.ttl {
+				a.ttl = ttl
+			}
+			a.ips = append(a.ips, rec.A)
 		}
 	}
-	a.err = errors.New("no A record")
+	if len(a.ips) == 0 {
+		a.err = errors.New("no A record")
+	}
 	return a
 }
 

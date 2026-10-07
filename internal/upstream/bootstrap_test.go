@@ -12,7 +12,8 @@ import (
 	"github.com/miekg/dns"
 )
 
-// startTestDNS поднимает обычный UDP DNS-сервер, отвечающий одним A.
+// startTestDNS поднимает обычный UDP DNS-сервер; ip — один адрес или
+// несколько через запятую.
 func startTestDNS(t *testing.T, ip string) string {
 	t.Helper()
 	pc, err := net.ListenPacket("udp", "127.0.0.1:0")
@@ -23,8 +24,10 @@ func startTestDNS(t *testing.T, ip string) string {
 	mux.HandleFunc(".", func(w dns.ResponseWriter, q *dns.Msg) {
 		resp := new(dns.Msg)
 		resp.SetReply(q)
-		rr, _ := dns.NewRR(q.Question[0].Name + " 300 IN A " + ip)
-		resp.Answer = append(resp.Answer, rr)
+		for _, one := range strings.Split(ip, ",") {
+			rr, _ := dns.NewRR(q.Question[0].Name + " 300 IN A " + one)
+			resp.Answer = append(resp.Answer, rr)
+		}
 		w.WriteMsg(resp)
 	})
 	srv := &dns.Server{PacketConn: pc, Handler: mux}
@@ -104,11 +107,11 @@ func fastTimers(t *testing.T) {
 func TestBootstrapLookupUsesConfiguredServer(t *testing.T) {
 	addr := startTestDNS(t, "203.0.113.9")
 	b := NewBootstrap([]string{addr})
-	ip, err := b.LookupIP(context.Background(), "dns.example.test")
+	ips, err := b.LookupIPs(context.Background(), "dns.example.test")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !ip.Equal(net.ParseIP("203.0.113.9")) {
+	if ip := ips[0]; !ip.Equal(net.ParseIP("203.0.113.9")) {
 		t.Errorf("ip = %v, want 203.0.113.9", ip)
 	}
 }
@@ -118,11 +121,11 @@ func TestBootstrapFailsOverToNextServer(t *testing.T) {
 	b := NewBootstrap([]string{"127.0.0.1:1", live})
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	ip, err := b.LookupIP(ctx, "dns.example.test")
+	ips, err := b.LookupIPs(ctx, "dns.example.test")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !ip.Equal(net.ParseIP("203.0.113.10")) {
+	if ip := ips[0]; !ip.Equal(net.ParseIP("203.0.113.10")) {
 		t.Errorf("ip = %v, want 203.0.113.10", ip)
 	}
 }
@@ -131,7 +134,7 @@ func TestBootstrapErrorsWhenAllServersFail(t *testing.T) {
 	b := NewBootstrap([]string{"127.0.0.1:1"})
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	if _, err := b.LookupIP(ctx, "dns.example.test"); err == nil {
+	if _, err := b.LookupIPs(ctx, "dns.example.test"); err == nil {
 		t.Error("want error when no bootstrap server answers")
 	}
 }
@@ -143,12 +146,12 @@ func TestBootstrapSilentServerDoesNotDelayOthers(t *testing.T) {
 	live := startTestDNS(t, "203.0.113.11")
 	b := NewBootstrap([]string{startSilentUDP(t), startSilentUDP(t), live})
 	start := time.Now()
-	ip, err := b.LookupIP(context.Background(), "dns.example.test")
+	ips, err := b.LookupIPs(context.Background(), "dns.example.test")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !ip.Equal(net.ParseIP("203.0.113.11")) {
-		t.Errorf("ip = %v, want 203.0.113.11", ip)
+	if ip := ips[0]; !ip.Equal(net.ParseIP("203.0.113.11")) {
+		t.Errorf("ips = %v, want 203.0.113.11", ips)
 	}
 	if d := time.Since(start); d > bootstrapTimeout/2 {
 		t.Errorf("lookup took %v: silent servers were waited out one by one", d)
@@ -159,11 +162,11 @@ func TestBootstrapSilentServerDoesNotDelayOthers(t *testing.T) {
 func TestBootstrapFallsBackToTCP(t *testing.T) {
 	fastTimers(t)
 	b := NewBootstrap([]string{startTCPOnlyDNS(t, "203.0.113.12")})
-	ip, err := b.LookupIP(context.Background(), "dns.example.test")
+	ips, err := b.LookupIPs(context.Background(), "dns.example.test")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !ip.Equal(net.ParseIP("203.0.113.12")) {
+	if ip := ips[0]; !ip.Equal(net.ParseIP("203.0.113.12")) {
 		t.Errorf("ip = %v, want 203.0.113.12", ip)
 	}
 }
@@ -175,7 +178,7 @@ func TestBootstrapErrorNamesEveryServer(t *testing.T) {
 	fastTimers(t)
 	a, b2 := startSilentUDP(t), startSilentUDP(t)
 	b := NewBootstrap([]string{a, b2})
-	_, err := b.LookupIP(context.Background(), "dns.example.test")
+	_, err := b.LookupIPs(context.Background(), "dns.example.test")
 	if err == nil {
 		t.Fatal("want error")
 	}
@@ -224,7 +227,7 @@ func TestBootstrapCachesWithinTTL(t *testing.T) {
 	addr, queries, _ := startCountingDNS(t, "203.0.113.13", "300")
 	b := NewBootstrap([]string{addr})
 	for i := 0; i < 3; i++ {
-		if _, err := b.LookupIP(context.Background(), "dns.example.test"); err != nil {
+		if _, err := b.LookupIPs(context.Background(), "dns.example.test"); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -239,17 +242,79 @@ func TestBootstrapFallsBackToLastKnownIP(t *testing.T) {
 	fastTimers(t)
 	addr, _, mute := startCountingDNS(t, "203.0.113.14", "300")
 	b := NewBootstrap([]string{addr})
-	if _, err := b.LookupIP(context.Background(), "dns.example.test"); err != nil {
+	if _, err := b.LookupIPs(context.Background(), "dns.example.test"); err != nil {
 		t.Fatal(err)
 	}
 	mute()
 	b.expireCache() // TTL истёк — надо спрашивать заново
-	ip, err := b.LookupIP(context.Background(), "dns.example.test")
+	ips, err := b.LookupIPs(context.Background(), "dns.example.test")
 	if err != nil {
 		t.Fatalf("want last known IP, got error %v", err)
 	}
-	if !ip.Equal(net.ParseIP("203.0.113.14")) {
+	if ip := ips[0]; !ip.Equal(net.ParseIP("203.0.113.14")) {
 		t.Errorf("ip = %v, want the last known 203.0.113.14", ip)
+	}
+}
+
+// Апстрим может жить на нескольких адресах, и часть из них бывает мертва:
+// bootstrap отдаёт все, дозвон сам выбирает живой.
+func TestBootstrapReturnsAllAddresses(t *testing.T) {
+	b := NewBootstrap([]string{startTestDNS(t, "203.0.113.21,203.0.113.22,203.0.113.23")})
+	ips, err := b.LookupIPs(context.Background(), "dns.example.test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ips) != 3 {
+		t.Fatalf("ips = %v, want all three", ips)
+	}
+}
+
+// doqd test показывает, кто и как ответил — для этого Resolve отдаёт источник.
+func TestBootstrapResolveReportsSource(t *testing.T) {
+	fastTimers(t)
+	addr := startTCPOnlyDNS(t, "203.0.113.24")
+	b := NewBootstrap([]string{addr})
+	r, err := b.Resolve(context.Background(), "dns.example.test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.Server != addr || r.Proto != "tcp" || r.Cached {
+		t.Errorf("resolution = %+v, want %s over tcp, not cached", r, addr)
+	}
+	r, _ = b.Resolve(context.Background(), "dns.example.test")
+	if !r.Cached {
+		t.Errorf("second resolution = %+v, want cached", r)
+	}
+}
+
+// Адреса просрочены, а bootstrap молчит (DPI): старые адреса отдаются сразу,
+// а не после 3 с ожидания на каждом переподключении. Обновление идёт в фоне.
+func TestBootstrapServesExpiredAddressesWithoutWaiting(t *testing.T) {
+	fastTimers(t)
+	addr, queries, mute := startCountingDNS(t, "203.0.113.15", "300")
+	b := NewBootstrap([]string{addr})
+	if _, err := b.LookupIPs(context.Background(), "dns.example.test"); err != nil {
+		t.Fatal(err)
+	}
+	mute()
+	b.expireCache()
+	start := time.Now()
+	r, err := b.Resolve(context.Background(), "dns.example.test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d := time.Since(start); d > 50*time.Millisecond {
+		t.Errorf("expired addresses returned after %v, want at once", d)
+	}
+	if !r.Stale || !r.IPs[0].Equal(net.ParseIP("203.0.113.15")) {
+		t.Errorf("resolution = %+v, want the stale address", r)
+	}
+	deadline := time.Now().Add(time.Second)
+	for queries.Load() < 2 && time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
+	}
+	if queries.Load() < 2 {
+		t.Error("no background refresh after serving expired addresses")
 	}
 }
 
