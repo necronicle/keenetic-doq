@@ -57,6 +57,16 @@ func (s *Server) handle(w dns.ResponseWriter, req *dns.Msg) {
 		w.WriteMsg(fail)
 		return
 	}
+	if _, udp := w.RemoteAddr().(*net.UDPAddr); udp {
+		// DoQ размер ответа не ограничивает, а UDP-клиент заявил свой буфер
+		// (без EDNS — 512 байт). Лишнее срезается с флагом TC, и клиент
+		// переспросит по TCP.
+		size := dns.MinMsgSize
+		if opt := req.IsEdns0(); opt != nil {
+			size = max(int(opt.UDPSize()), dns.MinMsgSize)
+		}
+		resp.Truncate(size)
+	}
 	w.WriteMsg(resp)
 }
 

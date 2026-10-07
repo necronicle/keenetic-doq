@@ -7,8 +7,8 @@ import (
 	"github.com/miekg/dns"
 )
 
-func q(name string, qtype uint16) dns.Question {
-	return dns.Question{Name: dns.Fqdn(name), Qtype: qtype, Qclass: dns.ClassINET}
+func q(name string, qtype uint16) Key {
+	return QuestionKey(dns.Question{Name: dns.Fqdn(name), Qtype: qtype, Qclass: dns.ClassINET})
 }
 
 func respA(name string, ttl uint32, rcode int) *dns.Msg {
@@ -103,5 +103,43 @@ func TestLRUEviction(t *testing.T) {
 	}
 	if c.Get(q("a.com", dns.TypeA)) == nil || c.Get(q("c.com", dns.TypeA)) == nil {
 		t.Error("a and c must survive")
+	}
+}
+
+// Ответ на запрос с DO (с подписями DNSSEC) и без — разные ответы.
+func TestDOBitSeparatesEntries(t *testing.T) {
+	c, _ := newTestCache(16)
+	plain := new(dns.Msg)
+	plain.SetQuestion("example.com.", dns.TypeA)
+	withDO := plain.Copy()
+	withDO.SetEdns0(1232, true)
+	c.Put(KeyOf(plain), respA("example.com", 300, dns.RcodeSuccess))
+	if c.Get(KeyOf(withDO)) != nil {
+		t.Error("answer cached without DO served to a DO query")
+	}
+	if c.Get(KeyOf(plain)) == nil {
+		t.Error("plain answer not cached")
+	}
+}
+
+// RFC 8767: просроченная запись не выбрасывается сразу — её можно отдать,
+// когда апстримы недоступны, с коротким TTL.
+func TestServeStale(t *testing.T) {
+	c, now := newTestCache(16)
+	c.Put(q("example.com", dns.TypeA), respA("example.com", 300, dns.RcodeSuccess))
+	*now = now.Add(time.Hour)
+	if c.Get(q("example.com", dns.TypeA)) != nil {
+		t.Fatal("expired entry served as fresh")
+	}
+	got := c.GetStale(q("example.com", dns.TypeA))
+	if got == nil {
+		t.Fatal("expired entry not available as stale")
+	}
+	if ttl := got.Answer[0].Header().Ttl; ttl != uint32(staleTTL/time.Second) {
+		t.Errorf("stale TTL = %d, want %d", ttl, staleTTL/time.Second)
+	}
+	*now = now.Add(maxStale)
+	if c.GetStale(q("example.com", dns.TypeA)) != nil {
+		t.Error("entry older than maxStale still served")
 	}
 }

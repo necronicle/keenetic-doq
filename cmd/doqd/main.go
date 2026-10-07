@@ -1,6 +1,7 @@
 // doqd — DNS-over-QUIC форвардер для Keenetic (слушает обычный DNS,
 // резолвит через DoQ-апстримы). Регистрируется в KeeneticOS как
-// name-server на 127.0.0.1:5353 рядом со штатными DoT/DoH.
+// name-server на <LAN-IP>:5354 рядом со штатными DoT/DoH: loopback
+// KeeneticOS в name-server не принимает, а 5353 занят avahi.
 package main
 
 import (

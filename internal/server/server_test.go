@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"syscall"
 	"testing"
@@ -11,7 +12,10 @@ import (
 	"github.com/miekg/dns"
 )
 
-type fakeResolver struct{ err error }
+type fakeResolver struct {
+	err     error
+	answers int // сколько A-записей в ответе (0 — одна)
+}
 
 func (f *fakeResolver) Resolve(ctx context.Context, req *dns.Msg) (*dns.Msg, error) {
 	if f.err != nil {
@@ -19,8 +23,10 @@ func (f *fakeResolver) Resolve(ctx context.Context, req *dns.Msg) (*dns.Msg, err
 	}
 	resp := new(dns.Msg)
 	resp.SetReply(req)
-	rr, _ := dns.NewRR(req.Question[0].Name + " 300 IN A 1.2.3.4")
-	resp.Answer = append(resp.Answer, rr)
+	for i := 0; i < max(f.answers, 1); i++ {
+		rr, _ := dns.NewRR(fmt.Sprintf("%s 300 IN A 10.0.%d.%d", req.Question[0].Name, i/256, i%256))
+		resp.Answer = append(resp.Answer, rr)
+	}
 	return resp, nil
 }
 
@@ -135,5 +141,58 @@ func TestStartWaitStopsOnContextCancel(t *testing.T) {
 		}
 	case <-time.After(3 * time.Second):
 		t.Fatal("StartWait не завершился после отмены контекста")
+	}
+}
+
+// DoQ не ограничивает размер ответа, а UDP-клиент заявил свой буфер: ответ
+// больше буфера обрезается с флагом TC, и клиент переспрашивает по TCP.
+func TestUDPAnswerFitsClientBuffer(t *testing.T) {
+	s := startServer(t, &fakeResolver{answers: 100}) // ~1.6 КБ
+	q := new(dns.Msg)
+	q.SetQuestion("example.com.", dns.TypeA)
+	c := &dns.Client{Net: "udp", Timeout: 2 * time.Second, UDPSize: 4096}
+	resp, _, err := c.Exchange(q, s.Addr())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !resp.Truncated {
+		t.Error("UDP answer without EDNS is not truncated")
+	}
+	resp.Compress = true // размер на проводе — со сжатием имён
+	if n := resp.Len(); n > dns.MinMsgSize {
+		t.Errorf("UDP answer is %d bytes, client buffer is %d", n, dns.MinMsgSize)
+	}
+	tcp := &dns.Client{Net: "tcp", Timeout: 2 * time.Second}
+	full, _, err := tcp.Exchange(q, s.Addr())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if full.Truncated || len(full.Answer) != 100 {
+		t.Errorf("TCP answer truncated: TC=%v, %d answers", full.Truncated, len(full.Answer))
+	}
+}
+
+// Клиент с EDNS получает ответ в пределах заявленного им буфера.
+func TestUDPAnswerFitsEDNSBuffer(t *testing.T) {
+	s := startServer(t, &fakeResolver{answers: 100}) // ~1.6 КБ
+	c := &dns.Client{Net: "udp", Timeout: 2 * time.Second, UDPSize: 4096}
+	for _, tc := range []struct {
+		size      uint16
+		truncated bool
+	}{{1232, true}, {4096, false}} {
+		q := new(dns.Msg)
+		q.SetQuestion("example.com.", dns.TypeA)
+		q.SetEdns0(tc.size, false)
+		resp, _, err := c.Exchange(q, s.Addr())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp.Truncated != tc.truncated {
+			t.Errorf("buffer %d: TC = %v, want %v", tc.size, resp.Truncated, tc.truncated)
+		}
+		resp.Compress = true
+		if n := resp.Len(); n > int(tc.size) {
+			t.Errorf("buffer %d: answer is %d bytes", tc.size, n)
+		}
 	}
 }
