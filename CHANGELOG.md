@@ -3,7 +3,7 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версии — [SemVer](https://semver.org/lang/ru/).
 
-## [Unreleased]
+## [0.3.4] — 2026-10-07
 
 ### Added
 - **Резервные апстримы: ключ `fallback` и `doqd add --fallback`.** Резервный
