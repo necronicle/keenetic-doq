@@ -32,6 +32,12 @@ upstream — the local doqd with its cache wins on merit.
 - Servers with several addresses: the dial races them in a staggered
   fashion, a dead address doesn't hold up a live one; the winner is
   remembered.
+- Geo-unblocking by default: the main upstreams are comss, geohide and
+  dns-ai, which answer with their proxy addresses for services blocked by
+  geolocation (ChatGPT, Gemini, Claude...). Quad9 is a `fallback`: it is
+  asked only when every main upstream has failed, so the real address of a
+  blocked service never overtakes the proxy one. Fallback answers stay in
+  the cache for at most a minute.
 - Multiple upstreams: queries go to the fastest live server; if it hasn't
   answered within ~3× its usual time, the same query goes to the next one in
   parallel. A dead upstream neither eats the query's time budget nor comes
@@ -88,7 +94,11 @@ All management is done with the same binary — no manual file editing:
 ~ # doqd list
 UPSTREAMS (/opt/etc/doqd.conf):
  1. quic://dns.comss.one                       alive  rtt 34 ms
- 2. quic://dns.quad9.net                       alive  rtt 193 ms
+ 2. quic://geohide.ru                          alive  rtt 41 ms
+ 3. quic://dns.dns-ai.ru                       alive  rtt 27 ms
+ 4. quic://dns.quad9.net                       alive  rtt 193 ms  [fallback]
+
+[fallback] is asked only when every other upstream has failed.
 
 listen: 192.168.1.1:5354   daemon: running (pid 9772)
 ```
@@ -105,21 +115,22 @@ OK — answered in 215 ms
 ```
 
 Add your own upstream — live-probed before it is written to the config
-(a dead server won't slip in by accident; override with `--force`):
+(a dead server won't slip in by accident; override with `--force`). With
+`--fallback` it becomes a fallback:
 
 ```sh
-~ # doqd add quic://dns.quad9.net
-probing quic://dns.quad9.net ... OK (198 ms)
-added to /opt/etc/doqd.conf (upstream #3)
+~ # doqd add --fallback quic://dns10.quad9.net
+probing quic://dns10.quad9.net ... OK (198 ms)
+added to /opt/etc/doqd.conf as fallback #5
 restarting the daemon ... alive (pid 20702)
 ```
 
-Remove — by number from `list` or by URL (the last upstream is
+Remove — by number from `list` or by URL (the last main upstream is
 protected):
 
 ```sh
-~ # doqd remove 3
-removed quic://dns.quad9.net
+~ # doqd remove 5
+removed fallback quic://dns10.quad9.net
 restarting the daemon ... alive (pid 20702)
 ```
 
@@ -139,7 +150,8 @@ resolve via :53:  NOERROR, 40 ms
 | Key | Default | Meaning |
 |---|---|---|
 | `listen` | `<LAN-IP>:5354` | listener address:port (UDP+TCP) |
-| `upstream` | `quic://dns.comss.one`, `quic://dns.quad9.net` | DoQ upstream, one line per server; the first line overrides the built-in defaults |
+| `upstream` | `quic://dns.comss.one`, `quic://geohide.ru`, `quic://dns.dns-ai.ru` | main DoQ upstream, one line per server; queries go to the fastest live one. The first `upstream` or `fallback` line overrides the defaults of both keys |
+| `fallback` | `quic://dns.quad9.net` | fallback DoQ upstream: asked only when every main upstream has failed; its answers' TTL is capped at 60 s. A config needs at least one `upstream` |
 | `bootstrap` | `77.88.8.8`, `77.88.8.8:1253`, `8.8.8.8`, `1.1.1.1` | plain DNS servers used to resolve the upstream names; IPs only (a port may be given). All are asked at once, a server silent over UDP is retried over TCP; the answer is cached for its TTL |
 | `cache_size` | `4096` | max cache entries |
 | `min_ttl` / `max_ttl` | `60` / `86400` | cache TTL bounds, seconds |
@@ -180,19 +192,37 @@ dig @192.168.1.1 example.com           # end-to-end via the stock DNS
 
 ## FAQ
 
-**Why comss and Quad9 as defaults, not AdGuard?** In a number of Russian
-networks AdGuard DNS is blocked by DPI (TSPU) on both DoQ and DoT —
-`doqd test quic://dns.adguard-dns.com` will show a handshake timeout, and
-shipping a knowingly dead server as a default helps no one. comss comes
-first as the fastest of the tested ones (~130 ms from the router vs
-~200 ms for Quad9), Quad9 is the failover. Check yours: `doqd list`
-live-probes every server.
+**Why these defaults, not AdGuard?** comss, geohide and dns-ai are
+geo-unblocking resolvers: for ChatGPT, Gemini, Claude and other services
+closed to Russia they answer with their proxy addresses. Quad9 knows no
+such addresses and returns the real ones, so it is a fallback, not a peer.
+AdGuard DNS is blocked by DPI (TSPU) in a number of Russian networks on
+both DoQ and DoT — `doqd test quic://dns.adguard-dns.com` will show a
+handshake timeout, and shipping a knowingly dead server as a default helps
+no one. Check yours: `doqd list` live-probes every server. An unblocking
+server your ISP blocks does no harm — queries route around it — but you
+can drop it: `doqd remove <number>`.
 
-**Both defaults filter something.** comss blocks ads, trackers and
-malicious domains; `dns.quad9.net` blocks malware domains. If you want
-plain resolving with nobody's blocklists, add an unfiltered server:
-`doqd add quic://dns10.quad9.net` (Quad9 without blocking) or
-`doqd add quic://unfiltered.adguard-dns.com` where AdGuard is reachable.
+**A geo-blocked service (ChatGPT, Gemini...) still doesn't open.** First
+upgrade to 0.3.4: before it, doqd returned whichever upstream answered
+first, and Quad9 regularly overtook comss with the real address. The
+installer turns Quad9 into a fallback by itself and, if the config still
+holds the old defaults, adds geohide and dns-ai. If that didn't help, look
+at `doqd status`: an `other DNS` line means the router asks other servers
+alongside doqd — usually the ISP's DNS or the built-in DoT/DoH — and takes
+the fastest answer, so the real address arrives past doqd. To send every
+query through doqd, remove the others: the ISP's DNS is turned off in the
+internet connection settings ("ignore the ISP's DNS", in the CLI
+`interface <connection> ip no name-servers`), DoT/DoH in the router's DNS
+settings; then `system configuration save`. Mind that the router's DNS
+then works only while doqd is alive. Devices have cached the stale answer
+too — restart the browser on them or wait a few minutes.
+
+**The defaults filter something.** comss blocks ads, trackers and
+malicious domains; `dns.quad9.net` blocks malware domains. An unfiltered
+fallback: `doqd add --fallback quic://dns10.quad9.net` (and `doqd remove`
+for `dns.quad9.net`); `quic://unfiltered.adguard-dns.com` where AdGuard is
+reachable.
 
 **`ndmc: system failed [0xcffd0062]` / `Cli::Main: failed to initialize`,
 and `doqd status` says `registration: NOT found` or `registration: unknown`.**

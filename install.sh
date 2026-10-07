@@ -88,15 +88,60 @@ chmod 755 "$BIN.new"
 [ -x "$INIT" ] && "$INIT" stop >/dev/null 2>&1 || true
 mv "$BIN.new" "$BIN"
 
+# 0.3.4: Quad9 turns into a fallback. Before, queries went to whichever
+# upstream answered first, and Quad9 regularly overtook comss with the real
+# address of a geo-blocked service. A config still holding the old built-in
+# pair also gets the other two unblocking servers. Configs that already use
+# `fallback`, or where Quad9 is the only upstream, are left alone.
+migrate_conf() {
+    grep -q '^fallback[[:space:]]' "$CONF" && return 0
+    grep -qx 'upstream quic://dns.quad9.net' "$CONF" || return 0
+    n=$(grep -c '^upstream[[:space:]]' "$CONF")
+    [ "$n" -gt 1 ] || return 0
+    add=no
+    [ "$n" -eq 2 ] && grep -qx 'upstream quic://dns.comss.one' "$CONF" && add=yes
+    last=$(grep -n '^upstream[[:space:]]' "$CONF" | tail -n 1 | cut -d: -f1)
+    awk -v last="$last" -v add="$add" '
+        function fallback() {
+            print ""
+            print "# Fallback: asked only when every upstream above has failed. It returns real"
+            print "# addresses, so it must never overtake them. Add with: doqd add --fallback"
+            print "fallback quic://dns.quad9.net"
+        }
+        /^# DoQ upstreams, in order of preference/ || /^# DoQ-апстримы, в порядке предпочтения/ {
+            print "# DoQ upstreams: queries go to the fastest live one. Manage with: doqd add / doqd remove"
+            next
+        }
+        $0 == "upstream quic://dns.quad9.net" { if (NR == last) fallback(); next }
+        { print }
+        add == "yes" && $0 == "upstream quic://dns.comss.one" {
+            print "upstream quic://geohide.ru"
+            print "upstream quic://dns.dns-ai.ru"
+        }
+        NR == last { fallback() }
+    ' "$CONF" > "$CONF.new" && mv "$CONF.new" "$CONF" || { rm -f "$CONF.new"; return 1; }
+    log "config: quic://dns.quad9.net is now a fallback (asked only when the others fail)"
+    [ "$add" = yes ] && log "config: added upstreams quic://geohide.ru and quic://dns.dns-ai.ru"
+    return 0
+}
+
 # Existing config is preserved on reinstall/upgrade.
+[ -f "$CONF" ] && { migrate_conf || log "WARNING: could not update $CONF, left as is"; }
 if [ ! -f "$CONF" ]; then
     cat > "$CONF" <<EOF
 # doqd — DNS-over-QUIC forwarder. https://github.com/necronicle/keenetic-doq
 listen $LAN_IP:$PORT
 
-# DoQ upstreams, in order of preference. Manage with: doqd add / doqd remove
+# DoQ upstreams: queries go to the fastest live one. Manage with: doqd add / doqd remove
+# These three answer with their proxy addresses for services blocked by
+# geolocation (ChatGPT, Gemini, Claude...).
 upstream quic://dns.comss.one
-upstream quic://dns.quad9.net
+upstream quic://geohide.ru
+upstream quic://dns.dns-ai.ru
+
+# Fallback: asked only when every upstream above has failed. It returns real
+# addresses, so it must never overtake them. Add with: doqd add --fallback
+fallback quic://dns.quad9.net
 
 # Plain-DNS servers used ONLY to resolve the upstream names above. They must
 # be external: any DNS on the router itself is the router's own proxy, which
