@@ -2,6 +2,7 @@ package geo
 
 import (
 	"context"
+	"net/netip"
 	"os"
 	"path/filepath"
 	"testing"
@@ -177,4 +178,30 @@ func TestCorruptStateReevaluates(t *testing.T) {
 	}
 	start(t, l)
 	waitFor(t, func() bool { return evaluated(l) && l.Pinned() == "g2" }, 5*time.Second)
+}
+
+func TestCheckProxiesFlushesBadAddresses(t *testing.T) {
+	p := &fakeProber{}
+	g1 := newFake("g1", map[string][]string{"chatgpt.com.": {"1.1.1.1", "5.5.5.5"}})
+	l, rec := newTestLanes(t, newFake("fast", nil), p, g1)
+	l.health.Reset(map[netip.Addr]string{mustAddr("1.1.1.1"): "chatgpt.com", mustAddr("5.5.5.5"): "chatgpt.com"})
+	ctx := context.Background()
+	l.checkProxies(ctx)
+	if len(rec.preds()) != 0 {
+		t.Fatal("nothing is bad, nothing to flush")
+	}
+	p.setDead("5.5.5.5", true)
+	l.checkProxies(ctx)
+	l.checkProxies(ctx) // second failure in a row = dead
+	preds := rec.preds()
+	if len(preds) == 0 {
+		t.Fatal("a proxy turned dead: cached answers with it must be flushed")
+	}
+	pred := preds[len(preds)-1]
+	if !pred(aMsg("chatgpt.com", "1.1.1.1", "5.5.5.5")) {
+		t.Fatal("answer with the dead address must match")
+	}
+	if pred(aMsg("chatgpt.com", "1.1.1.1")) {
+		t.Fatal("answer without the dead address must not match")
+	}
 }

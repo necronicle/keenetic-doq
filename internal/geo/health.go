@@ -225,6 +225,20 @@ func (h *Health) State(a netip.Addr) ProxyState {
 	return h.stateLocked(p, h.bestLocked())
 }
 
+// BadAddrs — адреса, которые сейчас мертвы или медленны (то же правило, что у State).
+func (h *Health) BadAddrs() []netip.Addr {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	best := h.bestLocked()
+	var bad []netip.Addr
+	for a, p := range h.addrs {
+		if h.stateLocked(p, best) != Healthy {
+			bad = append(bad, a)
+		}
+	}
+	return bad
+}
+
 // AllDead: таблица не пуста и все адреса в ней мертвы.
 func (h *Health) AllDead() bool {
 	h.mu.Lock()

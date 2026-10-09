@@ -16,13 +16,21 @@ import (
 type flushRec struct {
 	mu    sync.Mutex
 	calls int
+	ps    []func(*dns.Msg) bool
 }
 
-func (r *flushRec) flush(func(*dns.Msg) bool) int {
+func (r *flushRec) flush(pred func(*dns.Msg) bool) int {
 	r.mu.Lock()
 	r.calls++
+	r.ps = append(r.ps, pred)
 	r.mu.Unlock()
 	return 0
+}
+
+func (r *flushRec) preds() []func(*dns.Msg) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return append([]func(*dns.Msg) bool(nil), r.ps...)
 }
 
 func (r *flushRec) count() int { r.mu.Lock(); defer r.mu.Unlock(); return r.calls }

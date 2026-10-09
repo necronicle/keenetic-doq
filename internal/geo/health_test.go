@@ -141,3 +141,21 @@ func TestHealthAllDead(t *testing.T) {
 		t.Fatalf("snapshot = %+v", snap)
 	}
 }
+
+func TestHealthBadAddrs(t *testing.T) {
+	ctx := context.Background()
+	h, p := newHealthFixture()
+	if got := h.BadAddrs(); len(got) != 0 {
+		t.Fatalf("nothing checked yet, got %v", got)
+	}
+	p.setDead("1.1.1.3", true)
+	h.CheckAll(ctx)
+	h.CheckAll(ctx)
+	got := map[netip.Addr]bool{}
+	for _, a := range h.BadAddrs() {
+		got[a] = true
+	}
+	if len(got) != 2 || !got[mustAddr("1.1.1.3")] || !got[mustAddr("1.1.1.2")] {
+		t.Fatalf("want dead 1.1.1.3 and slow 1.1.1.2, got %v", got)
+	}
+}

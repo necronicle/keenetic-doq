@@ -3,8 +3,11 @@ package geo
 import (
 	"context"
 	"log/slog"
+	"net/netip"
 	"os"
 	"time"
+
+	"github.com/miekg/dns"
 )
 
 // Start поднимает гео-полосу: сохранённый выбор или первая оценка, затем
@@ -108,6 +111,7 @@ func (l *Lanes) checkProxies(ctx context.Context) {
 	if ctx.Err() != nil {
 		return // проверка прервана остановкой — не засчитывать
 	}
+	l.flushBad()
 	l.mu.Lock()
 	if !l.health.AllDead() {
 		l.deadCycles = 0
@@ -119,6 +123,31 @@ func (l *Lanes) checkProxies(ctx context.Context) {
 	l.mu.Unlock()
 	if trip {
 		l.failover("every proxy of the pinned server is dead")
+	}
+}
+
+// flushBad убирает из кеша ответы с адресами, ставшими мёртвыми или медленными:
+// иначе клиенты получали бы их до конца TTL. l.mu не держится.
+func (l *Lanes) flushBad() {
+	bad := l.health.BadAddrs()
+	if len(bad) == 0 {
+		return
+	}
+	set := make(map[netip.Addr]struct{}, len(bad))
+	for _, a := range bad {
+		set[a] = struct{}{}
+	}
+	n := l.cfg.Flush(func(m *dns.Msg) bool {
+		ips, _ := answerAddrs(m)
+		for _, x := range ips {
+			if _, ok := set[x]; ok {
+				return true
+			}
+		}
+		return false
+	})
+	if n > 0 {
+		slog.Info("geo: dropped cached answers with dead or slow proxies", "entries", n)
 	}
 }
 
