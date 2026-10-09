@@ -32,7 +32,7 @@ func Default() *Config {
 		Listen: "127.0.0.1:5354",
 		// Серверы обхода геоблокировок: для заблокированных по геолокации
 		// сервисов они отдают адреса своих прокси.
-		Upstreams: []string{"quic://dns.comss.one", "quic://geohide.ru", "quic://dns.dns-ai.ru"},
+		Upstreams: []string{"quic://geohide.ru", "quic://dns.dns-ai.ru"},
 		// Резерв — обычные резолверы без фильтрации из разных сетей: Quad9
 		// и ControlD. AdGuard сюда не годится — его режет ТСПУ.
 		Fallbacks: []string{"quic://dns.quad9.net", "quic://p0.freedns.controld.com"},

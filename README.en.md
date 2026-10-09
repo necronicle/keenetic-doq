@@ -59,8 +59,8 @@ use the filter's DNS, bypassing doqd.
 - Servers with several addresses: the dial races them in a staggered
   fashion, a dead address doesn't hold up a live one; the winner is
   remembered.
-- Geo-unblocking by default: the main upstreams are comss, geohide and
-  dns-ai, which answer with their proxy addresses for services blocked by
+- Geo-unblocking by default: the main upstreams are geohide and dns-ai,
+  which answer with their proxy addresses for services blocked by
   geolocation (ChatGPT, Gemini, Claude...). Quad9 and ControlD are
   `fallback`s: they are asked only when every main upstream has failed, so the real address of a
   blocked service never overtakes the proxy one. Fallback answers stay in
@@ -120,11 +120,10 @@ All management is done with the same binary — no manual file editing:
 ```sh
 ~ # doqd list
 UPSTREAMS (/opt/etc/doqd.conf):
- 1. quic://dns.comss.one                       alive  rtt 34 ms
- 2. quic://geohide.ru                          alive  rtt 41 ms
- 3. quic://dns.dns-ai.ru                       alive  rtt 27 ms
- 4. quic://dns.quad9.net                       alive  rtt 193 ms  [fallback]
- 5. quic://p0.freedns.controld.com             alive  rtt 181 ms  [fallback]
+ 1. quic://geohide.ru                          alive  rtt 41 ms
+ 2. quic://dns.dns-ai.ru                       alive  rtt 27 ms
+ 3. quic://dns.quad9.net                       alive  rtt 193 ms  [fallback]
+ 4. quic://p0.freedns.controld.com             alive  rtt 181 ms  [fallback]
 
 [fallback] is asked only when every other upstream has failed.
 
@@ -178,7 +177,7 @@ resolve via :53:  NOERROR, 40 ms
 | Key | Default | Meaning |
 |---|---|---|
 | `listen` | `<LAN-IP>:5354` | listener address:port (UDP+TCP) |
-| `upstream` | `quic://dns.comss.one`, `quic://geohide.ru`, `quic://dns.dns-ai.ru` | main DoQ upstream, one line per server; queries go to the fastest live one. The first `upstream` or `fallback` line overrides the defaults of both keys |
+| `upstream` | `quic://geohide.ru`, `quic://dns.dns-ai.ru` | main DoQ upstream, one line per server; queries go to the fastest live one. The first `upstream` or `fallback` line overrides the defaults of both keys |
 | `fallback` | `quic://dns.quad9.net`, `quic://p0.freedns.controld.com` | fallback DoQ upstream: asked only when every main upstream has failed; its answers' TTL is capped at 60 s. A config needs at least one `upstream` |
 | `bootstrap` | `77.88.8.8`, `77.88.8.8:1253`, `8.8.8.8`, `1.1.1.1` | plain DNS servers used to resolve the upstream names; IPs only (a port may be given). All are asked at once, a server silent over UDP is retried over TCP; the answer is cached for its TTL |
 | `cache_size` | `4096` | max cache entries |
@@ -220,7 +219,7 @@ dig @192.168.1.1 example.com           # end-to-end via the stock DNS
 
 ## FAQ
 
-**Why these defaults, not AdGuard?** comss, geohide and dns-ai are
+**Why these defaults, not AdGuard?** geohide and dns-ai are
 geo-unblocking resolvers: for ChatGPT, Gemini, Claude and other services
 closed to Russia they answer with their proxy addresses. Quad9 and ControlD
 know no such addresses and return the real ones, so they are fallbacks, not
@@ -232,9 +231,18 @@ no one. Check yours: `doqd list` live-probes every server. An unblocking
 server your ISP blocks does no harm — queries route around it — but you
 can drop it: `doqd remove <number>`.
 
+**Where did comss go?** It left the defaults in 0.3.5. doqd picks the
+server with the fastest DNS answer, and that was usually comss, yet its
+proxies for geo-blocked services turned out to be the slowest: a TLS
+handshake with chatgpt.com through them took 0.2 to 4.7 s, through dns-ai
+0.13–0.15 s. Sites opened noticeably slower even though DNS answered fast.
+On upgrade the installer removes comss from the config if other main
+upstreams remain. To bring it back: `doqd add quic://dns.comss.one`.
+
 **A geo-blocked service (ChatGPT, Gemini...) still doesn't open.** First
 upgrade to 0.3.4: before it, doqd returned whichever upstream answered
-first, and Quad9 regularly overtook comss with the real address. The
+first, and Quad9 regularly overtook the unblocking servers with the real
+address. The
 installer turns Quad9 into a fallback by itself, adds ControlD next to it
 and, if the config still
 holds the old defaults, adds geohide and dns-ai. If that didn't help, look
@@ -256,8 +264,8 @@ same or better for the unblocking servers. Repeat queries come from doqd's
 cache. A split would need a list of geo-blocked domains, which always lags
 behind: a site missing from it would get its real address and not open.
 
-**The defaults filter something.** comss blocks ads, trackers and
-malicious domains; `dns.quad9.net` blocks malware domains (ControlD `p0`
+**The defaults filter something.** `dns.quad9.net` blocks malware
+domains (ControlD `p0`
 filters nothing). An unfiltered
 fallback: `doqd add --fallback quic://dns10.quad9.net` (and `doqd remove`
 for `dns.quad9.net`); `quic://unfiltered.adguard-dns.com` where AdGuard is

@@ -11,7 +11,7 @@ func TestDefault(t *testing.T) {
 	if c.Listen != "127.0.0.1:5354" {
 		t.Errorf("Listen = %q", c.Listen)
 	}
-	if len(c.Upstreams) != 3 || c.Upstreams[0] != "quic://dns.comss.one" {
+	if len(c.Upstreams) != 2 || c.Upstreams[0] != "quic://geohide.ru" || c.Upstreams[1] != "quic://dns.dns-ai.ru" {
 		t.Errorf("Upstreams = %v", c.Upstreams)
 	}
 	if len(c.Fallbacks) != 2 || c.Fallbacks[0] != "quic://dns.quad9.net" ||

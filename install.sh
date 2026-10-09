@@ -129,17 +129,30 @@ migrate_conf() {
     return 0
 }
 
+# 0.3.5: comss leaves the defaults. doqd picks the upstream with the fastest
+# DNS answer, and that was comss, while its proxies for geo-blocked services
+# were the slowest: a TLS handshake to ChatGPT took from 0.2 to 4.7 s against
+# 0.15 s via dns-ai. Dropped only when other upstreams remain.
+drop_comss() {
+    grep -qx 'upstream quic://dns.comss.one' "$CONF" || return 0
+    n=$(grep -c '^upstream[[:space:]]' "$CONF")
+    [ "$n" -gt 1 ] || return 0
+    grep -vx 'upstream quic://dns.comss.one' "$CONF" > "$CONF.new" && mv "$CONF.new" "$CONF" || { rm -f "$CONF.new"; return 1; }
+    log "config: removed upstream quic://dns.comss.one (slow proxies); to bring it back: doqd add quic://dns.comss.one"
+    return 0
+}
+
 # Existing config is preserved on reinstall/upgrade.
 [ -f "$CONF" ] && { migrate_conf || log "WARNING: could not update $CONF, left as is"; }
+[ -f "$CONF" ] && { drop_comss || log "WARNING: could not update $CONF, left as is"; }
 if [ ! -f "$CONF" ]; then
     cat > "$CONF" <<EOF
 # doqd — DNS-over-QUIC forwarder. https://github.com/necronicle/keenetic-doq
 listen $LAN_IP:$PORT
 
 # DoQ upstreams: queries go to the fastest live one. Manage with: doqd add / doqd remove
-# These three answer with their proxy addresses for services blocked by
+# These two answer with their proxy addresses for services blocked by
 # geolocation (ChatGPT, Gemini, Claude...).
-upstream quic://dns.comss.one
 upstream quic://geohide.ru
 upstream quic://dns.dns-ai.ru
 
