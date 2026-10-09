@@ -432,3 +432,15 @@ func (p *Picker) probe(ctx context.Context, st *upstreamState, startup bool) boo
 	}
 	return false
 }
+
+// ExchangeTimed — exchangeTimed для пакетов снаружи: время самого обмена без
+// дозвона, если апстрим его отдаёт.
+func ExchangeTimed(ctx context.Context, ex Exchanger, m *dns.Msg) (*dns.Msg, time.Duration, error) {
+	return exchangeTimed(ctx, ex, m)
+}
+
+// CapTTL ограничивает TTL всех записей ответа сверху.
+func CapTTL(m *dns.Msg, maxTTL uint32) { capTTL(m, maxTTL) }
+
+// SoftFail — SERVFAIL или REFUSED: ответ есть, но бесполезный.
+func SoftFail(resp *dns.Msg) bool { return softFail(resp) }
