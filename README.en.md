@@ -151,12 +151,12 @@ The pinned server, the ranking and the state of its proxies:
 
 ```sh
 ~ # doqd geo
-pinned:     quic://dns.dns-ai.ru (since 2026-10-09 12:34)
+pinned:     quic://geohide.ru (since 2026-10-09 12:34)
 evaluation: 2026-10-09 12:34
 
 RANKING (last evaluation):
- 1. quic://dns.dns-ai.ru               coverage 3/3  proxies 2/2 alive  tls 128 ms
- 2. quic://geohide.ru                  coverage 3/3  proxies 4/4 alive  tls 176 ms
+ 1. quic://geohide.ru                  coverage 7/7  proxies 4/4 alive  tls 176 ms
+ 2. quic://dns.dns-ai.ru               coverage 4/7  proxies 2/2 alive  tls 128 ms
 
 PINNED SERVER PROXIES (checked every 30 s):
   13.140.94.151                            healthy  tls 102 ms
@@ -323,7 +323,8 @@ the real address of the service, and the browser would go there past the
 proxy. If no unblocking server answers such a query, doqd replies with an
 empty answer (NODATA) rather than a plain resolver's answer — the browser
 then takes the addresses from A/AAAA. The server's proxy pool grows
-only from answers to the three probe domains (chatgpt.com, claude.ai,
+only from answers to the probe domains (chatgpt.com, sentinel.openai.com,
+tcr9i.chat.openai.com, auth.openai.com, claude.ai, assets-proxy.anthropic.com,
 gemini.google.com), not from every geo name: otherwise a listed name the
 server does not substitute (e.g. x.ai with real Cloudflare addresses) would
 drag every Cloudflare site into the geo lane. Ordinary sites thus get real

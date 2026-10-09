@@ -145,12 +145,12 @@ listen: 192.168.1.1:5354   daemon: running (pid 11236)
 
 ```sh
 ~ # doqd geo
-pinned:     quic://dns.dns-ai.ru (since 2026-10-09 12:34)
+pinned:     quic://geohide.ru (since 2026-10-09 12:34)
 evaluation: 2026-10-09 12:34
 
 RANKING (last evaluation):
- 1. quic://dns.dns-ai.ru               coverage 3/3  proxies 2/2 alive  tls 128 ms
- 2. quic://geohide.ru                  coverage 3/3  proxies 4/4 alive  tls 176 ms
+ 1. quic://geohide.ru                  coverage 7/7  proxies 4/4 alive  tls 176 ms
+ 2. quic://dns.dns-ai.ru               coverage 4/7  proxies 2/2 alive  tls 128 ms
 
 PINNED SERVER PROXIES (checked every 30 s):
   13.140.94.151                            healthy  tls 102 ms
@@ -311,7 +311,8 @@ AAAA, HTTPS и других типов doqd сначала делает внут
 сервиса, и браузер пошёл бы по нему мимо прокси. Если на такой запрос не
 ответил ни один сервер обхода, doqd отвечает пустым ответом (NODATA), а не
 ответом обычного резолвера, — браузер возьмёт адреса из A/AAAA. Пул прокси сервера пополняется только ответами на
-три пробных домена (chatgpt.com, claude.ai, gemini.google.com), а не на
+пробные домены (chatgpt.com, sentinel.openai.com, tcr9i.chat.openai.com,
+auth.openai.com, claude.ai, assets-proxy.anthropic.com, gemini.google.com), а не на
 каждое гео-имя: иначе имя из списка, которое сервер не подменяет (например,
 x.ai с настоящими адресами Cloudflare), затянуло бы в гео-полосу все сайты
 Cloudflare. Обычные сайты поэтому получают настоящие адреса от самого быстрого
