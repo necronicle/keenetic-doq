@@ -20,6 +20,8 @@ const (
 	slowFactor        = 3           // …и больше лучшей в пуле во столько раз
 	samplesKept       = 5           // замеров на адрес
 	maxParallelChecks = 4
+	maxTracked        = 64               // всего адресов в таблице; пул не вытесняется
+	nonPoolTTL        = 10 * time.Minute // адрес не из пула, не виденный столько, забывается
 )
 
 // TLSProber меряет TLS-рукопожатие с прокси.
@@ -75,44 +77,94 @@ func (s ProxyState) String() string {
 
 type proxy struct {
 	sni     string
+	pool    bool      // прокси пула закреплённого (рейтинг, ответы на пробные домены)
+	seen    time.Time // когда адрес последний раз был в ответе
 	fails   int
 	samples []time.Duration
 }
 
-// Health — состояние адресов прокси закреплённого сервера.
+// Health — состояние адресов закреплённого сервера: его пула прокси и прочих
+// адресов из его ответов (гео-имена, которые сервер не подменяет, — там
+// настоящие адреса). Правило «все прокси мертвы», сброс кеша по плохим
+// адресам и счётчики в CLI смотрят только на пул; прочие адреса только
+// фильтруются в ответах и забываются через 10 минут без появления.
 type Health struct {
 	prober TLSProber
+	now    func() time.Time
+	sem    chan struct{} // общий предел проверок: цикл и проверки новых адресов
 	mu     sync.Mutex
 	addrs  map[netip.Addr]*proxy
 }
 
-func NewHealth(p TLSProber) *Health { return &Health{prober: p, addrs: map[netip.Addr]*proxy{}} }
+func NewHealth(p TLSProber) *Health {
+	return &Health{prober: p, now: time.Now, sem: make(chan struct{}, maxParallelChecks),
+		addrs: map[netip.Addr]*proxy{}}
+}
 
 // Reset заменяет таблицу пулом нового закреплённого сервера; замеры адресов,
 // которые есть и там и там, сохраняются.
 func (h *Health) Reset(addrs map[netip.Addr]string) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+	now := h.now()
 	next := make(map[netip.Addr]*proxy, len(addrs))
 	for a, sni := range addrs {
-		if p := h.addrs[a]; p != nil {
-			next[a] = p
-		} else {
-			next[a] = &proxy{sni: sni}
+		p := h.addrs[a]
+		if p == nil {
+			p = &proxy{sni: sni}
 		}
+		p.pool, p.seen = true, now
+		next[a] = p
 	}
 	h.addrs = next
 }
 
-// Track добавляет адрес; true — адрес новый.
-func (h *Health) Track(a netip.Addr, sni string) bool {
+// Track отмечает адрес из ответа; pool — ответ на пробный домен. true — адрес
+// новый и его надо проверить. Таблица не растёт больше maxTracked: место
+// освобождает самый давний адрес не из пула; если таких нет, новый адрес не
+// из пула не отслеживается.
+func (h *Health) Track(a netip.Addr, sni string, pool bool) bool {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	if _, ok := h.addrs[a]; ok {
+	now := h.now()
+	if p, ok := h.addrs[a]; ok {
+		p.seen = now
+		if pool && !p.pool {
+			p.pool, p.sni = true, sni
+		}
 		return false
 	}
-	h.addrs[a] = &proxy{sni: sni}
+	if len(h.addrs) >= maxTracked && !h.evictLocked() && !pool {
+		return false
+	}
+	h.addrs[a] = &proxy{sni: sni, pool: pool, seen: now}
 	return true
+}
+
+// evictLocked убирает самый давний адрес не из пула; false — таких нет.
+func (h *Health) evictLocked() bool {
+	var oldest netip.Addr
+	var at time.Time
+	for a, p := range h.addrs {
+		if !p.pool && (!oldest.IsValid() || p.seen.Before(at)) {
+			oldest, at = a, p.seen
+		}
+	}
+	if !oldest.IsValid() {
+		return false
+	}
+	delete(h.addrs, oldest)
+	return true
+}
+
+// pruneLocked забывает адреса не из пула, давно не встречавшиеся в ответах.
+func (h *Health) pruneLocked() {
+	cut := h.now().Add(-nonPoolTTL)
+	for a, p := range h.addrs {
+		if !p.pool && p.seen.Before(cut) {
+			delete(h.addrs, a)
+		}
+	}
 }
 
 // Check — одна проба адреса.
@@ -127,27 +179,32 @@ func (h *Health) Check(ctx context.Context, a netip.Addr) error {
 	if p == nil {
 		return fmt.Errorf("%s is not tracked", a)
 	}
+	select {
+	case h.sem <- struct{}{}:
+	case <-ctx.Done():
+		return ctx.Err() // не дождались очереди — это не неудача адреса
+	}
+	defer func() { <-h.sem }()
 	rtt, err := h.prober.Probe(ctx, a, sni)
 	h.record(a, rtt, err)
 	return err
 }
 
-// CheckAll пробует все адреса, не больше maxParallelChecks одновременно.
+// CheckAll забывает давние адреса не из пула и пробует остальные; одновременно
+// не больше maxParallelChecks проб (предел общий с Check).
 func (h *Health) CheckAll(ctx context.Context) {
 	h.mu.Lock()
+	h.pruneLocked()
 	addrs := make([]netip.Addr, 0, len(h.addrs))
 	for a := range h.addrs {
 		addrs = append(addrs, a)
 	}
 	h.mu.Unlock()
-	sem := make(chan struct{}, maxParallelChecks)
 	var wg sync.WaitGroup
 	for _, a := range addrs {
 		wg.Add(1)
-		sem <- struct{}{}
 		go func() {
 			defer wg.Done()
-			defer func() { <-sem }()
 			h.Check(ctx, a)
 		}()
 	}
@@ -190,11 +247,11 @@ func median(ds []time.Duration) time.Duration {
 	return s[len(s)/2]
 }
 
-// bestLocked — лучшая медиана среди живых адресов с замерами.
+// bestLocked — лучшая медиана среди живых адресов пула с замерами.
 func (h *Health) bestLocked() time.Duration {
 	var best time.Duration
 	for _, p := range h.addrs {
-		if p.fails >= deadAfter || len(p.samples) == 0 {
+		if !p.pool || p.fails >= deadAfter || len(p.samples) == 0 {
 			continue
 		}
 		if m := median(p.samples); best == 0 || m < best {
@@ -225,33 +282,81 @@ func (h *Health) State(a netip.Addr) ProxyState {
 	return h.stateLocked(p, h.bestLocked())
 }
 
-// BadAddrs — адреса, которые сейчас мертвы или медленны (то же правило, что у State).
+// BadAddrs — адреса пула, которые сейчас мертвы или медленны (то же правило,
+// что у State).
 func (h *Health) BadAddrs() []netip.Addr {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	best := h.bestLocked()
 	var bad []netip.Addr
 	for a, p := range h.addrs {
-		if h.stateLocked(p, best) != Healthy {
+		if p.pool && h.stateLocked(p, best) != Healthy {
 			bad = append(bad, a)
 		}
 	}
 	return bad
 }
 
-// AllDead: таблица не пуста и все адреса в ней мертвы.
+// Refilter — предикат для сброса из кеша: ответ содержит адрес из target и
+// рядом с ним хотя бы один здоровый адрес того же типа, то есть Filter сейчас
+// его бы изменил. Ответ, где плохи все адреса типа, Filter отдаёт как есть —
+// его сброс дал бы только лишний запрос. Состояния снимаются один раз.
+func (h *Health) Refilter(target []netip.Addr) func(*dns.Msg) bool {
+	tgt := make(map[netip.Addr]bool, len(target))
+	for _, a := range target {
+		tgt[a] = true
+	}
+	h.mu.Lock()
+	best := h.bestLocked()
+	unhealthy := map[netip.Addr]bool{}
+	for a, p := range h.addrs {
+		if h.stateLocked(p, best) != Healthy {
+			unhealthy[a] = true
+		}
+	}
+	h.mu.Unlock()
+	return func(m *dns.Msg) bool {
+		var hit, good [2]bool // [A, AAAA]
+		for _, rr := range m.Answer {
+			a, i := rrAddr(rr)
+			if !a.IsValid() {
+				continue
+			}
+			hit[i] = hit[i] || tgt[a]
+			good[i] = good[i] || !unhealthy[a]
+		}
+		return (hit[0] && good[0]) || (hit[1] && good[1])
+	}
+}
+
+// rrAddr — адрес A/AAAA-записи и индекс типа (0 — A, 1 — AAAA).
+func rrAddr(rr dns.RR) (netip.Addr, int) {
+	switch v := rr.(type) {
+	case *dns.A:
+		a, _ := netip.AddrFromSlice(v.A.To4())
+		return a, 0
+	case *dns.AAAA:
+		a, _ := netip.AddrFromSlice(v.AAAA)
+		return a.Unmap(), 1
+	}
+	return netip.Addr{}, 0
+}
+
+// AllDead: в пуле есть адреса, и все они мертвы.
 func (h *Health) AllDead() bool {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	if len(h.addrs) == 0 {
-		return false
-	}
+	n := 0
 	for _, p := range h.addrs {
+		if !p.pool {
+			continue
+		}
+		n++
 		if p.fails < deadAfter {
 			return false
 		}
 	}
-	return true
+	return n > 0
 }
 
 // Filter убирает из копии ответа A/AAAA мёртвых и медленных прокси, если
@@ -262,14 +367,8 @@ func (h *Health) Filter(m *dns.Msg) *dns.Msg {
 	defer h.mu.Unlock()
 	best := h.bestLocked()
 	healthy := func(rr dns.RR) bool {
-		var a netip.Addr
-		switch v := rr.(type) {
-		case *dns.A:
-			a, _ = netip.AddrFromSlice(v.A.To4())
-		case *dns.AAAA:
-			a, _ = netip.AddrFromSlice(v.AAAA)
-			a = a.Unmap()
-		default:
+		a, _ := rrAddr(rr)
+		if !a.IsValid() {
 			return true
 		}
 		p := h.addrs[a]
@@ -305,6 +404,7 @@ type ProxyStatus struct {
 	State    string `json:"state"`
 	MedianMs int64  `json:"median_ms"`
 	Fails    int    `json:"fails"`
+	Pool     bool   `json:"pool"`
 }
 
 func (h *Health) Snapshot() []ProxyStatus {
@@ -314,7 +414,7 @@ func (h *Health) Snapshot() []ProxyStatus {
 	out := make([]ProxyStatus, 0, len(h.addrs))
 	for a, p := range h.addrs {
 		out = append(out, ProxyStatus{Addr: a.String(), State: h.stateLocked(p, best).String(),
-			MedianMs: median(p.samples).Milliseconds(), Fails: p.fails})
+			MedianMs: median(p.samples).Milliseconds(), Fails: p.fails, Pool: p.pool})
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Addr < out[j].Addr })
 	return out

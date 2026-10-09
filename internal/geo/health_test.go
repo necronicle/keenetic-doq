@@ -130,10 +130,10 @@ func TestHealthAllDead(t *testing.T) {
 	if !h.AllDead() {
 		t.Fatal("the only address is dead")
 	}
-	if h.Track(mustAddr("1.1.1.1"), "a") {
+	if h.Track(mustAddr("1.1.1.1"), "a", true) {
 		t.Fatal("Track of a known address must return false")
 	}
-	if !h.Track(mustAddr("2.2.2.2"), "a") || h.AllDead() {
+	if !h.Track(mustAddr("2.2.2.2"), "a", true) || h.AllDead() {
 		t.Fatal("new address is untested, so not all dead")
 	}
 	snap := h.Snapshot()

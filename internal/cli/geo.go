@@ -24,6 +24,19 @@ func readSnap() *geo.Snapshot {
 	return s
 }
 
+// poolProxies — прокси пула закреплённого; прочие адреса из его ответов
+// (настоящие адреса гео-имён без подмены) прокси не считаются.
+func poolProxies(s *geo.Snapshot) (pool []geo.ProxyStatus, other int) {
+	for _, p := range s.Proxies {
+		if p.Pool {
+			pool = append(pool, p)
+		} else {
+			other++
+		}
+	}
+	return pool, other
+}
+
 func medianInt(xs []int64) int64 {
 	s := append([]int64(nil), xs...)
 	sort.Slice(s, func(i, j int) bool { return s[i] < s[j] })
@@ -36,10 +49,10 @@ func geoInfo(url string, snap *geo.Snapshot) string {
 	if snap == nil {
 		return ""
 	}
-	if url == snap.Pinned && len(snap.Proxies) > 0 {
+	if pool, _ := poolProxies(snap); url == snap.Pinned && len(pool) > 0 {
 		ok := 0
 		var ms []int64
-		for _, p := range snap.Proxies {
+		for _, p := range pool {
 			if p.State == "healthy" {
 				ok++
 				if p.MedianMs > 0 {
@@ -47,7 +60,7 @@ func geoInfo(url string, snap *geo.Snapshot) string {
 				}
 			}
 		}
-		s := fmt.Sprintf("  proxies %d/%d ok", ok, len(snap.Proxies))
+		s := fmt.Sprintf("  proxies %d/%d ok", ok, len(pool))
 		if len(ms) > 0 {
 			s += fmt.Sprintf(", tls %d ms", medianInt(ms))
 		}
@@ -151,14 +164,17 @@ func formatGeo(s *geo.Snapshot, probes int) string {
 			b.WriteString("\n")
 		}
 	}
-	if len(s.Proxies) > 0 {
+	if pool, other := poolProxies(s); len(pool) > 0 || other > 0 {
 		b.WriteString("\nPINNED SERVER PROXIES (checked every 30 s):\n")
-		for _, p := range s.Proxies {
+		for _, p := range pool {
 			fmt.Fprintf(&b, "  %-40s %-8s", p.Addr, p.State)
 			if p.MedianMs > 0 {
 				fmt.Fprintf(&b, " tls %d ms", p.MedianMs)
 			}
 			b.WriteString("\n")
+		}
+		if other > 0 {
+			fmt.Fprintf(&b, "  (+ other addresses from its answers: %d)\n", other)
 		}
 	}
 	fmt.Fprintf(&b, "\nlearned geo-blocked names: %d\n", s.LearnedGeo)
@@ -169,8 +185,9 @@ func geoStatusLine(s *geo.Snapshot) string {
 	if s == nil || s.Pinned == "" {
 		return "geo:             no state yet (daemon starting or evaluating)"
 	}
+	pool, _ := poolProxies(s)
 	ok := 0
-	for _, p := range s.Proxies {
+	for _, p := range pool {
 		if p.State == "healthy" {
 			ok++
 		}
@@ -180,7 +197,7 @@ func geoStatusLine(s *geo.Snapshot) string {
 		since = "since " + s.Since.Local().Format("2006-01-02 15:04")
 	}
 	return fmt.Sprintf("geo:             pinned %s %s, proxies %d/%d healthy",
-		strings.TrimPrefix(s.Pinned, "quic://"), since, ok, len(s.Proxies))
+		strings.TrimPrefix(s.Pinned, "quic://"), since, ok, len(pool))
 }
 
 func runGeo(args []string) int {

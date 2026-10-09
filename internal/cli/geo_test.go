@@ -18,8 +18,10 @@ func sampleSnap() *geo.Snapshot {
 			{URL: "quic://geohide.ru", Coverage: 3, Alive: 3, Total: 4, MedianTLSMs: 170},
 		},
 		Proxies: []geo.ProxyStatus{
-			{Addr: "13.140.94.151", State: "healthy", MedianMs: 120},
-			{Addr: "62.60.230.61", State: "dead", Fails: 2},
+			{Addr: "13.140.94.151", State: "healthy", MedianMs: 120, Pool: true},
+			{Addr: "62.60.230.61", State: "dead", Fails: 2, Pool: true},
+			// настоящий адрес гео-имени без подмены — не прокси
+			{Addr: "104.18.0.1", State: "healthy", MedianMs: 20},
 		},
 		LearnedGeo: 7,
 	}
@@ -103,5 +105,15 @@ func TestFormatGeoTemporaryPin(t *testing.T) {
 	}
 	if got := geoStatusLine(s); strings.Contains(got, "0001") {
 		t.Fatalf("status must not show a zero date: %q", got)
+	}
+}
+
+func TestGeoOutputsCountPoolOnly(t *testing.T) {
+	out := formatGeo(sampleSnap(), 3)
+	if strings.Contains(out, "104.18.0.1") {
+		t.Errorf("a non-pool address must not be listed as a proxy:\n%s", out)
+	}
+	if !strings.Contains(out, "other addresses from its answers: 1") {
+		t.Errorf("non-pool addresses must be counted separately:\n%s", out)
 	}
 }

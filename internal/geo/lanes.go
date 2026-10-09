@@ -390,7 +390,7 @@ func (l *Lanes) finishGeo(url string, resp *dns.Msg, name string) *dns.Msg {
 	}
 	ips, _ := answerAddrs(resp)
 	for _, a := range ips {
-		if l.health.Track(a, normalize(name)) {
+		if l.health.Track(a, normalize(name), isProbeDomain(name)) {
 			go l.checkNew(a)
 		}
 	}
@@ -419,15 +419,7 @@ func (l *Lanes) checkNew(a netip.Addr) {
 		}
 	}
 	if l.health.State(a) == Dead {
-		n := l.cfg.Flush(func(m *dns.Msg) bool {
-			ips, _ := answerAddrs(m)
-			for _, x := range ips {
-				if x == a {
-					return true
-				}
-			}
-			return false
-		})
+		n := l.cfg.Flush(l.health.Refilter([]netip.Addr{a}))
 		slog.Info("geo: new proxy address is dead, dropped from the cache", "addr", a, "entries", n)
 	}
 }
