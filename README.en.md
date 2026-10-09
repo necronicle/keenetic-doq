@@ -169,6 +169,9 @@ learned geo-blocked names: 0
 
 `doqd geo reselect` re-evaluates the unblocking servers right away instead
 of waiting for a failure (it waits up to 45 s and shows the new choice).
+After `doqd add --geo` the choice is not revisited by itself — the saved
+pinned server survives the restart — so only `doqd geo reselect` evaluates
+the new server.
 
 Probe any server without changing anything:
 
@@ -286,8 +289,10 @@ handshake with chatgpt.com through them took 0.2 to 4.7 s, through dns-ai
 0.13–0.15 s. Sites opened noticeably slower even though DNS answered fast.
 Since 0.4.0 proxy speed is taken into account when choosing the unblocking
 server, and slow proxies of the pinned server are cut by the filter. To
-bring comss back: `doqd add --geo quic://dns.comss.one`. On upgrade the
-installer removes comss from the config if other unblocking servers remain.
+bring comss back: `doqd add --geo quic://dns.comss.one`. The installer
+removes the `upstream quic://dns.comss.one` line only when upgrading from
+0.3.x and only if another `upstream` line remains; otherwise comss moves to
+`geo`.
 
 **A geo-blocked service (ChatGPT, Gemini...) doesn't open.** First upgrade
 to 0.4.0: before it, doqd took the fastest answer, so domains of one site
@@ -312,7 +317,12 @@ answer, and if it holds addresses from that server's proxy pool, the name
 is considered geo-blocked and from then on goes only to it. Only A queries
 are classified directly; for AAAA, HTTPS and other types doqd first makes an
 internal A query. A name once learned stays geo-blocked until restart: a
-later "plain" result does not override it. The server's proxy pool grows
+later "plain" result does not override it. In HTTPS/SVCB answers for
+geo-blocked names doqd strips the `ipv4hint`/`ipv6hint` hints: they may carry
+the real address of the service, and the browser would go there past the
+proxy. If no unblocking server answers such a query, doqd replies with an
+empty answer (NODATA) rather than a plain resolver's answer — the browser
+then takes the addresses from A/AAAA. The server's proxy pool grows
 only from answers to the three probe domains (chatgpt.com, claude.ai,
 gemini.google.com), not from every geo name: otherwise a listed name the
 server does not substitute (e.g. x.ai with real Cloudflare addresses) would
@@ -327,12 +337,25 @@ chatgpt.com, claude.ai and gemini.google.com. The best by coverage and
 speed is pinned; servers whose median TLS is within 20 % of the best count
 as equal and keep the config order, so the choice does not flip on
 measurement noise. The pinned server changes only on failure: three errors
-in a row, or all its proxies dead for three checks in a row (checks run
-every 30 s). The choice is stored in `/opt/var/lib/doqd/geo.state` and
+in a row on A/AAAA (SERVFAIL and REFUSED count too; errors on HTTPS/SVCB do
+not — geohide always resets those), or all its proxies dead for three checks
+in a row (checks run every 30 s). Before switching, doqd checks the network
+with a query through the fast lane: if that is silent too, the network is at
+fault rather than the server, and the pin stays. An evaluation in which no
+server unblocked anything (usually the internet is down) is inconclusive:
+the previous choice and ranking stay, `geo.state` is not rewritten, and the
+evaluation is retried after 1 min, 2, 4… up to 30 min. The choice is stored in `/opt/var/lib/doqd/geo.state` and
 survives a restart; an evaluation interrupted by shutdown is not saved, and
 a corrupt `geo.state` triggers a fresh evaluation. When a proxy of the
 pinned server turns dead or slow, cached answers containing it are dropped
-at once.
+at once — when the answer also holds a healthy address of the same type (an
+answer where every address is bad is served as is by the filter anyway).
+
+**How do I roll back to 0.3.x?** 0.3.x does not know the `geo` key and will
+not start with a 0.4.0 config. Before installing the older version, turn
+the `geo` lines in `/opt/etc/doqd.conf` back into `upstream`, and the
+Quad9 and ControlD `upstream` lines into `fallback`; or delete
+`/opt/etc/doqd.conf` and the older installer will write its own defaults.
 
 **How do I add my own geo-blocked domain?** `doqd add-domain example.com`
 — the domain and its subdomains go to the pinned unblocking server; the
