@@ -24,8 +24,11 @@ func (l *Lanes) Reselect(reason string) {
 // отказ. Считаются только A/AAAA: geohide сбрасывает поток (код 5) на каждый
 // HTTPS/SVCB, а Safari и Chrome шлют HTTPS на каждую навигацию — иначе сервер
 // «отказывал» бы от обычного сёрфинга. SERVFAIL/REFUSED на A/AAAA — неудача,
-// как и ошибка.
-func (l *Lanes) notePinned(url string, qtype uint16, r exResult) {
+// как и ошибка, но только на geoExchange (имя уже гео, ответ закреплённого —
+// вердикт). На пути классификации имя неизвестно, и домен, который SERVFAIL-ит
+// у всех (сломанный DNSSEC), не должен «ронять» сервер: считаются только
+// ошибки и таймауты.
+func (l *Lanes) notePinned(url string, qtype uint16, r exResult, geoPath bool) {
 	if qtype != dns.TypeA && qtype != dns.TypeAAAA {
 		return
 	}
@@ -45,6 +48,8 @@ func (l *Lanes) notePinned(url string, qtype uint16, r exResult) {
 				l.rtt = (l.rtt*7 + r.rtt) / 8
 			}
 		}
+	case !geoPath && r.err == nil && r.resp != nil && upstream.SoftFail(r.resp):
+		// классификация: SERVFAIL/REFUSED не считается ни успехом, ни неудачей
 	case errors.Is(r.err, context.Canceled):
 		// клиент ушёл — сервер не виноват
 	default:

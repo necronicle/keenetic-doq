@@ -194,7 +194,31 @@ func (l *Lanes) Exchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
 	if l.class.Lookup(q.Name) == Geo {
 		return l.geoExchange(ctx, m)
 	}
-	return l.cfg.Fast.Exchange(ctx, m)
+	resp, err := l.cfg.Fast.Exchange(ctx, m)
+	if err == nil && resp != nil && l.class.Lookup(q.Name) == Unknown {
+		return unverified(resp), nil
+	}
+	return resp, err
+}
+
+// unverified — ответ быстрой полосы на неизвестное имя без вердикта закреплённого:
+// копия с урезанным TTL, чтобы ответ с настоящим адресом не жил в кеше долго.
+func unverified(resp *dns.Msg) *dns.Msg {
+	out := resp.Copy()
+	upstream.CapTTL(out, degradedMaxTTL)
+	return out
+}
+
+// learnGeo запоминает имя как гео и выбрасывает из кеша его ответы (любого типа):
+// ответ быстрой полосы, закешированный раньше, мог нести настоящий адрес
+// (например ipv4hint в HTTPS). Вызывается без l.mu.
+func (l *Lanes) learnGeo(name string) {
+	l.class.Learn(name, Geo)
+	slog.Debug("geo: learned geo-blocked name", "name", name)
+	n := normalize(name)
+	l.cfg.Flush(func(m *dns.Msg) bool {
+		return len(m.Question) > 0 && normalize(m.Question[0].Name) == n
+	})
 }
 
 // classifyWait — сколько ждать закреплённого для неизвестного имени.
@@ -229,7 +253,7 @@ func (l *Lanes) classifyExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, err
 		actx, cancel := context.WithTimeout(context.WithoutCancel(ctx), l.attempt)
 		defer cancel()
 		r := result(upstream.ExchangeTimed(actx, pinned.Ex, m))
-		l.notePinned(pinned.URL, qtype, r)
+		l.notePinned(pinned.URL, qtype, r, false)
 		geoCh <- r
 	}()
 	if failing {
@@ -256,23 +280,24 @@ func (l *Lanes) classifyExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, err
 		geoOK := geo != nil && geo.ok()
 		switch {
 		case geoOK && l.prints.MatchAny(geo.resp):
-			l.class.Learn(name, Geo)
-			slog.Debug("geo: learned geo-blocked name", "name", name)
+			l.learnGeo(name)
 			return l.finishGeo(pinned.URL, geo.resp, name), nil
 		case fastOK && l.prints.MatchAny(fast.resp):
 			// Быструю полосу обогнал сервер обхода со своим пулом.
 			if geo == nil {
 				continue
 			}
-			l.class.Learn(name, Geo)
-			slog.Debug("geo: learned geo-blocked name", "name", name)
+			l.learnGeo(name)
 			return l.geoExchange(ctx, m)
 		case fast != nil && geo != nil:
 			if fastOK && geoOK {
 				l.class.Learn(name, Plain)
 			}
 			if fast.err == nil {
-				return fast.resp, nil
+				if fastOK && geoOK {
+					return fast.resp, nil // имя «обычное»: вердикт есть
+				}
+				return unverified(fast.resp), nil
 			}
 			if geo.err == nil {
 				return geo.resp, nil
@@ -280,7 +305,7 @@ func (l *Lanes) classifyExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, err
 			return nil, fmt.Errorf("fast lane: %v; geo server: %v", fast.err, geo.err)
 		case fastOK && capC == nil:
 			// Закреплённый не успел: ответ быстрой полосы, имя не выучено.
-			return fast.resp, nil
+			return unverified(fast.resp), nil
 		}
 	}
 }
@@ -294,7 +319,7 @@ func (l *Lanes) fastFirst(ctx context.Context, fastCh, geoCh <-chan exResult) (*
 		return nil, ctx.Err()
 	}
 	if fast.err == nil {
-		return fast.resp, nil
+		return unverified(fast.resp), nil
 	}
 	select {
 	case g := <-geoCh:
@@ -320,7 +345,7 @@ func (l *Lanes) geoExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
 		cancel()
 		resp := r.resp
 		if i == 0 {
-			l.notePinned(s.URL, q.Qtype, r)
+			l.notePinned(s.URL, q.Qtype, r, true)
 		}
 		if r.ok() {
 			var out *dns.Msg
