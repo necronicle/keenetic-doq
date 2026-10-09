@@ -11,31 +11,39 @@ import (
 	"strings"
 	"time"
 
+	"github.com/miekg/dns"
+
 	"github.com/necronicle/keenetic-doq/internal/upstream"
 )
 
 type Config struct {
-	Listen    string
+	Listen string
+	// Geo — серверы обхода геоблокировок: геоблокированные имена идут только
+	// в один из них, закреплённый.
+	Geo []string
+	// Upstreams — обычные резолверы: остальные имена идут в быстрейший из них
+	// и серверов обхода.
 	Upstreams []string
-	// Fallbacks спрашиваются, только когда отказали все Upstreams: ответы
-	// серверов обхода геоблокировок не должен перебивать обычный резолвер.
+	// Fallbacks спрашиваются, только когда отказали все остальные.
 	Fallbacks []string
-	Bootstrap []string
-	CacheSize int
-	MinTTL    time.Duration
-	MaxTTL    time.Duration
-	LogLevel  string
+	// GeoDomains — свои геоблокированные домены сверх встроенного списка.
+	GeoDomains []string
+	Bootstrap  []string
+	CacheSize  int
+	MinTTL     time.Duration
+	MaxTTL     time.Duration
+	LogLevel   string
 }
 
 func Default() *Config {
 	return &Config{
 		Listen: "127.0.0.1:5354",
-		// Серверы обхода геоблокировок: для заблокированных по геолокации
-		// сервисов они отдают адреса своих прокси.
-		Upstreams: []string{"quic://geohide.ru", "quic://dns.dns-ai.ru"},
-		// Резерв — обычные резолверы без фильтрации из разных сетей: Quad9
-		// и ControlD. AdGuard сюда не годится — его режет ТСПУ.
-		Fallbacks: []string{"quic://dns.quad9.net", "quic://p0.freedns.controld.com"},
+		// Серверы обхода: для заблокированных по геолокации сервисов отдают
+		// адреса своих прокси. comss убран в 0.3.5 — медленные прокси.
+		Geo: []string{"quic://geohide.ru", "quic://dns.dns-ai.ru"},
+		// Обычные резолверы без фильтрации из разных сетей. AdGuard сюда не
+		// годится — его режет ТСПУ.
+		Upstreams: []string{"quic://dns.quad9.net", "quic://p0.freedns.controld.com"},
 		Bootstrap: append([]string(nil), upstream.DefaultBootstrapServers...),
 		CacheSize: 4096,
 		MinTTL:    60 * time.Second,
@@ -46,7 +54,7 @@ func Default() *Config {
 
 func Parse(r io.Reader) (*Config, error) {
 	cfg := Default()
-	sawUpstream, sawBootstrap := false, false
+	sawServers, sawBootstrap := false, false
 	sc := bufio.NewScanner(r)
 	line := 0
 	for sc.Scan() {
@@ -63,18 +71,27 @@ func Parse(r io.Reader) (*Config, error) {
 		switch key {
 		case "listen":
 			cfg.Listen = val
-		case "upstream", "fallback":
-			// Первая же строка любого из двух ключей отменяет оба дефолта:
+		case "geo", "upstream", "fallback":
+			// Первая же строка любого из трёх ключей отменяет все три дефолта:
 			// иначе свой список молча дополнялся бы встроенным.
-			if !sawUpstream {
-				cfg.Upstreams, cfg.Fallbacks = nil, nil
-				sawUpstream = true
+			if !sawServers {
+				cfg.Geo, cfg.Upstreams, cfg.Fallbacks = nil, nil, nil
+				sawServers = true
 			}
-			if key == "upstream" {
+			switch key {
+			case "geo":
+				cfg.Geo = append(cfg.Geo, val)
+			case "upstream":
 				cfg.Upstreams = append(cfg.Upstreams, val)
-			} else {
+			default:
 				cfg.Fallbacks = append(cfg.Fallbacks, val)
 			}
+		case "geo-domain":
+			d, err := GeoDomain(val)
+			if err != nil {
+				return nil, fmt.Errorf("line %d: %w", line, err)
+			}
+			cfg.GeoDomains = append(cfg.GeoDomains, d)
 		case "bootstrap":
 			addr, err := BootstrapAddr(val)
 			if err != nil {
@@ -110,9 +127,9 @@ func Parse(r io.Reader) (*Config, error) {
 	if err := sc.Err(); err != nil {
 		return nil, err
 	}
-	if len(cfg.Upstreams) == 0 {
-		return nil, fmt.Errorf("fallback servers need at least one upstream: " +
-			"a fallback is asked only when every upstream has failed")
+	if len(cfg.Upstreams) == 0 && len(cfg.Geo) == 0 {
+		return nil, fmt.Errorf("fallback servers need at least one upstream or geo server: " +
+			"a fallback is asked only when every other server has failed")
 	}
 	listenHost, _, err := net.SplitHostPort(cfg.Listen)
 	if err != nil {
@@ -127,6 +144,17 @@ func Parse(r io.Reader) (*Config, error) {
 		}
 	}
 	return cfg, nil
+}
+
+// GeoDomain приводит домен из `geo-domain` к виду для сравнения: нижний
+// регистр, без завершающей точки. Однословные имена не принимаются — суффикс
+// вроде "com" увёл бы в гео-полосу половину интернета.
+func GeoDomain(val string) (string, error) {
+	d := strings.TrimSuffix(strings.ToLower(val), ".")
+	if _, ok := dns.IsDomainName(d); !ok || !strings.Contains(d, ".") || strings.Contains(d, "..") {
+		return "", fmt.Errorf("bad geo-domain %q: want a domain like example.com", val)
+	}
+	return d, nil
 }
 
 // BootstrapAddr приводит значение к IP:порт. Имя тут недопустимо: его пришлось

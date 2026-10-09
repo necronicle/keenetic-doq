@@ -1,6 +1,7 @@
 package config
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -11,12 +12,14 @@ func TestDefault(t *testing.T) {
 	if c.Listen != "127.0.0.1:5354" {
 		t.Errorf("Listen = %q", c.Listen)
 	}
-	if len(c.Upstreams) != 2 || c.Upstreams[0] != "quic://geohide.ru" || c.Upstreams[1] != "quic://dns.dns-ai.ru" {
+	if !reflect.DeepEqual(c.Geo, []string{"quic://geohide.ru", "quic://dns.dns-ai.ru"}) {
+		t.Errorf("Geo = %v", c.Geo)
+	}
+	if !reflect.DeepEqual(c.Upstreams, []string{"quic://dns.quad9.net", "quic://p0.freedns.controld.com"}) {
 		t.Errorf("Upstreams = %v", c.Upstreams)
 	}
-	if len(c.Fallbacks) != 2 || c.Fallbacks[0] != "quic://dns.quad9.net" ||
-		c.Fallbacks[1] != "quic://p0.freedns.controld.com" {
-		t.Errorf("Fallbacks = %v", c.Fallbacks)
+	if len(c.Fallbacks) != 0 || len(c.GeoDomains) != 0 {
+		t.Errorf("Fallbacks = %v, GeoDomains = %v, want none", c.Fallbacks, c.GeoDomains)
 	}
 	if c.CacheSize != 4096 || c.MinTTL != 60*time.Second || c.MaxTTL != 24*time.Hour || c.LogLevel != "info" {
 		t.Errorf("defaults wrong: %+v", c)

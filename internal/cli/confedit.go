@@ -205,6 +205,9 @@ func defaultConfLines() []string {
 		"# doqd — DNS-over-QUIC forwarder. https://github.com/necronicle/keenetic-doq",
 		"listen " + def.Listen,
 	}
+	for _, u := range def.Geo {
+		lines = append(lines, "geo "+u)
+	}
 	for _, u := range def.Upstreams {
 		lines = append(lines, "upstream "+u)
 	}
