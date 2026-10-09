@@ -3,7 +3,7 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версии — [SemVer](https://semver.org/lang/ru/).
 
-## [0.4.1] — 2026-10-XX
+## [0.4.1] — 2026-10-09
 
 ### Fixed
 - **ChatGPT не отвечал («Не удалось загрузить этот ответ»), вход сбрасывался,
