@@ -1,0 +1,35 @@
+# doqd — DNS-over-QUIC forwarder. https://github.com/necronicle/keenetic-doq
+listen 192.168.1.1:5354
+
+# Geo-unblocking servers: geo-blocked names (ChatGPT, Gemini, Claude...) go only
+# to one of them, picked once by its proxies and kept. Manage with: doqd add --geo
+geo quic://geohide.ru
+geo quic://dns.dns-ai.ru
+
+# Plain resolvers: every other name goes to the fastest of these and the servers
+# above. Manage with: doqd add / doqd remove
+upstream quic://dns.quad9.net
+upstream quic://p0.freedns.controld.com
+
+# Your own geo-blocked domains (subdomains included), on top of the built-in
+# list. Manage with: doqd add-domain / doqd remove-domain
+# geo-domain example.ai
+
+# Plain-DNS servers used ONLY to resolve the upstream names above. They must
+# be external: any DNS on the router itself is the router's own proxy, which
+# forwards to doqd — asking it would mean asking ourselves.
+# All are asked at once; a server silent over UDP is retried over TCP.
+# 77.88.8.8:1253 is Yandex DNS on a non-standard port, for ISPs that drop
+# port-53 queries for some names.
+bootstrap 77.88.8.8
+bootstrap 77.88.8.8:1253
+bootstrap 8.8.8.8
+bootstrap 1.1.1.1
+
+# cache: max entries / TTL bounds in seconds
+cache_size 4096
+min_ttl 60
+max_ttl 86400
+
+# log level: debug | info | warn | error
+log info

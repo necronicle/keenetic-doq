@@ -87,14 +87,17 @@ chmod 755 "$BIN.new"
 
 [ -x "$INIT" ] && "$INIT" stop >/dev/null 2>&1 || true
 mv "$BIN.new" "$BIN"
-mkdir -p /opt/var/lib/doqd
+mkdir -p /opt/var/lib/doqd || log "WARNING: cannot create /opt/var/lib/doqd — the pinned geo server will not survive a restart"
 
 # 0.3.4: Quad9 turns into a fallback, joined by ControlD. Before, queries went
 # to whichever upstream answered first, and Quad9 regularly overtook comss with
 # the real address of a geo-blocked service. A config still holding the old
 # built-in pair also gets the other two unblocking servers. Configs that
-# already use `fallback`, or where Quad9 is the only upstream, are left alone.
+# already use `fallback`, or where Quad9 is the only upstream, are left alone,
+# as are configs already in the 0.4.0 format (a `geo` key): there Quad9 is a
+# plain upstream on purpose.
 migrate_conf() {
+    grep -q '^geo[[:space:]]' "$CONF" && return 0
     grep -q '^fallback[[:space:]]' "$CONF" && return 0
     grep -qx 'upstream quic://dns.quad9.net' "$CONF" || return 0
     n=$(grep -c '^upstream[[:space:]]' "$CONF")
@@ -133,8 +136,10 @@ migrate_conf() {
 # 0.3.5: comss leaves the defaults. doqd picks the upstream with the fastest
 # DNS answer, and that was comss, while its proxies for geo-blocked services
 # were the slowest: a TLS handshake to ChatGPT took from 0.2 to 4.7 s against
-# 0.15 s via dns-ai. Dropped only when other upstreams remain.
+# 0.15 s via dns-ai. Dropped only when other upstreams remain; configs already
+# on the `geo` key (0.4.0 format) are left alone.
 drop_comss() {
+    grep -q '^geo[[:space:]]' "$CONF" && return 0
     grep -qx 'upstream quic://dns.comss.one' "$CONF" || return 0
     n=$(grep -c '^upstream[[:space:]]' "$CONF")
     [ "$n" -gt 1 ] || return 0

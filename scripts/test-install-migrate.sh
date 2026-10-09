@@ -15,9 +15,12 @@ for src in "$ROOT"/testdata/migrate/*.in; do
         . "$WORK/fns.sh"
         log() { :; }
         CONF="$WORK/conf"
-        migrate_conf
-        drop_comss
-        migrate_geo
+        # twice: a second installer run must change nothing
+        for _ in 1 2; do
+            migrate_conf
+            drop_comss
+            migrate_geo
+        done
     )
     if diff -u "$want" "$WORK/conf"; then
         echo "ok:   $(basename "$src")"
