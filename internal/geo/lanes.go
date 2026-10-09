@@ -210,7 +210,7 @@ func (l *Lanes) classifyExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, err
 			fast = &r
 		case r := <-geoCh:
 			geo = &r
-			l.notePinned(pinned.URL, r)
+			l.notePinned(pinned.URL, m.Question[0].Qtype, r)
 		case <-capC:
 			capC = nil
 		case <-ctx.Done():
@@ -251,8 +251,10 @@ func (l *Lanes) classifyExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, err
 
 // geoExchange — гео-имя: закреплённый, при его ошибке — запасные по
 // рейтингу, при отказе всех — устаревший ответ или быстрая полоса.
+// HTTPS/SVCB в быструю полосу не уходят никогда: её ответ несёт в
+// ipv4hint/ipv6hint настоящий адрес геоблокированного сервиса.
 func (l *Lanes) geoExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
-	name := m.Question[0].Name
+	q := m.Question[0]
 	var lastErr error
 	for i, s := range l.geoOrder() {
 		actx, cancel := context.WithTimeout(ctx, geoAttemptTimeout)
@@ -260,14 +262,19 @@ func (l *Lanes) geoExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
 		cancel()
 		r := exResult{resp: resp, rtt: rtt, err: err}
 		if i == 0 {
-			l.notePinned(s.URL, r)
+			l.notePinned(s.URL, q.Qtype, r)
 		}
 		if r.ok() {
+			var out *dns.Msg
 			if i == 0 {
-				return l.finishGeo(s.URL, resp, name), nil
+				out = l.finishGeo(s.URL, resp, q.Name)
+			} else {
+				out = resp.Copy()
+				upstream.CapTTL(out, degradedMaxTTL)
 			}
-			out := resp.Copy()
-			upstream.CapTTL(out, degradedMaxTTL)
+			if carriesAddrHints(q.Qtype) {
+				stripAddrHints(out)
+			}
 			return out, nil
 		}
 		if err != nil {
@@ -282,6 +289,14 @@ func (l *Lanes) geoExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
 	if l.cfg.Stale(m) != nil {
 		return nil, fmt.Errorf("%w: %v", ErrGeoUnavailable, lastErr)
 	}
+	if carriesAddrHints(q.Qtype) {
+		// NODATA: клиент возьмёт адреса из A/AAAA, а они идут через прокси.
+		// Без SOA кеш держит пустой ответ 60 с.
+		out := new(dns.Msg)
+		out.SetReply(m)
+		out.RecursionAvailable = true
+		return out, nil
+	}
 	resp, err := l.cfg.Fast.Exchange(ctx, m)
 	if err != nil {
 		return nil, err
@@ -289,6 +304,34 @@ func (l *Lanes) geoExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
 	out := resp.Copy()
 	upstream.CapTTL(out, degradedMaxTTL)
 	return out, nil
+}
+
+// carriesAddrHints — типы, в ответах на которые бывают ipv4hint/ipv6hint.
+func carriesAddrHints(qtype uint16) bool { return qtype == dns.TypeHTTPS || qtype == dns.TypeSVCB }
+
+// stripAddrHints убирает ipv4hint/ipv6hint из HTTPS/SVCB-записей ответа
+// (m — уже копия). Подсказка может нести настоящий адрес сервиса, и браузер
+// пошёл бы по нему мимо прокси; без подсказок он берёт A/AAAA.
+func stripAddrHints(m *dns.Msg) {
+	strip := func(kv []dns.SVCBKeyValue) []dns.SVCBKeyValue {
+		out := make([]dns.SVCBKeyValue, 0, len(kv))
+		for _, x := range kv {
+			if k := x.Key(); k != dns.SVCB_IPV4HINT && k != dns.SVCB_IPV6HINT {
+				out = append(out, x)
+			}
+		}
+		return out
+	}
+	for _, sec := range [][]dns.RR{m.Answer, m.Extra} {
+		for _, rr := range sec {
+			switch v := rr.(type) {
+			case *dns.HTTPS:
+				v.Value = strip(v.Value)
+			case *dns.SVCB:
+				v.Value = strip(v.Value)
+			}
+		}
+	}
 }
 
 // finishGeo — ответ закреплённого: пополнить отпечаток (только пробными

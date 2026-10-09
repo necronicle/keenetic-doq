@@ -67,8 +67,11 @@ type fakeEx struct {
 	ips   map[string][]string // FQDN в нижнем регистре → адреса A
 	rcode map[string]int
 	err   error
-	delay time.Duration
-	calls []dns.Question
+	// typeErr — ошибка только для этого типа запроса (geohide сбрасывает
+	// поток на HTTPS/SVCB, а на A отвечает).
+	typeErr map[uint16]error
+	delay   time.Duration
+	calls   []dns.Question
 }
 
 func newFake(addr string, ips map[string][]string) *fakeEx {
@@ -80,6 +83,15 @@ func (f *fakeEx) Address() string { return f.addr }
 func (f *fakeEx) setErr(err error) { f.mu.Lock(); f.err = err; f.mu.Unlock() }
 
 func (f *fakeEx) setDelay(d time.Duration) { f.mu.Lock(); f.delay = d; f.mu.Unlock() }
+
+func (f *fakeEx) setTypeErr(t uint16, err error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.typeErr == nil {
+		f.typeErr = map[uint16]error{}
+	}
+	f.typeErr[t] = err
+}
 
 func (f *fakeEx) count() int { f.mu.Lock(); defer f.mu.Unlock(); return len(f.calls) }
 
@@ -99,6 +111,9 @@ func (f *fakeEx) Exchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
 	f.mu.Lock()
 	f.calls = append(f.calls, m.Question[0])
 	err, delay := f.err, f.delay
+	if e, ok := f.typeErr[m.Question[0].Qtype]; ok && err == nil {
+		err = e
+	}
 	f.mu.Unlock()
 	if delay > 0 {
 		select {
@@ -132,6 +147,11 @@ func (f *fakeEx) Exchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
 		resp.Answer = append(resp.Answer, &dns.HTTPS{SVCB: dns.SVCB{
 			Hdr:      dns.RR_Header{Name: q.Name, Rrtype: dns.TypeHTTPS, Class: dns.ClassINET, Ttl: 600},
 			Priority: 1, Target: ".",
+			Value: []dns.SVCBKeyValue{
+				&dns.SVCBAlpn{Alpn: []string{"h2"}},
+				&dns.SVCBIPv4Hint{Hint: []net.IP{net.ParseIP("104.18.32.47").To4()}},
+				&dns.SVCBIPv6Hint{Hint: []net.IP{net.ParseIP("2606:4700::6812:202f")}},
+			},
 		}})
 	}
 	return resp, nil

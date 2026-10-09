@@ -17,8 +17,15 @@ func (l *Lanes) Reselect(reason string) {
 	}
 }
 
-// notePinned учитывает исход запроса к закреплённому: три ошибки подряд — отказ.
-func (l *Lanes) notePinned(url string, r exResult) {
+// notePinned учитывает исход запроса к закреплённому: три неудачи подряд —
+// отказ. Считаются только A/AAAA: geohide сбрасывает поток (код 5) на каждый
+// HTTPS/SVCB, а Safari и Chrome шлют HTTPS на каждую навигацию — иначе сервер
+// «отказывал» бы от обычного сёрфинга. SERVFAIL/REFUSED на A/AAAA — неудача,
+// как и ошибка.
+func (l *Lanes) notePinned(url string, qtype uint16, r exResult) {
+	if qtype != dns.TypeA && qtype != dns.TypeAAAA {
+		return
+	}
 	l.mu.Lock()
 	if url != l.pinned {
 		l.mu.Unlock()
@@ -26,7 +33,7 @@ func (l *Lanes) notePinned(url string, r exResult) {
 	}
 	trip := false
 	switch {
-	case r.err == nil && r.resp != nil:
+	case r.ok():
 		l.fails = 0
 		if r.rtt > 0 {
 			if l.rtt == 0 {
@@ -37,7 +44,7 @@ func (l *Lanes) notePinned(url string, r exResult) {
 		}
 	case errors.Is(r.err, context.Canceled):
 		// клиент ушёл — сервер не виноват
-	case r.err != nil:
+	default:
 		l.fails++
 		trip = l.fails == failsToFailover
 	}
