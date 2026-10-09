@@ -12,16 +12,36 @@ import (
 	"github.com/necronicle/keenetic-doq/internal/geo"
 )
 
-// readSnap — снимок демона; без работающего демона снимок устарел и не нужен.
+// snapMaxAge — снимок старше этого оставлен остановленным демоном или демоном
+// без гео-полосы (старой версии): живой пишет его раз в 30 с.
+const snapMaxAge = 2 * time.Minute
+
+// readSnap — снимок работающего демона или nil.
 func readSnap() *geo.Snapshot {
 	if daemonPID() == 0 {
 		return nil
 	}
-	s, err := geo.ReadSnapshot(geo.DefaultSnapshotPath)
-	if err != nil {
+	return loadFreshSnap(geo.DefaultSnapshotPath, time.Now())
+}
+
+// loadFreshSnap — снимок не старше snapMaxAge или nil.
+func loadFreshSnap(path string, now time.Time) *geo.Snapshot {
+	s, err := geo.ReadSnapshot(path)
+	if err != nil || now.Sub(s.Time) > snapMaxAge {
 		return nil
 	}
 	return s
+}
+
+// reselectPrecheck: SIGUSR1 можно слать, только если демон пишет свежий
+// снимок. Демон без гео-полосы (0.3.x) сигнал не ловит, и SIGUSR1 его убил бы.
+func reselectPrecheck(path string, now time.Time) (*geo.Snapshot, error) {
+	s := loadFreshSnap(path, now)
+	if s == nil {
+		return nil, fmt.Errorf("the running daemon reports no geo state (%s is missing or older than %s): "+
+			"it has no geo servers in the config or is an older version — not signalling it", path, snapMaxAge)
+	}
+	return s, nil
 }
 
 // poolProxies — прокси пула закреплённого; прочие адреса из его ответов
@@ -225,10 +245,12 @@ func runGeoReselect() int {
 		fmt.Fprintln(os.Stderr, "error: the daemon is not running")
 		return 1
 	}
-	var before time.Time
-	if s, err := geo.ReadSnapshot(geo.DefaultSnapshotPath); err == nil {
-		before = s.AttemptedAt
+	snap, err := reselectPrecheck(geo.DefaultSnapshotPath, time.Now())
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		return 1
 	}
+	before := snap.AttemptedAt
 	if err := syscall.Kill(pid, syscall.SIGUSR1); err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		return 1

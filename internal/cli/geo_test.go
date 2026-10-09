@@ -2,6 +2,7 @@ package cli
 
 import (
 	"errors"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -115,5 +116,46 @@ func TestGeoOutputsCountPoolOnly(t *testing.T) {
 	}
 	if !strings.Contains(out, "other addresses from its answers: 1") {
 		t.Errorf("non-pool addresses must be counted separately:\n%s", out)
+	}
+}
+
+func TestLoadFreshSnap(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "snap.json")
+	now := time.Date(2026, 10, 9, 15, 0, 0, 0, time.UTC)
+	if s := loadFreshSnap(path, now); s != nil {
+		t.Fatal("no snapshot file — nil")
+	}
+	geo.WriteSnapshot(path, geo.Snapshot{Time: now.Add(-90 * time.Second), Pinned: "quic://geohide.ru"})
+	if s := loadFreshSnap(path, now); s == nil || s.Pinned != "quic://geohide.ru" {
+		t.Fatalf("a 90 s old snapshot is fresh, got %+v", s)
+	}
+	geo.WriteSnapshot(path, geo.Snapshot{Time: now.Add(-3 * time.Minute), Pinned: "quic://geohide.ru"})
+	if s := loadFreshSnap(path, now); s != nil {
+		t.Fatal("a snapshot older than 2 min is left over from a stopped or older daemon")
+	}
+}
+
+func TestReselectRefusesWithoutFreshSnapshot(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "snap.json")
+	now := time.Now()
+	if _, err := reselectPrecheck(path, now); err == nil || !strings.Contains(err.Error(), "older version") {
+		t.Fatalf("no snapshot: SIGUSR1 would kill an older daemon, want a refusal, got %v", err)
+	}
+	geo.WriteSnapshot(path, geo.Snapshot{Time: now.Add(-10 * time.Minute)})
+	if _, err := reselectPrecheck(path, now); err == nil {
+		t.Fatal("stale snapshot: refuse")
+	}
+	geo.WriteSnapshot(path, geo.Snapshot{Time: now.Add(-10 * time.Second), Pinned: "quic://geohide.ru"})
+	if s, err := reselectPrecheck(path, now); err != nil || s == nil {
+		t.Fatalf("fresh snapshot: go ahead, got %v", err)
+	}
+}
+
+func TestAddGeoHint(t *testing.T) {
+	if got := addHint(confServer{URL: "quic://x.example", Geo: true}); !strings.Contains(got, "doqd geo reselect") {
+		t.Fatalf("hint = %q", got)
+	}
+	if got := addHint(confServer{URL: "quic://x.example"}); got != "" {
+		t.Fatalf("plain upstream needs no hint, got %q", got)
 	}
 }

@@ -156,6 +156,18 @@ type exResult struct {
 	err  error
 }
 
+// errNoResponse — апстрим не вернул ни ответа, ни ошибки.
+var errNoResponse = errors.New("upstream returned no response")
+
+// result собирает исход запроса; (nil, nil) превращается в ошибку, чтобы
+// дальше ответ можно было разыменовывать без проверок.
+func result(resp *dns.Msg, rtt time.Duration, err error) exResult {
+	if err == nil && resp == nil {
+		err = errNoResponse
+	}
+	return exResult{resp: resp, rtt: rtt, err: err}
+}
+
 func (r exResult) ok() bool { return r.err == nil && r.resp != nil && !upstream.SoftFail(r.resp) }
 
 func (l *Lanes) Exchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
@@ -208,7 +220,7 @@ func (l *Lanes) classifyExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, err
 	geoCh := make(chan exResult, 1)
 	go func() {
 		resp, err := l.cfg.Fast.Exchange(ctx, m)
-		fastCh <- exResult{resp: resp, err: err}
+		fastCh <- result(resp, 0, err)
 	}()
 	// Запрос к закреплённому живёт дольше клиента: клиент получает ответ
 	// быстрой полосы через 0,3–1 с, а исход (и таймаут) закреплённого должен
@@ -216,8 +228,7 @@ func (l *Lanes) classifyExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, err
 	go func() {
 		actx, cancel := context.WithTimeout(context.WithoutCancel(ctx), l.attempt)
 		defer cancel()
-		resp, rtt, err := upstream.ExchangeTimed(actx, pinned.Ex, m)
-		r := exResult{resp: resp, rtt: rtt, err: err}
+		r := result(upstream.ExchangeTimed(actx, pinned.Ex, m))
 		l.notePinned(pinned.URL, qtype, r)
 		geoCh <- r
 	}()
@@ -305,9 +316,9 @@ func (l *Lanes) geoExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
 	var lastErr error
 	for i, s := range l.geoOrder() {
 		actx, cancel := context.WithTimeout(ctx, l.attempt)
-		resp, rtt, err := upstream.ExchangeTimed(actx, s.Ex, m)
+		r := result(upstream.ExchangeTimed(actx, s.Ex, m))
 		cancel()
-		r := exResult{resp: resp, rtt: rtt, err: err}
+		resp := r.resp
 		if i == 0 {
 			l.notePinned(s.URL, q.Qtype, r)
 		}
@@ -324,8 +335,8 @@ func (l *Lanes) geoExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
 			}
 			return out, nil
 		}
-		if err != nil {
-			lastErr = err
+		if r.err != nil {
+			lastErr = r.err
 		} else {
 			lastErr = fmt.Errorf("%s answered %s", s.URL, dns.RcodeToString[resp.Rcode])
 		}
@@ -345,10 +356,11 @@ func (l *Lanes) geoExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
 		return out, nil
 	}
 	resp, err := l.cfg.Fast.Exchange(ctx, m)
-	if err != nil {
-		return nil, err
+	r := result(resp, 0, err)
+	if r.err != nil {
+		return nil, r.err
 	}
-	out := resp.Copy()
+	out := r.resp.Copy()
 	upstream.CapTTL(out, degradedMaxTTL)
 	return out, nil
 }

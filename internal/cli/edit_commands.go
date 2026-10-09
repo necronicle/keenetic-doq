@@ -70,7 +70,19 @@ func runAdd(args []string) int {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		return 1
 	}
+	if h := addHint(srv); h != "" {
+		fmt.Println(h)
+	}
 	return 0
+}
+
+// addHint — что сделать после add. Новый сервер обхода сам в оценку не
+// попадёт: при рестарте сохранённый выбор восстанавливается без неё.
+func addHint(srv confServer) string {
+	if srv.Geo {
+		return "the pinned server is kept across restarts; to evaluate the new one now: doqd geo reselect"
+	}
+	return ""
 }
 
 func runRemove(args []string) int {

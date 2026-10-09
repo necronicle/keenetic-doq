@@ -82,6 +82,9 @@ func queryA(ctx context.Context, ex upstream.Exchanger, name string) (*dns.Msg, 
 	cctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	resp, err := ex.Exchange(cctx, m)
+	if err == nil && resp == nil {
+		err = fmt.Errorf("%s: no response", name)
+	}
 	if err == nil && (resp.Rcode == dns.RcodeServerFailure || resp.Rcode == dns.RcodeRefused) {
 		err = fmt.Errorf("%s answered %s", name, dns.RcodeToString[resp.Rcode])
 	}

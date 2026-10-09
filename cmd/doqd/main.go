@@ -114,8 +114,9 @@ func main() {
 		Flush:        c.DeleteIf,
 		Stale:        func(m *dns.Msg) *dns.Msg { return c.GetStale(cache.KeyOf(m)) },
 	})
-	lanes.Start(ctx)
-	// `doqd geo reselect` шлёт SIGUSR1 — переоценить серверы обхода.
+	// `doqd geo reselect` шлёт SIGUSR1 — переоценить серверы обхода. Подписка
+	// до Start: действие SIGUSR1 по умолчанию — завершить процесс, а снимок,
+	// по которому CLI решает, можно ли слать сигнал, пишет уже Start.
 	usr1 := make(chan os.Signal, 1)
 	signal.Notify(usr1, syscall.SIGUSR1)
 	go func() {
@@ -123,6 +124,7 @@ func main() {
 			lanes.Reselect("requested by doqd geo reselect")
 		}
 	}()
+	lanes.Start(ctx)
 
 	res := resolver.New(c, lanes)
 	srv := server.New(cfg.Listen, res)
