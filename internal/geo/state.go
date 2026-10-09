@@ -34,7 +34,10 @@ type Snapshot struct {
 	Fails       int           `json:"fails"`
 }
 
-// writeJSON пишет атомарно: .new и rename — оборванная запись не испортит файл.
+// writeJSON пишет атомарно: во временный файл с уникальным именем в том же
+// каталоге, затем rename. Уникальное имя нужно, когда несколько горутин пишут
+// один путь одновременно (фоновый цикл и переключение при отказе): общий
+// временный файл у них перемешался бы. Оборванная запись не портит файл.
 func writeJSON(path string, v any) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
@@ -43,11 +46,31 @@ func writeJSON(path string, v any) error {
 	if err != nil {
 		return err
 	}
-	tmp := path + ".new"
-	if err := os.WriteFile(tmp, raw, 0o644); err != nil {
+	f, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path)+".*.new")
+	if err != nil {
 		return err
 	}
-	return os.Rename(tmp, path)
+	tmp := f.Name()
+	// При любой ошибке после создания временного файла он не должен остаться.
+	fail := func(err error) error {
+		os.Remove(tmp)
+		return err
+	}
+	if _, err := f.Write(raw); err != nil {
+		f.Close()
+		return fail(err)
+	}
+	if err := f.Close(); err != nil {
+		return fail(err)
+	}
+	// CreateTemp создаёт файл с правами 0600; для состояния нужны 0644.
+	if err := os.Chmod(tmp, 0o644); err != nil {
+		return fail(err)
+	}
+	if err := os.Rename(tmp, path); err != nil {
+		return fail(err)
+	}
+	return nil
 }
 
 func readJSON(path string, v any) error {

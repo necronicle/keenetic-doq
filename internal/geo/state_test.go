@@ -1,8 +1,10 @@
 package geo
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 )
@@ -15,8 +17,8 @@ func TestStateRoundTrip(t *testing.T) {
 	if err := SaveState(path, in); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(path + ".new"); !os.IsNotExist(err) {
-		t.Fatal("temporary file must be renamed away")
+	if left, _ := filepath.Glob(path + ".*.new"); len(left) != 0 {
+		t.Fatalf("temporary files must be renamed away, left: %v", left)
 	}
 	out, err := LoadState(path)
 	if err != nil {
@@ -39,5 +41,31 @@ func TestSnapshotRoundTrip(t *testing.T) {
 	s, err := ReadSnapshot(path)
 	if err != nil || s.Pinned != "g1" || s.LearnedGeo != 4 || s.Proxies[0].MedianMs != 120 {
 		t.Fatalf("snapshot = %+v, %v", s, err)
+	}
+}
+
+func TestConcurrentWritesStayValid(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "geo.state")
+	var wg sync.WaitGroup
+	for i := 0; i < 20; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			if err := SaveState(path, &State{Pinned: fmt.Sprintf("g%d", i)}); err != nil {
+				t.Error(err)
+			}
+		}(i)
+	}
+	wg.Wait()
+	s, err := LoadState(path)
+	if err != nil {
+		t.Fatalf("file must be valid JSON after concurrent writes: %v", err)
+	}
+	if s.Pinned == "" {
+		t.Fatal("pinned must be one of the written values")
+	}
+	if left, _ := filepath.Glob(filepath.Join(dir, "*.new")); len(left) != 0 {
+		t.Fatalf("temporary files left behind: %v", left)
 	}
 }
