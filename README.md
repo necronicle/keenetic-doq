@@ -128,8 +128,8 @@ sh install.sh --local ./doqd-linux-arm64
 ```sh
 ~ # doqd list
 GEO — geo-blocked names go only to the pinned server, marked * (/opt/etc/doqd.conf):
-   1. quic://geohide.ru                          alive  rtt 212 ms  proxies 4/4 alive, tls 176 ms
- * 2. quic://dns.dns-ai.ru                       alive  rtt 317 ms  proxies 4/4 ok, tls 102 ms
+ * 1. quic://geohide.ru                          alive  rtt 212 ms  proxies 4/4 alive, tls 168 ms
+   2. quic://dns.dns-ai.ru                       alive  rtt 317 ms  proxies 2/2 alive, tls 151 ms
 FAST — every other name goes to the fastest of these and the servers above:
    3. quic://dns.quad9.net                       alive  rtt 209 ms
    4. quic://p0.freedns.controld.com             alive  rtt 186 ms
@@ -145,18 +145,18 @@ listen: 192.168.1.1:5354   daemon: running (pid 11236)
 
 ```sh
 ~ # doqd geo
-pinned:     quic://geohide.ru (since 2026-10-09 12:34)
-evaluation: 2026-10-09 12:34
+pinned:     quic://geohide.ru (since 2026-10-09 14:27)
+evaluation: 2026-10-09 14:27
 
 RANKING (last evaluation):
- 1. quic://geohide.ru                  coverage 7/7  proxies 4/4 alive  tls 176 ms
- 2. quic://dns.dns-ai.ru               coverage 4/7  proxies 2/2 alive  tls 128 ms
+ 1. quic://geohide.ru                  coverage 7/7  proxies 4/4 alive  tls 168 ms
+ 2. quic://dns.dns-ai.ru               coverage 4/7  proxies 2/2 alive  tls 151 ms
 
 PINNED SERVER PROXIES (checked every 30 s):
-  13.140.94.151                            healthy  tls 102 ms
-  160.79.104.10                            healthy  tls 82 ms
-  2607:6bc0::10                            healthy  tls 85 ms
-  62.60.230.61                             healthy  tls 148 ms
+  159.194.200.33                           healthy  tls 799 ms
+  193.233.112.67                           healthy  tls 160 ms
+  193.233.112.68                           healthy  tls 155 ms
+  193.233.112.88                           healthy  tls 166 ms
 
 learned geo-blocked names: 0
 ```
