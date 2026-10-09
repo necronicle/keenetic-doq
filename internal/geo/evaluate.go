@@ -28,7 +28,8 @@ type Result struct {
 	Total       int               `json:"total"`
 	PoolIPs     []string          `json:"pool_ips"`
 	PoolCNAMEs  []string          `json:"pool_cnames"`
-	SNI         map[string]string `json:"sni"` // адрес → пробный домен, для проверок здоровья
+	SNI         map[string]string `json:"sni"`     // адрес → пробный домен, для проверок здоровья
+	Covered     []string          `json:"covered"` // пробные домены с подменой и живым прокси
 	Err         string            `json:"err,omitempty"`
 }
 
@@ -92,6 +93,7 @@ func queryA(ctx context.Context, ex upstream.Exchanger, name string) (*dns.Msg, 
 }
 
 // references — настоящие адреса пробных доменов по мнению обычного резолвера.
+// Домен, по которому резолвер не ответил, в карте отсутствует.
 func (e *Evaluator) references(ctx context.Context) map[string][]netip.Addr {
 	out := map[string][]netip.Addr{}
 	if e.Reference == nil {
@@ -108,6 +110,9 @@ func (e *Evaluator) references(ctx context.Context) map[string][]netip.Addr {
 				return
 			}
 			ips, _ := answerAddrs(resp)
+			if len(ips) == 0 {
+				return // пустой ответ ничего не доказывает
+			}
 			mu.Lock()
 			out[p] = ips
 			mu.Unlock()
@@ -157,6 +162,13 @@ func (e *Evaluator) evalOne(ctx context.Context, s Server, refs map[string][]net
 			continue
 		}
 		ips, _ := answerAddrs(resp)
+		// Резолвер задан, но по этому домену не ответил: подмену не проверить,
+		// домен не засчитывается никому (иначе настоящий адрес сошёл бы за прокси).
+		if e.Reference != nil {
+			if _, ok := refs[probe]; !ok {
+				continue
+			}
+		}
 		// Совпало с обычным резолвером — сервер этот сервис не обходит.
 		if len(ips) == 0 || overlaps(ips, refs[probe]) {
 			continue
@@ -177,6 +189,7 @@ func (e *Evaluator) evalOne(ctx context.Context, s Server, refs map[string][]net
 		for _, a := range ips {
 			if _, ok := alive[a]; ok {
 				r.Coverage++
+				r.Covered = append(r.Covered, sni)
 				break
 			}
 		}

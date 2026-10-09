@@ -130,6 +130,7 @@ func TestNewAddressChecksRespectParallelism(t *testing.T) {
 func TestProbeDomainAnswersArePool(t *testing.T) {
 	g1 := newFake("g1", map[string][]string{"chatgpt.com.": {"3.3.3.3"}, "x.ai.": {"104.18.0.1"}})
 	l, _ := newTestLanes(t, newFake("fast", nil), nil, g1)
+	l.ranking = []Result{{URL: "g1", Coverage: 1, Covered: []string{"chatgpt.com"}}}
 	ask(t, l, "chatgpt.com", dns.TypeA)
 	ask(t, l, "x.ai", dns.TypeA)
 	s := snapByAddr(l.health)

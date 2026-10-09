@@ -2,6 +2,7 @@ package geo
 
 import (
 	"context"
+	"errors"
 	"net/netip"
 	"os"
 	"path/filepath"
@@ -65,8 +66,8 @@ func TestStartEvaluatesAndPinsBest(t *testing.T) {
 
 func savedRanking() []Result {
 	return []Result{
-		{URL: "g2", Coverage: len(ProbeDomains), Alive: 1, Total: 1, PoolIPs: []string{"2.2.2.2"}, SNI: map[string]string{"2.2.2.2": "chatgpt.com"}},
-		{URL: "g1", Coverage: len(ProbeDomains), Alive: 1, Total: 1, PoolIPs: []string{"1.1.1.1"}, SNI: map[string]string{"1.1.1.1": "chatgpt.com"}},
+		{URL: "g2", Coverage: len(ProbeDomains), Covered: coveredAll(), Alive: 1, Total: 1, PoolIPs: []string{"2.2.2.2"}, SNI: map[string]string{"2.2.2.2": "chatgpt.com"}},
+		{URL: "g1", Coverage: len(ProbeDomains), Covered: coveredAll(), Alive: 1, Total: 1, PoolIPs: []string{"1.1.1.1"}, SNI: map[string]string{"1.1.1.1": "chatgpt.com"}},
 	}
 }
 
@@ -238,5 +239,47 @@ func TestCheckProxiesFlushesBadAddresses(t *testing.T) {
 	}
 	if pred(aMsg("chatgpt.com", "1.1.1.1")) {
 		t.Fatal("answer without the dead address must not match")
+	}
+}
+
+func coveredAll() []string {
+	var out []string
+	for _, d := range ProbeDomains {
+		out = append(out, normalize(d))
+	}
+	return out
+}
+
+// Победитель с неполным охватом закрепляется, но оценка повторяется: когда
+// полноохватный сервер вернётся, он займёт место.
+func TestPartialWinnerIsRetried(t *testing.T) {
+	l, g1, _, _ := lifecycleFixture(t)
+	l.retryBase, l.retryMax = 50*time.Millisecond, 100*time.Millisecond
+	// g2 — частичный охват, g1 «лежит».
+	partial := realAnswers()
+	for _, d := range []string{"chatgpt.com.", "auth.openai.com.", "claude.ai.", "gemini.google.com."} {
+		partial[d] = []string{"2.2.2.2"}
+	}
+	l.cfg.Geo[1].Ex = newFake("g2", partial)
+	g1.setErr(errors.New("down"))
+	start(t, l)
+	waitFor(t, func() bool { return evaluated(l) && l.Pinned() == "g2" }, 5*time.Second)
+	if s := l.Snapshot(); s.Inconclusive {
+		t.Fatal("a partial winner is a result, not an inconclusive evaluation")
+	}
+	waitFor(t, func() bool { return retryDelay(l) > 0 }, 5*time.Second)
+	g1.setErr(nil)
+	waitFor(t, func() bool { return l.Pinned() == "g1" && retryDelay(l) == 0 }, 5*time.Second)
+}
+
+// Смена набора проб: пул из сохранённого рейтинга всё равно в отпечатках.
+func TestProbeSetChangeStillLoadsFingerprints(t *testing.T) {
+	l, g1, g2, _ := lifecycleFixture(t)
+	g1.setDelay(time.Hour)
+	g2.setDelay(time.Hour)
+	SaveState(l.cfg.StatePath, &State{Pinned: "g2", Since: time.Now(), Ranking: savedRanking()})
+	start(t, l)
+	if !l.prints.MatchAny(aMsg("a.", "1.1.1.1")) || !l.prints.MatchAny(aMsg("a.", "2.2.2.2")) {
+		t.Fatal("saved pools must be loaded even when the pin is not trusted")
 	}
 }

@@ -169,7 +169,7 @@ func (l *Lanes) snapshotLocked() Snapshot {
 		AttemptedAt: l.attemptedAt, Evaluating: l.evaluating, Ranking: append([]Result(nil), l.ranking...),
 		Fails: l.fails}
 	if l.retryDelay > 0 {
-		s.Inconclusive = true
+		s.Inconclusive = !l.retryPartial
 		s.RetryAt = l.attemptedAt.Add(l.retryDelay)
 	}
 	s.Proxies = l.health.Snapshot()

@@ -114,11 +114,15 @@ func TestEvaluatePrefersFullProbeCoverage(t *testing.T) {
 	}
 	g2 := newFake("g2", partial)
 	p := &fakeProber{lat: map[string]time.Duration{"1.1.1.1": 900 * time.Millisecond, "2.2.2.2": 20 * time.Millisecond}}
-	// Подмененные g2 «настоящие» адреса не проходят TLS-пробу как прокси, но
-	// совпадают с ref, так что покрытие считается только по подменам.
+	// Остальные адреса g2 совпадают с ref, поэтому не считаются подменой и
+	// пропускаются; охват g2 — только четыре подменённых хоста.
 	rs := newEvaluator(ref, p).Run(context.Background(), []Server{{URL: "g2", Ex: g2}, {URL: "g1", Ex: g1}})
 	if rs[0].URL != "g1" || rs[0].Coverage != len(ProbeDomains) || rs[1].Coverage != 4 {
 		t.Fatalf("full coverage must beat speed: %+v", rs)
+	}
+	if len(rs[0].Covered) != len(ProbeDomains) || !reflect.DeepEqual(rs[1].Covered,
+		[]string{"chatgpt.com", "auth.openai.com", "claude.ai", "gemini.google.com"}) {
+		t.Fatalf("covered lists: %v / %v", rs[0].Covered, rs[1].Covered)
 	}
 }
 
@@ -127,5 +131,33 @@ func TestProbeDomainsCoverNeededHosts(t *testing.T) {
 		"claude.ai.", "assets-proxy.anthropic.com.", "gemini.google.com."}
 	if !reflect.DeepEqual(ProbeDomains, want) {
 		t.Fatalf("ProbeDomains = %v", ProbeDomains)
+	}
+}
+
+// Reference не ответил по одному хосту: этот хост не засчитывается никому.
+func TestEvaluateReferenceFailureSkipsProbe(t *testing.T) {
+	refAns := realAnswers()
+	delete(refAns, "sentinel.openai.com.")
+	ref := newFake("ref", refAns)
+	g1 := newFake("g1", probeAnswers("1.1.1.1"))
+	rs := newEvaluator(ref, &fakeProber{}).Run(context.Background(), []Server{{URL: "g1", Ex: g1}})
+	if rs[0].Coverage != len(ProbeDomains)-1 {
+		t.Fatalf("a probe without a reference answer must count for nobody: %+v", rs[0])
+	}
+	for _, c := range rs[0].Covered {
+		if c == "sentinel.openai.com" {
+			t.Fatal("sentinel must not be covered")
+		}
+	}
+}
+
+// Reference не ответил ни по одному хосту — оценка безрезультатна.
+func TestEvaluateReferenceDownIsInconclusive(t *testing.T) {
+	ref := newFake("ref", realAnswers())
+	ref.setErr(errors.New("down"))
+	g1 := newFake("g1", probeAnswers("1.1.1.1"))
+	rs := newEvaluator(ref, &fakeProber{}).Run(context.Background(), []Server{{URL: "g1", Ex: g1}})
+	if rs[0].Coverage != 0 {
+		t.Fatalf("no reference at all: nobody gets coverage: %+v", rs[0])
 	}
 }

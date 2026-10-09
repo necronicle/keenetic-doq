@@ -64,18 +64,20 @@ type Lanes struct {
 	now                 func() time.Time
 	loopDone            chan struct{} // закрывается при выходе фонового цикла
 
-	mu          sync.Mutex
-	pinned      string
-	since       time.Time
-	evaluatedAt time.Time
-	evaluating  bool
-	attemptedAt time.Time     // конец последней оценки, в том числе безрезультатной
-	retryDelay  time.Duration // >0 — последняя оценка безрезультатна, повтор через столько
-	ranking     []Result
-	saved       *State // что сейчас в geo.state; nil — ещё не писали и не читали
-	fails       int
-	deadCycles  int
-	rtt         time.Duration // EWMA ответа закреплённого
+	mu           sync.Mutex
+	pinned       string
+	since        time.Time
+	evaluatedAt  time.Time
+	evaluating   bool
+	attemptedAt  time.Time     // конец последней оценки, в том числе безрезультатной
+	retryPartial bool          // повтор назначен из-за неполного охвата победителя
+	partialDelay time.Duration // отсрочка повтора при неполном охвате
+	retryDelay   time.Duration // >0 — последняя оценка безрезультатна, повтор через столько
+	ranking      []Result
+	saved        *State // что сейчас в geo.state; nil — ещё не писали и не читали
+	fails        int
+	deadCycles   int
+	rtt          time.Duration // EWMA ответа закреплённого
 }
 
 func New(cfg Config) *Lanes {
@@ -422,12 +424,13 @@ func stripAddrHints(m *dns.Msg) {
 // доменами — иначе гео-имя без подмены затащило бы в пул чужие адреса),
 // поставить новые адреса на проверку, выкинуть мёртвые и медленные.
 func (l *Lanes) finishGeo(url string, resp *dns.Msg, name string) *dns.Msg {
-	if isProbeDomain(name) {
+	covered := l.isCovered(url, name)
+	if covered {
 		l.prints.AddTo(url, resp)
 	}
 	ips, _ := answerAddrs(resp)
 	for _, a := range ips {
-		if l.health.Track(a, normalize(name), isProbeDomain(name)) {
+		if l.health.Track(a, normalize(name), covered) {
 			go l.checkNew(a)
 		}
 	}
@@ -436,11 +439,21 @@ func (l *Lanes) finishGeo(url string, resp *dns.Msg, name string) *dns.Msg {
 	return out
 }
 
-func isProbeDomain(name string) bool {
+// isCovered: имя — пробный домен, который сервер по последней оценке подменяет
+// живым прокси. Только такие ответы пополняют пул: настоящий адрес хоста,
+// который сервер не подменяет, прокси не является.
+func (l *Lanes) isCovered(url, name string) bool {
 	n := normalize(name)
-	for _, p := range ProbeDomains {
-		if normalize(p) == n {
-			return true
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	for _, r := range l.ranking {
+		if r.URL != url {
+			continue
+		}
+		for _, c := range r.Covered {
+			if c == n {
+				return true
+			}
 		}
 	}
 	return false

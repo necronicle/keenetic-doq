@@ -249,6 +249,7 @@ func TestGeoTTLCappedAt300(t *testing.T) {
 func TestPoolGrowsOnlyFromProbeDomains(t *testing.T) {
 	g1 := newFake("g1", map[string][]string{"chatgpt.com.": {"3.3.3.3"}, "x.ai.": {"104.18.0.1"}})
 	l, _ := newTestLanes(t, newFake("fast", nil), nil, g1)
+	l.ranking = []Result{{URL: "g1", Coverage: 1, Covered: []string{"chatgpt.com"}}}
 	ask(t, l, "chatgpt.com", dns.TypeA)
 	ask(t, l, "x.ai", dns.TypeA)
 	if !l.prints.MatchAny(aMsg("a.", "3.3.3.3")) {
@@ -346,5 +347,26 @@ func TestParallelAAndAAAAEndGeo(t *testing.T) {
 	}
 	if got := ipsOf(ask(t, l, "new.example", dns.TypeA)); !reflect.DeepEqual(got, []string{"1.1.1.1"}) {
 		t.Fatalf("got %v", got)
+	}
+}
+
+// Сервер с частичным охватом отдаёт настоящий адрес для хоста, который он не
+// подменяет: такой адрес не должен попасть в пул и считаться прокси.
+func TestUncoveredProbeAnswerStaysOutOfPool(t *testing.T) {
+	g1 := newFake("g1", map[string][]string{"chatgpt.com.": {"3.3.3.3"}, "sentinel.openai.com.": {"104.18.0.9"}})
+	l, _ := newTestLanes(t, newFake("fast", nil), nil, g1)
+	l.ranking = []Result{{URL: "g1", Coverage: 1, Covered: []string{"chatgpt.com"}}}
+	ask(t, l, "chatgpt.com", dns.TypeA)
+	ask(t, l, "sentinel.openai.com", dns.TypeA)
+	if l.prints.MatchAny(aMsg("a.", "104.18.0.9")) {
+		t.Fatal("a real address from an uncovered probe host must not join the fingerprint")
+	}
+	for _, p := range l.health.Snapshot() {
+		if p.Addr == "104.18.0.9" && p.Pool {
+			t.Fatal("a real address must not be a pool address in Health")
+		}
+	}
+	if !l.prints.MatchAny(aMsg("a.", "3.3.3.3")) {
+		t.Fatal("covered probe host still grows the pool")
 	}
 }

@@ -27,6 +27,10 @@ func (l *Lanes) Start(ctx context.Context) {
 		// Выбор сделан по другому набору проб (или state 0.4.0 без поля):
 		// сервер мог подменять лишь часть нужных сервису хостов.
 		slog.Info("geo: probe set changed, not trusting the saved pin", "pinned", st.Pinned, "saved_probes", st.Probes)
+		// Пулы всё же в отпечатки: автообучение работает, пока идёт переоценка.
+		for _, r := range st.Ranking {
+			l.prints.Set(r.URL, r.Pool())
+		}
 		l.Reselect("probe set changed")
 	case err == nil:
 		l.Reselect("saved server is not in the config")
@@ -124,6 +128,7 @@ func (l *Lanes) evaluate(ctx context.Context, reason string) time.Duration {
 	l.evaluating = false
 	l.attemptedAt = l.now()
 	if !conclusive {
+		l.retryPartial, l.partialDelay = false, 0
 		if l.retryDelay == 0 {
 			l.retryDelay = l.retryBase
 		} else {
@@ -135,16 +140,35 @@ func (l *Lanes) evaluate(ctx context.Context, reason string) time.Duration {
 			"keeping the pinned server and the previous ranking", "reason", reason, "pinned", pinned, "retry_in", d)
 		return d
 	}
-	l.retryDelay = 0
 	l.ranking = rs
 	l.evaluatedAt = l.attemptedAt
+	// Победитель без полного охвата закрепляется, но оценка повторяется с той
+	// же отсрочкой: полноохватный сервер мог быть недоступен только сейчас.
+	partial := rs[0].Coverage < len(ProbeDomains)
+	var d time.Duration
+	l.retryDelay, l.retryPartial = 0, partial
+	if partial {
+		if l.partialDelay == 0 {
+			l.partialDelay = l.retryBase
+		} else {
+			l.partialDelay = min(2*l.partialDelay, l.retryMax)
+		}
+		d = l.partialDelay
+		l.retryDelay = d
+	} else {
+		l.partialDelay = 0
+	}
 	l.mu.Unlock()
 	for _, r := range rs {
 		l.prints.Set(r.URL, r.Pool())
 	}
 	// Рейтинг начинается с охвата, так что первый — с охватом.
 	l.pin(rs[0].URL, "evaluation: "+reason)
-	return 0
+	if partial {
+		slog.Warn("geo: the winner covers only part of the probe hosts, will retry",
+			"server", rs[0].URL, "coverage", rs[0].Coverage, "of", len(ProbeDomains), "retry_in", d)
+	}
+	return d
 }
 
 // checkProxies — цикл проверки прокси закреплённого; все мертвы три цикла
