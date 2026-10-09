@@ -87,6 +87,7 @@ chmod 755 "$BIN.new"
 
 [ -x "$INIT" ] && "$INIT" stop >/dev/null 2>&1 || true
 mv "$BIN.new" "$BIN"
+mkdir -p /opt/var/lib/doqd
 
 # 0.3.4: Quad9 turns into a fallback, joined by ControlD. Before, queries went
 # to whichever upstream answered first, and Quad9 regularly overtook comss with
@@ -142,24 +143,64 @@ drop_comss() {
     return 0
 }
 
+# 0.4.0: geo-unblocking servers get their own key. Before, doqd took the
+# fastest DNS answer for every name and mixed the proxy pools of different
+# servers; now geo-blocked names go to one pinned server, and Quad9/ControlD
+# stop being fallbacks — every other name goes to the fastest server.
+# Configs without a known unblocking server, or already on `geo`, are left alone.
+migrate_geo() {
+    grep -q '^geo[[:space:]]' "$CONF" && return 0
+    grep -Eq '^upstream[[:space:]]+quic://(geohide\.ru|dns\.dns-ai\.ru|dns\.comss\.one)[[:space:]]*$' "$CONF" || return 0
+    awk '
+        $1 == "upstream" && ($2 == "quic://geohide.ru" || $2 == "quic://dns.dns-ai.ru" || $2 == "quic://dns.comss.one") {
+            print "geo " $2
+            next
+        }
+        $1 == "fallback" && ($2 == "quic://dns.quad9.net" || $2 == "quic://p0.freedns.controld.com") {
+            print "upstream " $2
+            next
+        }
+        /^# DoQ upstreams: queries go to the fastest live one/ {
+            print "# Geo-unblocking servers: geo-blocked names (ChatGPT, Gemini, Claude...) go only"
+            print "# to one of them, picked once by its proxies and kept. Manage with: doqd add --geo"
+            next
+        }
+        /^# These (two|three) answer with their proxy addresses/ { next }
+        /^# geolocation \(ChatGPT, Gemini, Claude\.\.\.\)\.$/ { next }
+        /^# Fallbacks: asked only when every upstream above has failed/ {
+            print "# Plain resolvers: every other name goes to the fastest of these and the servers"
+            print "# above. Manage with: doqd add / doqd remove"
+            next
+        }
+        /^# addresses, so they must never overtake them\. Add with: doqd add --fallback$/ { next }
+        { print }
+    ' "$CONF" > "$CONF.new" && mv "$CONF.new" "$CONF" || { rm -f "$CONF.new"; return 1; }
+    log "config: geo-unblocking servers now use the 'geo' key; Quad9 and ControlD are plain upstreams"
+    return 0
+}
+
 # Existing config is preserved on reinstall/upgrade.
 [ -f "$CONF" ] && { migrate_conf || log "WARNING: could not update $CONF, left as is"; }
 [ -f "$CONF" ] && { drop_comss || log "WARNING: could not update $CONF, left as is"; }
+[ -f "$CONF" ] && { migrate_geo || log "WARNING: could not update $CONF, left as is"; }
 if [ ! -f "$CONF" ]; then
     cat > "$CONF" <<EOF
 # doqd — DNS-over-QUIC forwarder. https://github.com/necronicle/keenetic-doq
 listen $LAN_IP:$PORT
 
-# DoQ upstreams: queries go to the fastest live one. Manage with: doqd add / doqd remove
-# These two answer with their proxy addresses for services blocked by
-# geolocation (ChatGPT, Gemini, Claude...).
-upstream quic://geohide.ru
-upstream quic://dns.dns-ai.ru
+# Geo-unblocking servers: geo-blocked names (ChatGPT, Gemini, Claude...) go only
+# to one of them, picked once by its proxies and kept. Manage with: doqd add --geo
+geo quic://geohide.ru
+geo quic://dns.dns-ai.ru
 
-# Fallbacks: asked only when every upstream above has failed. They return real
-# addresses, so they must never overtake them. Add with: doqd add --fallback
-fallback quic://dns.quad9.net
-fallback quic://p0.freedns.controld.com
+# Plain resolvers: every other name goes to the fastest of these and the servers
+# above. Manage with: doqd add / doqd remove
+upstream quic://dns.quad9.net
+upstream quic://p0.freedns.controld.com
+
+# Your own geo-blocked domains (subdomains included), on top of the built-in
+# list. Manage with: doqd add-domain / doqd remove-domain
+# geo-domain example.ai
 
 # Plain-DNS servers used ONLY to resolve the upstream names above. They must
 # be external: any DNS on the router itself is the router's own proxy, which

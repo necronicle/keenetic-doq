@@ -1,0 +1,33 @@
+# doqd — DNS-over-QUIC forwarder. https://github.com/necronicle/keenetic-doq
+listen 192.168.1.1:5354
+
+# DoQ upstreams: queries go to the fastest live one. Manage with: doqd add / doqd remove
+# These three answer with their proxy addresses for services blocked by
+# geolocation (ChatGPT, Gemini, Claude...).
+upstream quic://dns.comss.one
+upstream quic://geohide.ru
+upstream quic://dns.dns-ai.ru
+
+# Fallbacks: asked only when every upstream above has failed. They return real
+# addresses, so they must never overtake them. Add with: doqd add --fallback
+fallback quic://dns.quad9.net
+fallback quic://p0.freedns.controld.com
+
+# Plain-DNS servers used ONLY to resolve the upstream names above. They must
+# be external: any DNS on the router itself is the router's own proxy, which
+# forwards to doqd — asking it would mean asking ourselves.
+# All are asked at once; a server silent over UDP is retried over TCP.
+# 77.88.8.8:1253 is Yandex DNS on a non-standard port, for ISPs that drop
+# port-53 queries for some names.
+bootstrap 77.88.8.8
+bootstrap 77.88.8.8:1253
+bootstrap 8.8.8.8
+bootstrap 1.1.1.1
+
+# cache: max entries / TTL bounds in seconds
+cache_size 4096
+min_ttl 60
+max_ttl 86400
+
+# log level: debug | info | warn | error
+log info

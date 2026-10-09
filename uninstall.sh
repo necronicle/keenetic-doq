@@ -29,5 +29,6 @@ fi
 
 [ -x /opt/etc/init.d/S56doqd ] && /opt/etc/init.d/S56doqd stop || true
 rm -f /opt/etc/init.d/S56doqd /opt/sbin/doqd
+rm -rf /opt/var/lib/doqd /tmp/doqd.state.json
 log "config /opt/etc/doqd.conf kept (delete manually if unwanted)"
 log "done"

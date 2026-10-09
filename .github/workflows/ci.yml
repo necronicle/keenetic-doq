@@ -13,6 +13,7 @@ jobs:
           go-version: '1.23'
       - run: go vet ./...
       - run: go test ./...
+      - run: sh scripts/test-install-migrate.sh
       - name: cross-build all router arches
         run: |
           CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o /dev/null ./cmd/doqd
