@@ -183,3 +183,20 @@ func withTTL(m *dns.Msg, ttl func(uint32) uint32) *dns.Msg {
 	}
 	return out
 }
+
+// DeleteIf удаляет записи, для которых pred вернул true, вместе с
+// устаревшими: после смены сервера обхода старые адреса прокси не должны
+// вернуться даже как stale. pred вызывается под замком кеша.
+func (c *Cache) DeleteIf(pred func(*dns.Msg) bool) int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	n := 0
+	for k, el := range c.byKey {
+		if pred(el.Value.(*entry).msg) {
+			c.lru.Remove(el)
+			delete(c.byKey, k)
+			n++
+		}
+	}
+	return n
+}
