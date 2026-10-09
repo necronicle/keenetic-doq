@@ -7,8 +7,8 @@
 
 **Telegram: [DoQ topic in @zapret2keenetic](https://t.me/zapret2keenetic/55256)** — questions, setup help, discussion (in Russian)
 
-DNS-over-QUIC (RFC 9250) for Keenetic routers — **alongside** the stock
-DoT/DoH, not instead of them.
+DNS-over-QUIC (RFC 9250) for Keenetic routers — **instead of** the stock
+DoT/DoH, without touching port 53.
 
 KeeneticOS supports DoT and DoH but not DoQ, and has no plans to add it.
 Existing solutions (AdGuard Home, dnsproxy) require `opkg dns-override`:
@@ -16,17 +16,40 @@ they capture port 53, displace the stock `ndnproxy` and break neighboring
 Entware projects. `keenetic-doq` works differently:
 
 ```
-LAN clients → ndnproxy :53 → [stock DoT/DoH upstreams]
-                           → <LAN-IP>:5354 (doqd) → [cache] → quic:// upstreams
+LAN clients → ndnproxy :53 → <LAN-IP>:5354 (doqd) → [cache] → quic:// upstreams
 ```
 
 The `doqd` daemon serves plain DNS on the router's LAN address (port 5354)
 and registers itself with the stock `ip name-server <LAN-IP>:5354` command
-as one more upstream of the system DNS. Port 53 is never touched and
-`opkg dns-override` is not needed. `ndnproxy` naturally prefers the fastest
-upstream — the local doqd with its cache wins on merit.
+as an upstream of the system DNS. Port 53 is never touched and
+`opkg dns-override` is not needed.
 
 > This project is intended for research into network protocols and for studying how DNS works. It is to be used for educational purposes only.
+
+## When the router asks doqd
+
+To KeeneticOS doqd is an ordinary, manually added DNS server. Which server
+answers a client is decided by the router's stock logic:
+
+- **DoT/DoH enabled — doqd is not used at all.** Per the
+  [Keenetic manual](https://support.keenetic.ru/ultra/kn-1811/ru/31543.html)
+  every query then goes to the DoT/DoH servers only, while the ISP's DNS
+  and manually added servers, doqd included, are not used. There is no
+  fallback to them either — users have confirmed this. So DoT/DoH must be
+  turned off for doqd to work.
+- **DoT/DoH disabled — a query goes to all plain servers at once**: doqd,
+  the ISP's DNS and other manually added ones, and the client gets the
+  fastest answer
+  ([Keenetic manual](https://support.keenetic.ru/ultra/kn-1811/ru/22961.html)).
+  The ISP's DNS may stay, but then part of the answers come from it, and
+  which part cannot be predicted. To send everything through doqd, turn
+  the ISP's DNS off in the internet connection settings ("ignore the
+  ISP's DNS", in the CLI `interface <connection> ip no name-servers`),
+  then `system configuration save`. The router's DNS then works only
+  while doqd is alive.
+
+Devices with an internet filter profile (AdGuard DNS, Yandex.DNS, SkyDNS)
+use the filter's DNS, bypassing doqd.
 
 ## Features
 
@@ -215,14 +238,11 @@ first, and Quad9 regularly overtook comss with the real address. The
 installer turns Quad9 into a fallback by itself, adds ControlD next to it
 and, if the config still
 holds the old defaults, adds geohide and dns-ai. If that didn't help, look
-at `doqd status`: an `other DNS` line means the router asks other servers
-alongside doqd — usually the ISP's DNS or the built-in DoT/DoH — and takes
-the fastest answer, so the real address arrives past doqd. To send every
-query through doqd, remove the others: the ISP's DNS is turned off in the
-internet connection settings ("ignore the ISP's DNS", in the CLI
-`interface <connection> ip no name-servers`), DoT/DoH in the router's DNS
-settings; then `system configuration save`. Mind that the router's DNS
-then works only while doqd is alive. Devices have cached the stale answer
+at `doqd status`: an `other DNS` line means the router has other servers
+configured besides doqd, and the real address may arrive past doqd.
+To send everything through doqd, turn the ISP's DNS off — see
+[When the router asks doqd](#when-the-router-asks-doqd). Devices have
+cached the stale answer
 too — restart the browser on them or wait a few minutes.
 
 **Why not send only geo-blocked names through the unblocking servers and
