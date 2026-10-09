@@ -35,6 +35,12 @@ func runStatus(args []string) int {
 		fmt.Println("daemon:          not running")
 	}
 	fmt.Printf("listen:          %s (udp+tcp)\n", listen)
+	for _, s := range confServers(lines) {
+		if s.Geo {
+			fmt.Println(geoStatusLine(readSnap()))
+			break
+		}
+	}
 
 	host, port, err := net.SplitHostPort(listen)
 	if err != nil { // конфиг без порта — берём порт из дефолта

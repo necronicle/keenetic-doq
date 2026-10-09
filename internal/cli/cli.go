@@ -19,6 +19,7 @@ var subcommands = map[string]func(args []string) int{
 	"add-domain":    runAddDomain,
 	"remove-domain": runRemoveDomain,
 	"status":        runStatus,
+	"geo":           runGeo,
 }
 
 func Run(args []string) int {
@@ -53,6 +54,8 @@ Management commands:
   doqd remove-domain <domain>     remove it again (built-in domains stay)
   doqd remove <number|url>        remove an upstream, restart the daemon
   doqd status                     daemon, registration and resolve check
+  doqd geo                        pinned geo-unblocking server, ranking, proxies
+  doqd geo reselect               re-evaluate the geo-unblocking servers now
 
 Flags accepted by management commands:
   -c path    config file (default /opt/etc/doqd.conf)
