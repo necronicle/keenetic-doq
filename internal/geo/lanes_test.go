@@ -307,3 +307,36 @@ func TestSnapshotWritten(t *testing.T) {
 		t.Fatalf("snapshot = %+v, %v", s, err)
 	}
 }
+
+func TestAAAAFirstThenAStillGeo(t *testing.T) {
+	fast := newFake("fast", map[string][]string{"new.example.": {"7.7.7.7"}})
+	g1 := newFake("g1", map[string][]string{"new.example.": {"1.1.1.1"}})
+	l, _ := newTestLanes(t, fast, nil, g1)
+	l.prints.Set("g1", poolOf("1.1.1.1"))
+	ask(t, l, "new.example", dns.TypeAAAA)
+	if got := ipsOf(ask(t, l, "new.example", dns.TypeA)); !reflect.DeepEqual(got, []string{"1.1.1.1"}) {
+		t.Fatalf("A after AAAA must come from the pinned pool, got %v", got)
+	}
+	if l.class.Lookup("new.example.") != Geo {
+		t.Fatal("must be geo")
+	}
+}
+
+func TestParallelAAndAAAAEndGeo(t *testing.T) {
+	fast := newFake("fast", map[string][]string{"new.example.": {"7.7.7.7"}})
+	g1 := newFake("g1", map[string][]string{"new.example.": {"1.1.1.1"}})
+	l, _ := newTestLanes(t, fast, nil, g1)
+	l.prints.Set("g1", poolOf("1.1.1.1"))
+	var wg sync.WaitGroup
+	for _, qt := range []uint16{dns.TypeA, dns.TypeAAAA} {
+		wg.Add(1)
+		go func() { defer wg.Done(); ask(t, l, "new.example", qt) }()
+	}
+	wg.Wait()
+	if l.class.Lookup("new.example.") != Geo {
+		t.Fatal("must be geo")
+	}
+	if got := ipsOf(ask(t, l, "new.example", dns.TypeA)); !reflect.DeepEqual(got, []string{"1.1.1.1"}) {
+		t.Fatalf("got %v", got)
+	}
+}

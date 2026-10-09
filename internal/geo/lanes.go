@@ -155,11 +155,13 @@ func (l *Lanes) Exchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
 	case Plain:
 		return l.cfg.Fast.Exchange(ctx, m)
 	}
-	if q.Qtype == dns.TypeA || q.Qtype == dns.TypeAAAA {
+	if q.Qtype == dns.TypeA {
 		return l.classifyExchange(ctx, m)
 	}
-	// HTTPS, SVCB и прочее: полосу определяет A-запись. Иначе Safari получил
-	// бы из HTTPS-записи Cloudflare подсказки с настоящими адресами.
+	// AAAA, HTTPS, SVCB и прочее: полосу определяет A-запись. Пулы строятся по
+	// A, поэтому AAAA-ответ сервера обхода не совпал бы ни с одним пулом и имя
+	// выучилось бы «обычным»; а из HTTPS-записи Cloudflare Safari получил бы
+	// подсказки с настоящими адресами.
 	probe := new(dns.Msg)
 	probe.SetQuestion(q.Name, dns.TypeA)
 	l.classifyExchange(ctx, probe)

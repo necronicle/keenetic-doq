@@ -81,3 +81,17 @@ func TestClassifierEvictsOldest(t *testing.T) {
 		t.Fatal("LRU eviction must drop the least recently used name")
 	}
 }
+
+func TestPlainNeverReplacesGeo(t *testing.T) {
+	c := NewClassifier(NewMatcher())
+	c.Learn("a.example.", Geo)
+	c.Learn("a.example.", Plain)
+	if c.Lookup("a.example.") != Geo {
+		t.Fatal("geo verdict must be sticky")
+	}
+	c.Learn("b.example.", Plain)
+	c.Learn("b.example.", Geo)
+	if c.Lookup("b.example.") != Geo {
+		t.Fatal("geo must replace plain")
+	}
+}

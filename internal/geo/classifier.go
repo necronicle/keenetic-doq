@@ -70,6 +70,10 @@ func (c *Classifier) Learn(name string, v Verdict) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if el, ok := c.byName[n]; ok {
+		// Geo липкий до перезапуска: «обычное» его не затирает.
+		if v == Plain && el.Value.(*learned).v == Geo {
+			return
+		}
 		c.lru.Remove(el)
 	}
 	c.byName[n] = c.lru.PushFront(&learned{name: n, v: v, at: c.now()})
