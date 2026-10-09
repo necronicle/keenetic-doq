@@ -55,6 +55,7 @@ type Lanes struct {
 	reselect chan string
 	interval time.Duration
 	now      func() time.Time
+	loopDone chan struct{} // закрывается при выходе фонового цикла
 
 	mu          sync.Mutex
 	pinned      string
