@@ -354,7 +354,8 @@ answer where every address is bad is served as is by the filter anyway).
 **How do I roll back to 0.3.x?** 0.3.x does not know the `geo` key and will
 not start with a 0.4.0 config. Before installing the older version, turn
 the `geo` lines in `/opt/etc/doqd.conf` back into `upstream`, and the
-Quad9 and ControlD `upstream` lines into `fallback`; or delete
+Quad9 and ControlD `upstream` lines into `fallback`, and delete any
+`geo-domain` lines (0.3.x rejects unknown keys); or delete
 `/opt/etc/doqd.conf` and the older installer will write its own defaults.
 
 **How do I add my own geo-blocked domain?** `doqd add-domain example.com`
