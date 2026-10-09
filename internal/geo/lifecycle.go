@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"slices"
 	"time"
 )
 
@@ -15,13 +16,18 @@ func (l *Lanes) Start(ctx context.Context) {
 	}
 	st, err := LoadState(l.cfg.StatePath)
 	switch {
-	case err == nil && l.has(st.Pinned):
+	case err == nil && l.has(st.Pinned) && slices.Equal(st.Probes, ProbeDomains):
 		l.mu.Lock()
 		l.pinned, l.since, l.evaluatedAt, l.ranking = st.Pinned, st.Since, st.EvaluatedAt, st.Ranking
 		l.saved = st
 		l.mu.Unlock()
 		l.applyRanking(st.Ranking)
 		slog.Info("geo: pinned server restored", "server", st.Pinned, "since", st.Since)
+	case err == nil && !slices.Equal(st.Probes, ProbeDomains):
+		// Выбор сделан по другому набору проб (или state 0.4.0 без поля):
+		// сервер мог подменять лишь часть нужных сервису хостов.
+		slog.Info("geo: probe set changed, not trusting the saved pin", "pinned", st.Pinned, "saved_probes", st.Probes)
+		l.Reselect("probe set changed")
 	case err == nil:
 		l.Reselect("saved server is not in the config")
 	default:

@@ -13,9 +13,16 @@ var builtinDomains = []string{
 	"notebooklm.google.com", "x.ai", "grok.com",
 }
 
-// ProbeDomains — по ним оцениваются серверы обхода и пополняется отпечаток
-// пула закреплённого сервера.
-var ProbeDomains = []string{"chatgpt.com.", "claude.ai.", "gemini.google.com."}
+// ProbeDomains — хосты, нужные рабочему сеансу сервиса: по ним оцениваются
+// серверы обхода (охват = сколько из них сервер подменяет живым прокси) и
+// пополняется отпечаток пула закреплённого. Сервер, подменяющий только сам
+// сайт (chatgpt.com), но отдающий настоящие адреса sentinel/tcr9i, сервис не
+// открывает: антибот и капча идут с российского адреса и отклоняются.
+// Меняя список, меняют и набор в geo.state: при расхождении выбор переоценивается.
+var ProbeDomains = []string{
+	"chatgpt.com.", "sentinel.openai.com.", "tcr9i.chat.openai.com.", "auth.openai.com.",
+	"claude.ai.", "assets-proxy.anthropic.com.", "gemini.google.com.",
+}
 
 // BuiltinDomains отдаёт копию встроенного списка.
 func BuiltinDomains() []string { return append([]string(nil), builtinDomains...) }

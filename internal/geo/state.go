@@ -16,7 +16,10 @@ const (
 )
 
 type State struct {
-	Pinned      string    `json:"pinned"`
+	Pinned string `json:"pinned"`
+	// Probes — набор пробных доменов, на котором сделана оценка; при его
+	// смене (и у старых state без поля) закреплённому не доверяют.
+	Probes      []string  `json:"probes"`
 	Since       time.Time `json:"since"`
 	EvaluatedAt time.Time `json:"evaluated_at"`
 	Ranking     []Result  `json:"ranking"`

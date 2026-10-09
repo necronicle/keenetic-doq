@@ -28,7 +28,7 @@ func retryDelay(l *Lanes) time.Duration {
 func TestInconclusiveEvaluationKeepsPreviousChoice(t *testing.T) {
 	l, g1, g2, _ := lifecycleFixture(t)
 	l.retryBase, l.retryMax = 50*time.Millisecond, 120*time.Millisecond
-	saved := &State{Pinned: "g2", Since: time.Now().Add(-time.Hour), Ranking: savedRanking()}
+	saved := &State{Pinned: "g2", Probes: ProbeDomains, Since: time.Now().Add(-time.Hour), Ranking: savedRanking()}
 	if err := SaveState(l.cfg.StatePath, saved); err != nil {
 		t.Fatal(err)
 	}
@@ -111,7 +111,7 @@ func TestDeadProxiesWithNetworkDownKeepPin(t *testing.T) {
 	fast := newFake("fast", nil)
 	fast.setErr(errors.New("network is unreachable"))
 	l.cfg.Fast = fast
-	SaveState(l.cfg.StatePath, &State{Pinned: "g1", Since: time.Now(), Ranking: []Result{
+	SaveState(l.cfg.StatePath, &State{Pinned: "g1", Probes: ProbeDomains, Since: time.Now(), Ranking: []Result{
 		savedRanking()[1], savedRanking()[0]}})
 	start(t, l)
 	p.setDead("1.1.1.1", true)
@@ -126,7 +126,7 @@ func TestDeadProxiesWithNetworkDownKeepPin(t *testing.T) {
 
 func TestPinUnchangedDoesNotRewriteState(t *testing.T) {
 	l, _, _, _ := lifecycleFixture(t)
-	SaveState(l.cfg.StatePath, &State{Pinned: "g2", Since: time.Now(), Ranking: savedRanking()})
+	SaveState(l.cfg.StatePath, &State{Pinned: "g2", Probes: ProbeDomains, Since: time.Now(), Ranking: savedRanking()})
 	start(t, l)
 	os.Remove(l.cfg.StatePath)
 	l.pin("g2", "evaluation: same result")

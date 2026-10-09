@@ -12,7 +12,7 @@ import (
 func TestStateRoundTrip(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "sub", "geo.state") // каталог создаётся сам
 	since := time.Date(2026, 10, 9, 14, 5, 0, 0, time.UTC)
-	in := &State{Pinned: "quic://dns.dns-ai.ru", Since: since, Ranking: []Result{{URL: "quic://dns.dns-ai.ru",
+	in := &State{Pinned: "quic://dns.dns-ai.ru", Probes: ProbeDomains, Since: since, Ranking: []Result{{URL: "quic://dns.dns-ai.ru",
 		Coverage: 3, PoolIPs: []string{"13.140.94.151"}, SNI: map[string]string{"13.140.94.151": "chatgpt.com"}}}}
 	if err := SaveState(path, in); err != nil {
 		t.Fatal(err)

@@ -5,6 +5,7 @@ import (
 	"net/netip"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 	"time"
 
@@ -15,8 +16,7 @@ import (
 // обычный резолвер — настоящие адреса.
 func lifecycleFixture(t *testing.T) (*Lanes, *fakeEx, *fakeEx, *fakeProber) {
 	t.Helper()
-	ref := newFake("ref", map[string][]string{"chatgpt.com.": {"7.7.7.7"}, "claude.ai.": {"7.7.7.8"},
-		"gemini.google.com.": {"7.7.7.9"}})
+	ref := newFake("ref", realAnswers())
 	g1 := newFake("g1", probeAnswers("1.1.1.1"))
 	g2 := newFake("g2", probeAnswers("2.2.2.2"))
 	p := &fakeProber{lat: map[string]time.Duration{"1.1.1.1": 900 * time.Millisecond, "2.2.2.2": 100 * time.Millisecond}}
@@ -65,14 +65,14 @@ func TestStartEvaluatesAndPinsBest(t *testing.T) {
 
 func savedRanking() []Result {
 	return []Result{
-		{URL: "g2", Coverage: 3, Alive: 1, Total: 1, PoolIPs: []string{"2.2.2.2"}, SNI: map[string]string{"2.2.2.2": "chatgpt.com"}},
-		{URL: "g1", Coverage: 3, Alive: 1, Total: 1, PoolIPs: []string{"1.1.1.1"}, SNI: map[string]string{"1.1.1.1": "chatgpt.com"}},
+		{URL: "g2", Coverage: len(ProbeDomains), Alive: 1, Total: 1, PoolIPs: []string{"2.2.2.2"}, SNI: map[string]string{"2.2.2.2": "chatgpt.com"}},
+		{URL: "g1", Coverage: len(ProbeDomains), Alive: 1, Total: 1, PoolIPs: []string{"1.1.1.1"}, SNI: map[string]string{"1.1.1.1": "chatgpt.com"}},
 	}
 }
 
 func TestStartUsesSavedState(t *testing.T) {
 	l, g1, g2, _ := lifecycleFixture(t)
-	if err := SaveState(l.cfg.StatePath, &State{Pinned: "g2", Since: time.Now(), Ranking: savedRanking()}); err != nil {
+	if err := SaveState(l.cfg.StatePath, &State{Pinned: "g2", Since: time.Now(), Probes: ProbeDomains, Ranking: savedRanking()}); err != nil {
 		t.Fatal(err)
 	}
 	start(t, l)
@@ -88,9 +88,39 @@ func TestStartUsesSavedState(t *testing.T) {
 	}
 }
 
+// Закреплённый выбор, сделанный на другом наборе пробных доменов (в том числе
+// state 0.4.0 без поля probes), не доверяется: переоценка и лучший охват.
+func TestSavedStateWithOtherProbeSetReevaluates(t *testing.T) {
+	cases := map[string][]string{
+		"older set": {"chatgpt.com.", "claude.ai.", "gemini.google.com."},
+		"no field":  nil,
+	}
+	for name, probes := range cases {
+		t.Run(name, func(t *testing.T) {
+			l, _, _, _ := lifecycleFixture(t)
+			// g2 — частичный охват, быстрый TLS; g1 — полный.
+			partial := realAnswers()
+			for _, d := range []string{"chatgpt.com.", "auth.openai.com.", "claude.ai.", "gemini.google.com."} {
+				partial[d] = []string{"2.2.2.2"}
+			}
+			l.cfg.Geo[1].Ex = newFake("g2", partial)
+			l.ev.Probes = ProbeDomains
+			if err := SaveState(l.cfg.StatePath, &State{Pinned: "g2", Since: time.Now(), Probes: probes, Ranking: savedRanking()}); err != nil {
+				t.Fatal(err)
+			}
+			start(t, l)
+			waitFor(t, func() bool { return evaluated(l) && l.Pinned() == "g1" }, 5*time.Second)
+			st, err := LoadState(l.cfg.StatePath)
+			if err != nil || !reflect.DeepEqual(st.Probes, ProbeDomains) || st.Pinned != "g1" {
+				t.Fatalf("state = %+v, %v", st, err)
+			}
+		})
+	}
+}
+
 func TestSavedPinMissingFromConfigReevaluates(t *testing.T) {
 	l, _, _, _ := lifecycleFixture(t)
-	SaveState(l.cfg.StatePath, &State{Pinned: "gone", Ranking: savedRanking()})
+	SaveState(l.cfg.StatePath, &State{Pinned: "gone", Probes: ProbeDomains, Ranking: savedRanking()})
 	start(t, l)
 	waitFor(t, func() bool { return evaluated(l) && l.Pinned() == "g2" }, 5*time.Second)
 }
@@ -100,7 +130,7 @@ func TestNoCoverageKeepsFirstServer(t *testing.T) {
 	l.retryBase, l.retryMax = time.Hour, time.Hour
 	for _, g := range []*fakeEx{g1, g2} {
 		g.mu.Lock()
-		g.ips = map[string][]string{"chatgpt.com.": {"7.7.7.7"}, "claude.ai.": {"7.7.7.8"}, "gemini.google.com.": {"7.7.7.9"}}
+		g.ips = realAnswers()
 		g.mu.Unlock()
 	}
 	start(t, l)
@@ -119,7 +149,7 @@ func TestNoCoverageKeepsFirstServer(t *testing.T) {
 
 func TestDeadProxiesFailOver(t *testing.T) {
 	l, _, _, p := lifecycleFixture(t)
-	SaveState(l.cfg.StatePath, &State{Pinned: "g1", Since: time.Now(), Ranking: []Result{
+	SaveState(l.cfg.StatePath, &State{Pinned: "g1", Since: time.Now(), Probes: ProbeDomains, Ranking: []Result{
 		savedRanking()[1], savedRanking()[0]}})
 	start(t, l)
 	p.setDead("1.1.1.1", true)
@@ -131,7 +161,7 @@ func TestDeadProxiesFailOver(t *testing.T) {
 
 func TestReselectReevaluates(t *testing.T) {
 	l, _, _, _ := lifecycleFixture(t)
-	SaveState(l.cfg.StatePath, &State{Pinned: "g1", Since: time.Now(), Ranking: []Result{
+	SaveState(l.cfg.StatePath, &State{Pinned: "g1", Since: time.Now(), Probes: ProbeDomains, Ranking: []Result{
 		savedRanking()[1], savedRanking()[0]}})
 	start(t, l)
 	l.Reselect("manual")

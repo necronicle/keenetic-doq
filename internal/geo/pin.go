@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/netip"
 	"reflect"
+	"slices"
 
 	"github.com/miekg/dns"
 
@@ -136,11 +137,11 @@ func (l *Lanes) pin(url, reason string) {
 		l.rtt = 0
 	}
 	l.fails, l.deadCycles = 0, 0
-	st := State{Pinned: l.pinned, Since: l.since, EvaluatedAt: l.evaluatedAt, Ranking: l.ranking}
+	st := State{Pinned: l.pinned, Probes: slices.Clone(ProbeDomains), Since: l.since, EvaluatedAt: l.evaluatedAt, Ranking: l.ranking}
 	l.health.Reset(poolSNI(url, st.Ranking))
 	// Тот же сервер и тот же рейтинг — флешку не трогать (время оценки на
 	// диске при этом остаётся прежним).
-	if s := l.saved; s == nil || s.Pinned != st.Pinned || !s.Since.Equal(st.Since) || !reflect.DeepEqual(s.Ranking, st.Ranking) {
+	if s := l.saved; s == nil || s.Pinned != st.Pinned || !slices.Equal(s.Probes, st.Probes) || !s.Since.Equal(st.Since) || !reflect.DeepEqual(s.Ranking, st.Ranking) {
 		if err := SaveState(l.cfg.StatePath, &st); err != nil {
 			slog.Warn("geo: cannot save state", "path", l.cfg.StatePath, "err", err)
 		} else {

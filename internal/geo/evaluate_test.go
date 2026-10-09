@@ -3,13 +3,28 @@ package geo
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
 )
 
+// probeAnswers — ответы, где каждый пробный домен подменён на ip.
 func probeAnswers(ip string) map[string][]string {
-	return map[string][]string{"chatgpt.com.": {ip}, "claude.ai.": {ip}, "gemini.google.com.": {ip}}
+	m := map[string][]string{}
+	for _, d := range ProbeDomains {
+		m[d] = []string{ip}
+	}
+	return m
+}
+
+// realAnswers — «настоящие» адреса пробных доменов (разные у каждого).
+func realAnswers() map[string][]string {
+	m := map[string][]string{}
+	for i, d := range ProbeDomains {
+		m[d] = []string{fmt.Sprintf("7.7.7.%d", i+1)}
+	}
+	return m
 }
 
 func newEvaluator(ref *fakeEx, p *fakeProber) *Evaluator {
@@ -21,8 +36,7 @@ func newEvaluator(ref *fakeEx, p *fakeProber) *Evaluator {
 }
 
 func TestEvaluateRanksByProxyTLS(t *testing.T) {
-	ref := newFake("ref", map[string][]string{"chatgpt.com.": {"7.7.7.7"}, "claude.ai.": {"7.7.7.8"},
-		"gemini.google.com.": {"7.7.7.9"}})
+	ref := newFake("ref", realAnswers())
 	g1 := newFake("g1", probeAnswers("1.1.1.1"))
 	g2 := newFake("g2", probeAnswers("2.2.2.2"))
 	p := &fakeProber{lat: map[string]time.Duration{"1.1.1.1": 900 * time.Millisecond, "2.2.2.2": 100 * time.Millisecond}}
@@ -30,7 +44,7 @@ func TestEvaluateRanksByProxyTLS(t *testing.T) {
 	if len(rs) != 2 || rs[0].URL != "g2" {
 		t.Fatalf("ranking = %+v", rs)
 	}
-	if rs[0].Coverage != 3 || rs[0].Alive != 1 || rs[0].Total != 1 || rs[0].MedianTLSMs != 100 {
+	if rs[0].Coverage != len(ProbeDomains) || rs[0].Alive != 1 || rs[0].Total != 1 || rs[0].MedianTLSMs != 100 {
 		t.Fatalf("g2 result = %+v", rs[0])
 	}
 	if !reflect.DeepEqual(rs[0].PoolIPs, []string{"2.2.2.2"}) || rs[0].SNI["2.2.2.2"] != "chatgpt.com" {
@@ -42,8 +56,8 @@ func TestEvaluateRanksByProxyTLS(t *testing.T) {
 }
 
 func TestEvaluateNotSubstitutedGivesNoCoverage(t *testing.T) {
-	ref := newFake("ref", probeAnswers("7.7.7.7"))
-	g1 := newFake("g1", probeAnswers("7.7.7.7"))
+	ref := newFake("ref", realAnswers())
+	g1 := newFake("g1", realAnswers())
 	rs := newEvaluator(ref, &fakeProber{}).Run(context.Background(), []Server{{URL: "g1", Ex: g1}})
 	if rs[0].Coverage != 0 || len(rs[0].PoolIPs) != 0 {
 		t.Fatalf("real addresses are not a proxy pool: %+v", rs[0])
@@ -86,5 +100,32 @@ func TestRank(t *testing.T) {
 	}, order)
 	if got[0].URL != "g2" || got[1].URL != "g1" || got[2].URL != "g3" {
 		t.Fatalf("over 20%% the faster wins, no TLS data goes last: %v", got)
+	}
+}
+
+// Баг 0.4.1: dns-ai подменяет только часть хоста сервиса; полный охват у geohide
+// должен побеждать, даже если у dns-ai TLS намного быстрее.
+func TestEvaluatePrefersFullProbeCoverage(t *testing.T) {
+	ref := newFake("ref", realAnswers())
+	g1 := newFake("g1", probeAnswers("1.1.1.1"))
+	partial := realAnswers()
+	for _, d := range []string{"chatgpt.com.", "auth.openai.com.", "claude.ai.", "gemini.google.com."} {
+		partial[d] = []string{"2.2.2.2"}
+	}
+	g2 := newFake("g2", partial)
+	p := &fakeProber{lat: map[string]time.Duration{"1.1.1.1": 900 * time.Millisecond, "2.2.2.2": 20 * time.Millisecond}}
+	// Подмененные g2 «настоящие» адреса не проходят TLS-пробу как прокси, но
+	// совпадают с ref, так что покрытие считается только по подменам.
+	rs := newEvaluator(ref, p).Run(context.Background(), []Server{{URL: "g2", Ex: g2}, {URL: "g1", Ex: g1}})
+	if rs[0].URL != "g1" || rs[0].Coverage != len(ProbeDomains) || rs[1].Coverage != 4 {
+		t.Fatalf("full coverage must beat speed: %+v", rs)
+	}
+}
+
+func TestProbeDomainsCoverNeededHosts(t *testing.T) {
+	want := []string{"chatgpt.com.", "sentinel.openai.com.", "tcr9i.chat.openai.com.", "auth.openai.com.",
+		"claude.ai.", "assets-proxy.anthropic.com.", "gemini.google.com."}
+	if !reflect.DeepEqual(ProbeDomains, want) {
+		t.Fatalf("ProbeDomains = %v", ProbeDomains)
 	}
 }

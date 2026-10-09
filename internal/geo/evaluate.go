@@ -134,8 +134,24 @@ func (e *Evaluator) evalOne(ctx context.Context, s Server, refs map[string][]net
 	alive := map[netip.Addr]time.Duration{}
 	tested := map[netip.Addr]bool{}
 	var lastErr error
-	for _, probe := range e.Probes {
-		resp, err := queryA(ctx, s.Ex, probe)
+	// Пробные домены спрашиваются параллельно (их больше трёх, а предел
+	// оценки общий); обрабатываются затем по порядку — результат детерминирован.
+	type answer struct {
+		resp *dns.Msg
+		err  error
+	}
+	answers := make([]answer, len(e.Probes))
+	var qwg sync.WaitGroup
+	for i, probe := range e.Probes {
+		qwg.Add(1)
+		go func() {
+			defer qwg.Done()
+			answers[i].resp, answers[i].err = queryA(ctx, s.Ex, probe)
+		}()
+	}
+	qwg.Wait()
+	for pi, probe := range e.Probes {
+		resp, err := answers[pi].resp, answers[pi].err
 		if err != nil {
 			lastErr = err
 			continue
