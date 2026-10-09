@@ -171,6 +171,10 @@ func formatGeo(s *geo.Snapshot, probes int) string {
 		fmt.Fprintf(&b, "            last attempt %s was inconclusive (network down?), kept the previous choice; retry at %s\n",
 			s.AttemptedAt.Local().Format("2006-01-02 15:04"), s.RetryAt.Local().Format("15:04"))
 	}
+	if !s.Inconclusive && !s.Evaluating && !s.RetryAt.IsZero() {
+		fmt.Fprintf(&b, "            the pinned server does not cover every probe host; next re-evaluation at %s\n",
+			s.RetryAt.Local().Format("15:04"))
+	}
 	if len(s.Ranking) > 0 {
 		b.WriteString("\nRANKING (last evaluation):\n")
 		for i, r := range s.Ranking {

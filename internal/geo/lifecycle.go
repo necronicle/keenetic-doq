@@ -2,6 +2,7 @@ package geo
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"slices"
@@ -16,15 +17,15 @@ func (l *Lanes) Start(ctx context.Context) {
 	}
 	st, err := LoadState(l.cfg.StatePath)
 	switch {
-	case err == nil && l.has(st.Pinned) && slices.Equal(st.Probes, ProbeDomains):
+	case err == nil && l.has(st.Pinned) && slices.Equal(st.Probes, ProbeDomains) && hasCovered(st.Ranking):
 		l.mu.Lock()
 		l.pinned, l.since, l.evaluatedAt, l.ranking = st.Pinned, st.Since, st.EvaluatedAt, st.Ranking
 		l.saved = st
 		l.mu.Unlock()
 		l.applyRanking(st.Ranking)
 		slog.Info("geo: pinned server restored", "server", st.Pinned, "since", st.Since)
-	case err == nil && !slices.Equal(st.Probes, ProbeDomains):
-		// Выбор сделан по другому набору проб (или state 0.4.0 без поля):
+	case err == nil && (!slices.Equal(st.Probes, ProbeDomains) || !hasCovered(st.Ranking)):
+		// Выбор сделан по другому набору проб (или state без probes/covered):
 		// сервер мог подменять лишь часть нужных сервису хостов.
 		slog.Info("geo: probe set changed, not trusting the saved pin", "pinned", st.Pinned, "saved_probes", st.Probes)
 		// Пулы всё же в отпечатки: автообучение работает, пока идёт переоценка.
@@ -45,6 +46,16 @@ func (l *Lanes) Start(ctx context.Context) {
 		defer close(l.loopDone)
 		l.loop(ctx)
 	}()
+}
+
+// hasCovered: в рейтинге записан охват хоть одного сервера (поле covered).
+func hasCovered(rs []Result) bool {
+	for _, r := range rs {
+		if len(r.Covered) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func (l *Lanes) has(url string) bool {
@@ -72,12 +83,12 @@ func (l *Lanes) loop(ctx context.Context) {
 			retry.Stop()
 		}
 	}()
-	evaluate := func(reason string) {
+	evaluate := func(reason string, partialRetry bool) {
 		if retry != nil {
 			retry.Stop()
 			retry, retryC = nil, nil
 		}
-		if d := l.evaluate(ctx, reason); d > 0 {
+		if d := l.evaluate(ctx, reason, partialRetry); d > 0 {
 			retry = time.NewTimer(d)
 			retryC = retry.C
 		}
@@ -88,10 +99,14 @@ func (l *Lanes) loop(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case reason := <-l.reselect:
-			evaluate(reason)
+			evaluate(reason, false)
 		case <-retryC:
 			retry, retryC = nil, nil
-			evaluate("retry after an inconclusive evaluation")
+			if l.partialRetryPending() {
+				evaluate(l.partialReason(), true)
+			} else {
+				evaluate("retry after an inconclusive evaluation", false)
+			}
 		case <-t.C:
 			l.checkProxies(ctx)
 		}
@@ -102,8 +117,10 @@ func (l *Lanes) loop(ctx context.Context) {
 // evaluate оценивает все серверы обхода и закрепляет лучший. Оценка, в которой
 // ни у кого нет охвата, — безрезультатная (обычно лежит сеть): рейтинг,
 // отпечатки, закреплённый и geo.state остаются прежними. Возвращает отсрочку
-// повтора; 0 — повтор не нужен.
-func (l *Lanes) evaluate(ctx context.Context, reason string) time.Duration {
+// повтора; 0 — повтор не нужен. partialRetry — повтор из-за неполного охвата:
+// закреплённый меняется только на сервер со строго большим охватом, а при том
+// же выборе и том же охвате geo.state не переписывается.
+func (l *Lanes) evaluate(ctx context.Context, reason string, partialRetry bool) time.Duration {
 	l.mu.Lock()
 	l.evaluating = true
 	l.mu.Unlock()
@@ -140,11 +157,23 @@ func (l *Lanes) evaluate(ctx context.Context, reason string) time.Duration {
 			"keeping the pinned server and the previous ranking", "reason", reason, "pinned", pinned, "retry_in", d)
 		return d
 	}
-	l.ranking = rs
 	l.evaluatedAt = l.attemptedAt
+	target, memoryOnly := rs[0], false
+	if partialRetry {
+		var cur *Result
+		for i := range rs {
+			if rs[i].URL == l.pinned {
+				cur = &rs[i]
+			}
+		}
+		if cur != nil && rs[0].Coverage <= cur.Coverage {
+			target = *cur
+			memoryOnly = slices.Equal(cur.Covered, l.coveredOfLocked(cur.URL))
+		}
+	}
 	// Победитель без полного охвата закрепляется, но оценка повторяется с той
 	// же отсрочкой: полноохватный сервер мог быть недоступен только сейчас.
-	partial := rs[0].Coverage < len(ProbeDomains)
+	partial := target.Coverage < len(ProbeDomains)
 	var d time.Duration
 	l.retryDelay, l.retryPartial = 0, partial
 	if partial {
@@ -158,17 +187,48 @@ func (l *Lanes) evaluate(ctx context.Context, reason string) time.Duration {
 	} else {
 		l.partialDelay = 0
 	}
+	l.ranking = rs
 	l.mu.Unlock()
 	for _, r := range rs {
 		l.prints.Set(r.URL, r.Pool())
 	}
-	// Рейтинг начинается с охвата, так что первый — с охватом.
-	l.pin(rs[0].URL, "evaluation: "+reason)
+	if !memoryOnly {
+		// Рейтинг начинается с охвата, так что первый — с охватом.
+		l.pin(target.URL, "evaluation: "+reason)
+	}
 	if partial {
 		slog.Warn("geo: the winner covers only part of the probe hosts, will retry",
-			"server", rs[0].URL, "coverage", rs[0].Coverage, "of", len(ProbeDomains), "retry_in", d)
+			"server", target.URL, "coverage", target.Coverage, "of", len(ProbeDomains), "retry_in", d)
 	}
 	return d
+}
+
+// coveredOfLocked — охват сервера в текущем рейтинге; l.mu удерживается.
+func (l *Lanes) coveredOfLocked(url string) []string {
+	for _, r := range l.ranking {
+		if r.URL == url {
+			return r.Covered
+		}
+	}
+	return nil
+}
+
+func (l *Lanes) partialRetryPending() bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.retryPartial
+}
+
+func (l *Lanes) partialReason() string {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	cov := 0
+	for _, r := range l.ranking {
+		if r.URL == l.pinned {
+			cov = r.Coverage
+		}
+	}
+	return fmt.Sprintf("retry: pinned server covers %d/%d probe hosts", cov, len(ProbeDomains))
 }
 
 // checkProxies — цикл проверки прокси закреплённого; все мертвы три цикла

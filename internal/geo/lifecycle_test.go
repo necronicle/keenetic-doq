@@ -1,6 +1,7 @@
 package geo
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"net/netip"
@@ -270,6 +271,93 @@ func TestPartialWinnerIsRetried(t *testing.T) {
 	waitFor(t, func() bool { return retryDelay(l) > 0 }, 5*time.Second)
 	g1.setErr(nil)
 	waitFor(t, func() bool { return l.Pinned() == "g1" && retryDelay(l) == 0 }, 5*time.Second)
+	if st, err := LoadState(l.cfg.StatePath); err != nil || st.Pinned != "g1" {
+		t.Fatalf("the switch to the full-coverage server must be saved: %+v, %v", st, err)
+	}
+}
+
+func partialAnswers(ip string) map[string][]string {
+	m := realAnswers()
+	for _, d := range []string{"chatgpt.com.", "auth.openai.com.", "claude.ai.", "gemini.google.com."} {
+		m[d] = []string{ip}
+	}
+	return m
+}
+
+func attemptCount(l *Lanes) func() time.Time {
+	return func() time.Time { l.mu.Lock(); defer l.mu.Unlock(); return l.attemptedAt }
+}
+
+func waitNextAttempt(t *testing.T, l *Lanes) {
+	t.Helper()
+	at := attemptCount(l)
+	prev := at()
+	waitFor(t, func() bool { return at().After(prev) && !evaluatedBusy(l) }, 5*time.Second)
+}
+
+func evaluatedBusy(l *Lanes) bool { l.mu.Lock(); defer l.mu.Unlock(); return l.evaluating }
+
+// Повторы при неполном охвате не переписывают geo.state, пока выбор тот же.
+func TestPartialRetriesDoNotRewriteState(t *testing.T) {
+	l, g1, _, p := lifecycleFixture(t)
+	l.retryBase, l.retryMax = 30*time.Millisecond, 30*time.Millisecond
+	l.cfg.Geo[1].Ex = newFake("g2", partialAnswers("2.2.2.2"))
+	g1.setErr(errors.New("down"))
+	start(t, l)
+	waitFor(t, func() bool { return evaluated(l) && l.Pinned() == "g2" }, 5*time.Second)
+	first, err := os.ReadFile(l.cfg.StatePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, lat := range []time.Duration{300 * time.Millisecond, 50 * time.Millisecond} {
+		p.mu.Lock()
+		p.lat["2.2.2.2"] = lat
+		p.mu.Unlock()
+		waitNextAttempt(t, l)
+		waitNextAttempt(t, l)
+		if now, _ := os.ReadFile(l.cfg.StatePath); !bytes.Equal(first, now) {
+			t.Fatalf("retry %d rewrote geo.state", i)
+		}
+	}
+	if s := l.Snapshot(); s.RetryAt.IsZero() || s.Inconclusive {
+		t.Fatalf("partial retry must be visible in the snapshot: %+v", s)
+	}
+}
+
+// Равный по охвату конкурент, ставший быстрее, закреплённого не вытесняет.
+func TestPartialRetryDoesNotSwapEquals(t *testing.T) {
+	l, _, _, p := lifecycleFixture(t)
+	l.retryBase, l.retryMax = 30*time.Millisecond, 30*time.Millisecond
+	l.cfg.Geo[0].Ex = newFake("g1", partialAnswers("1.1.1.1"))
+	l.cfg.Geo[1].Ex = newFake("g2", partialAnswers("2.2.2.2"))
+	start(t, l)
+	waitFor(t, func() bool { return evaluated(l) && l.Pinned() == "g2" }, 5*time.Second)
+	p.mu.Lock()
+	p.lat["1.1.1.1"], p.lat["2.2.2.2"] = 10*time.Millisecond, 600*time.Millisecond
+	p.mu.Unlock()
+	waitNextAttempt(t, l)
+	waitNextAttempt(t, l)
+	if l.Pinned() != "g2" {
+		t.Fatalf("equal coverage must not swap the pin, got %s", l.Pinned())
+	}
+	l.mu.Lock()
+	top := l.ranking[0].URL
+	l.mu.Unlock()
+	if top != "g1" {
+		t.Fatalf("the in-memory ranking is still refreshed, top = %s", top)
+	}
+}
+
+// State без covered (первая сборка 0.4.1) не доверяется.
+func TestSavedStateWithoutCoveredReevaluates(t *testing.T) {
+	l, _, _, _ := lifecycleFixture(t)
+	r := savedRanking()
+	for i := range r {
+		r[i].Covered = nil
+	}
+	SaveState(l.cfg.StatePath, &State{Pinned: "g1", Since: time.Now(), Probes: ProbeDomains, Ranking: r})
+	start(t, l)
+	waitFor(t, func() bool { return evaluated(l) && l.Pinned() == "g2" }, 5*time.Second)
 }
 
 // Смена набора проб: пул из сохранённого рейтинга всё равно в отпечатках.
