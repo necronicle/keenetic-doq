@@ -76,6 +76,14 @@ func (l *Lanes) evaluate(ctx context.Context, reason string) {
 	l.writeSnapshot()
 	slog.Info("geo: evaluating unblocking servers", "reason", reason)
 	rs := l.ev.Run(ctx, l.cfg.Geo)
+	if ctx.Err() != nil {
+		// Остановка посреди оценки: результаты пусты, их нельзя сохранять.
+		l.mu.Lock()
+		l.evaluating = false
+		l.mu.Unlock()
+		slog.Info("geo: evaluation cancelled", "reason", reason)
+		return
+	}
 	for _, r := range rs {
 		l.prints.Set(r.URL, r.Pool())
 		slog.Info("geo: evaluated", "server", r.URL, "coverage", r.Coverage, "proxies_alive", r.Alive,
@@ -97,6 +105,9 @@ func (l *Lanes) evaluate(ctx context.Context, reason string) {
 // подряд — отказ.
 func (l *Lanes) checkProxies(ctx context.Context) {
 	l.health.CheckAll(ctx)
+	if ctx.Err() != nil {
+		return // проверка прервана остановкой — не засчитывать
+	}
 	l.mu.Lock()
 	if !l.health.AllDead() {
 		l.deadCycles = 0

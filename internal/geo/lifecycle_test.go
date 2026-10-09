@@ -147,3 +147,34 @@ func TestNoGeoStartIsNoop(t *testing.T) {
 		}
 	}
 }
+
+func TestCancelledEvaluationIsNotPersisted(t *testing.T) {
+	l, g1, g2, _ := lifecycleFixture(t)
+	g1.setDelay(2 * time.Second)
+	g2.setDelay(2 * time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
+	l.Start(ctx)
+	time.Sleep(200 * time.Millisecond)
+	cancel()
+	<-l.loopDone
+	if _, err := os.Stat(l.cfg.StatePath); !os.IsNotExist(err) {
+		t.Fatalf("cancelled evaluation must not write state: %v", err)
+	}
+	// Второй запуск на том же файле состояния обязан оценить заново.
+	g1.setDelay(0)
+	g2.setDelay(0)
+	l2 := New(Config{Fast: l.cfg.Fast, Reference: l.cfg.Reference, Prober: l.cfg.Prober, Geo: l.cfg.Geo,
+		StatePath: l.cfg.StatePath, SnapshotPath: l.cfg.SnapshotPath})
+	l2.interval = time.Hour
+	start(t, l2)
+	waitFor(t, func() bool { return evaluated(l2) && l2.Pinned() == "g2" }, 5*time.Second)
+}
+
+func TestCorruptStateReevaluates(t *testing.T) {
+	l, _, _, _ := lifecycleFixture(t)
+	if err := os.WriteFile(l.cfg.StatePath, []byte("\x00garbage{{"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	start(t, l)
+	waitFor(t, func() bool { return evaluated(l) && l.Pinned() == "g2" }, 5*time.Second)
+}
