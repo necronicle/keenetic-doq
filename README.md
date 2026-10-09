@@ -5,6 +5,8 @@
 ![CI](https://github.com/necronicle/keenetic-doq/actions/workflows/ci.yml/badge.svg)
 ![Release](https://img.shields.io/github/v/release/necronicle/keenetic-doq)
 
+**Telegram: [топик DoQ в @zapret2keenetic](https://t.me/zapret2keenetic/55256)** — вопросы, помощь с настройкой, обсуждение
+
 DNS-over-QUIC (RFC 9250) для роутеров Keenetic — **рядом** со штатными
 DoT/DoH, а не вместо них.
 
@@ -23,6 +25,8 @@ Entware-проекты. `keenetic-doq` работает иначе:
 апстрим системного DNS. Порт 53 никто не трогает, `opkg dns-override` не
 нужен. `ndnproxy` сам предпочитает быстрейший апстрим — локальный doqd с
 кешем выигрывает естественным образом.
+
+> Данный проект предназначен для исследования сетевых протоколов и изучения работы DNS. Используется исключительно в учебных целях.
 
 ## Возможности
 

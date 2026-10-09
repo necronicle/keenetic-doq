@@ -5,6 +5,8 @@
 ![CI](https://github.com/necronicle/keenetic-doq/actions/workflows/ci.yml/badge.svg)
 ![Release](https://img.shields.io/github/v/release/necronicle/keenetic-doq)
 
+**Telegram: [DoQ topic in @zapret2keenetic](https://t.me/zapret2keenetic/55256)** — questions, setup help, discussion (in Russian)
+
 DNS-over-QUIC (RFC 9250) for Keenetic routers — **alongside** the stock
 DoT/DoH, not instead of them.
 
@@ -23,6 +25,8 @@ and registers itself with the stock `ip name-server <LAN-IP>:5354` command
 as one more upstream of the system DNS. Port 53 is never touched and
 `opkg dns-override` is not needed. `ndnproxy` naturally prefers the fastest
 upstream — the local doqd with its cache wins on merit.
+
+> This project is intended for research into network protocols and for studying how DNS works. It is to be used for educational purposes only.
 
 ## Features
 
