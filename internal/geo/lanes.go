@@ -58,6 +58,7 @@ type Lanes struct {
 	ev       *Evaluator
 	reselect chan string
 	interval time.Duration
+	attempt  time.Duration // предел одной попытки к серверу обхода
 	// Отсрочка повтора после оценки без охвата: retryBase, удваивается до retryMax.
 	retryBase, retryMax time.Duration
 	now                 func() time.Time
@@ -98,6 +99,7 @@ func New(cfg Config) *Lanes {
 		ev:        &Evaluator{Reference: cfg.Reference, Prober: cfg.Prober, Probes: ProbeDomains, Attempts: 3, Timeout: evaluationTimeout},
 		reselect:  make(chan string, 1),
 		interval:  checkInterval,
+		attempt:   geoAttemptTimeout,
 		retryBase: retryBase,
 		retryMax:  retryMax,
 		now:       time.Now,
@@ -197,20 +199,33 @@ func (l *Lanes) classifyWait() time.Duration {
 // classifyExchange — неизвестное имя: быстрая полоса и закреплённый сервер
 // параллельно. Ответ любого из них из пула сервера обхода — имя гео.
 func (l *Lanes) classifyExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
-	name := m.Question[0].Name
+	name, qtype := m.Question[0].Name, m.Question[0].Qtype
 	pinned := l.geoOrder()[0]
+	l.mu.Lock()
+	failing := l.fails > 0
+	l.mu.Unlock()
 	fastCh := make(chan exResult, 1)
 	geoCh := make(chan exResult, 1)
 	go func() {
 		resp, err := l.cfg.Fast.Exchange(ctx, m)
 		fastCh <- exResult{resp: resp, err: err}
 	}()
+	// Запрос к закреплённому живёт дольше клиента: клиент получает ответ
+	// быстрой полосы через 0,3–1 с, а исход (и таймаут) закреплённого должен
+	// попасть в счёт неудач.
 	go func() {
-		actx, cancel := context.WithTimeout(ctx, geoAttemptTimeout)
+		actx, cancel := context.WithTimeout(context.WithoutCancel(ctx), l.attempt)
 		defer cancel()
 		resp, rtt, err := upstream.ExchangeTimed(actx, pinned.Ex, m)
-		geoCh <- exResult{resp: resp, rtt: rtt, err: err}
+		r := exResult{resp: resp, rtt: rtt, err: err}
+		l.notePinned(pinned.URL, qtype, r)
+		geoCh <- r
 	}()
+	if failing {
+		// Закреплённый уже ошибается: каждое новое имя ждало бы его до 1 с.
+		// Ответ быстрой полосы сразу, имя не выучивается.
+		return l.fastFirst(ctx, fastCh, geoCh)
+	}
 	timer := time.NewTimer(l.classifyWait())
 	defer timer.Stop()
 	capC := timer.C
@@ -221,7 +236,6 @@ func (l *Lanes) classifyExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, err
 			fast = &r
 		case r := <-geoCh:
 			geo = &r
-			l.notePinned(pinned.URL, m.Question[0].Qtype, r)
 		case <-capC:
 			capC = nil
 		case <-ctx.Done():
@@ -260,6 +274,28 @@ func (l *Lanes) classifyExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, err
 	}
 }
 
+// fastFirst — ответ быстрой полосы, а при её ошибке — закреплённого.
+func (l *Lanes) fastFirst(ctx context.Context, fastCh, geoCh <-chan exResult) (*dns.Msg, error) {
+	var fast exResult
+	select {
+	case fast = <-fastCh:
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+	if fast.err == nil {
+		return fast.resp, nil
+	}
+	select {
+	case g := <-geoCh:
+		if g.err == nil {
+			return g.resp, nil
+		}
+		return nil, fmt.Errorf("fast lane: %v; geo server: %v", fast.err, g.err)
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+}
+
 // geoExchange — гео-имя: закреплённый, при его ошибке — запасные по
 // рейтингу, при отказе всех — устаревший ответ или быстрая полоса.
 // HTTPS/SVCB в быструю полосу не уходят никогда: её ответ несёт в
@@ -268,7 +304,7 @@ func (l *Lanes) geoExchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
 	q := m.Question[0]
 	var lastErr error
 	for i, s := range l.geoOrder() {
-		actx, cancel := context.WithTimeout(ctx, geoAttemptTimeout)
+		actx, cancel := context.WithTimeout(ctx, l.attempt)
 		resp, rtt, err := upstream.ExchangeTimed(actx, s.Ex, m)
 		cancel()
 		r := exResult{resp: resp, rtt: rtt, err: err}
