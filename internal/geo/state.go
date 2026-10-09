@@ -23,15 +23,20 @@ type State struct {
 }
 
 type Snapshot struct {
-	Time        time.Time     `json:"time"`
-	Pinned      string        `json:"pinned"`
-	Since       time.Time     `json:"since"`
-	EvaluatedAt time.Time     `json:"evaluated_at"`
-	Evaluating  bool          `json:"evaluating"`
-	Ranking     []Result      `json:"ranking"`
-	Proxies     []ProxyStatus `json:"proxies"`
-	LearnedGeo  int           `json:"learned_geo"`
-	Fails       int           `json:"fails"`
+	Time        time.Time `json:"time"`
+	Pinned      string    `json:"pinned"`
+	Since       time.Time `json:"since"`
+	EvaluatedAt time.Time `json:"evaluated_at"`
+	// AttemptedAt — конец последней оценки, в том числе безрезультатной
+	// (ни у кого нет охвата); тогда Inconclusive и следующий повтор — RetryAt.
+	AttemptedAt  time.Time     `json:"attempted_at"`
+	Inconclusive bool          `json:"inconclusive,omitempty"`
+	RetryAt      time.Time     `json:"retry_at,omitempty"`
+	Evaluating   bool          `json:"evaluating"`
+	Ranking      []Result      `json:"ranking"`
+	Proxies      []ProxyStatus `json:"proxies"`
+	LearnedGeo   int           `json:"learned_geo"`
+	Fails        int           `json:"fails"`
 }
 
 // writeJSON пишет атомарно: во временный файл с уникальным именем в том же

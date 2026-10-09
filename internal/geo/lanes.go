@@ -24,6 +24,10 @@ const (
 	deadCyclesToFailover = 3
 	checkInterval        = 30 * time.Second
 	evaluationTimeout    = 15 * time.Second
+	retryBase            = time.Minute
+	retryMax             = 30 * time.Minute
+	netCheckName         = "example.com." // проверка сети перед отказом закреплённого
+	netCheckTimeout      = 3 * time.Second
 )
 
 // ErrGeoUnavailable: все серверы обхода молчат, а в кеше есть устаревший
@@ -54,15 +58,20 @@ type Lanes struct {
 	ev       *Evaluator
 	reselect chan string
 	interval time.Duration
-	now      func() time.Time
-	loopDone chan struct{} // закрывается при выходе фонового цикла
+	// Отсрочка повтора после оценки без охвата: retryBase, удваивается до retryMax.
+	retryBase, retryMax time.Duration
+	now                 func() time.Time
+	loopDone            chan struct{} // закрывается при выходе фонового цикла
 
 	mu          sync.Mutex
 	pinned      string
 	since       time.Time
 	evaluatedAt time.Time
 	evaluating  bool
+	attemptedAt time.Time     // конец последней оценки, в том числе безрезультатной
+	retryDelay  time.Duration // >0 — последняя оценка безрезультатна, повтор через столько
 	ranking     []Result
+	saved       *State // что сейчас в geo.state; nil — ещё не писали и не читали
 	fails       int
 	deadCycles  int
 	rtt         time.Duration // EWMA ответа закреплённого
@@ -82,14 +91,16 @@ func New(cfg Config) *Lanes {
 		cfg.Stale = func(*dns.Msg) *dns.Msg { return nil }
 	}
 	l := &Lanes{
-		cfg:      cfg,
-		class:    NewClassifier(cfg.Static),
-		prints:   NewFingerprints(),
-		health:   NewHealth(cfg.Prober),
-		ev:       &Evaluator{Reference: cfg.Reference, Prober: cfg.Prober, Probes: ProbeDomains, Attempts: 3, Timeout: evaluationTimeout},
-		reselect: make(chan string, 1),
-		interval: checkInterval,
-		now:      time.Now,
+		cfg:       cfg,
+		class:     NewClassifier(cfg.Static),
+		prints:    NewFingerprints(),
+		health:    NewHealth(cfg.Prober),
+		ev:        &Evaluator{Reference: cfg.Reference, Prober: cfg.Prober, Probes: ProbeDomains, Attempts: 3, Timeout: evaluationTimeout},
+		reselect:  make(chan string, 1),
+		interval:  checkInterval,
+		retryBase: retryBase,
+		retryMax:  retryMax,
+		now:       time.Now,
 	}
 	if len(cfg.Geo) > 0 {
 		l.pinned = cfg.Geo[0].URL // временно, до первой оценки

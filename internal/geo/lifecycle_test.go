@@ -97,18 +97,23 @@ func TestSavedPinMissingFromConfigReevaluates(t *testing.T) {
 
 func TestNoCoverageKeepsFirstServer(t *testing.T) {
 	l, g1, g2, _ := lifecycleFixture(t)
+	l.retryBase, l.retryMax = time.Hour, time.Hour
 	for _, g := range []*fakeEx{g1, g2} {
 		g.mu.Lock()
 		g.ips = map[string][]string{"chatgpt.com.": {"7.7.7.7"}, "claude.ai.": {"7.7.7.8"}, "gemini.google.com.": {"7.7.7.9"}}
 		g.mu.Unlock()
 	}
 	start(t, l)
-	waitFor(t, func() bool { return evaluated(l) }, 5*time.Second)
+	waitFor(t, func() bool { return attempted(l) }, 5*time.Second)
 	if l.Pinned() != "g1" {
 		t.Fatalf("no coverage anywhere — keep the first config server, got %s", l.Pinned())
 	}
-	if st, err := LoadState(l.cfg.StatePath); err != nil || st.Pinned != "g1" {
-		t.Fatalf("state = %+v, %v", st, err)
+	// Без охвата у всех оценка безрезультатна: сохранять нечего, будет повтор.
+	if _, err := os.Stat(l.cfg.StatePath); !os.IsNotExist(err) {
+		t.Fatalf("an inconclusive evaluation must not write state: %v", err)
+	}
+	if s := l.Snapshot(); !s.Inconclusive || s.RetryAt.IsZero() {
+		t.Fatalf("snapshot must report the inconclusive evaluation: %+v", s)
 	}
 }
 

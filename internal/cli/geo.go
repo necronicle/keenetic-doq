@@ -118,9 +118,12 @@ func formatList(conf string, ups []confServer, results []probeResult, snap *geo.
 
 func formatGeo(s *geo.Snapshot, probes int) string {
 	var b strings.Builder
-	if s.Pinned == "" {
+	switch {
+	case s.Pinned == "":
 		b.WriteString("pinned:     none\n")
-	} else {
+	case s.Since.IsZero():
+		fmt.Fprintf(&b, "pinned:     %s (temporary, until the first evaluation)\n", s.Pinned)
+	default:
 		fmt.Fprintf(&b, "pinned:     %s (since %s)\n", s.Pinned, s.Since.Local().Format("2006-01-02 15:04"))
 	}
 	switch {
@@ -130,6 +133,10 @@ func formatGeo(s *geo.Snapshot, probes int) string {
 		b.WriteString("evaluation: none yet\n")
 	default:
 		fmt.Fprintf(&b, "evaluation: %s\n", s.EvaluatedAt.Local().Format("2006-01-02 15:04"))
+	}
+	if s.Inconclusive && !s.Evaluating {
+		fmt.Fprintf(&b, "            last attempt %s was inconclusive (network down?), kept the previous choice; retry at %s\n",
+			s.AttemptedAt.Local().Format("2006-01-02 15:04"), s.RetryAt.Local().Format("15:04"))
 	}
 	if len(s.Ranking) > 0 {
 		b.WriteString("\nRANKING (last evaluation):\n")
@@ -168,8 +175,12 @@ func geoStatusLine(s *geo.Snapshot) string {
 			ok++
 		}
 	}
-	return fmt.Sprintf("geo:             pinned %s since %s, proxies %d/%d healthy",
-		strings.TrimPrefix(s.Pinned, "quic://"), s.Since.Local().Format("2006-01-02 15:04"), ok, len(s.Proxies))
+	since := "(temporary, until the first evaluation)"
+	if !s.Since.IsZero() {
+		since = "since " + s.Since.Local().Format("2006-01-02 15:04")
+	}
+	return fmt.Sprintf("geo:             pinned %s %s, proxies %d/%d healthy",
+		strings.TrimPrefix(s.Pinned, "quic://"), since, ok, len(s.Proxies))
 }
 
 func runGeo(args []string) int {
@@ -199,7 +210,7 @@ func runGeoReselect() int {
 	}
 	var before time.Time
 	if s, err := geo.ReadSnapshot(geo.DefaultSnapshotPath); err == nil {
-		before = s.EvaluatedAt
+		before = s.AttemptedAt
 	}
 	if err := syscall.Kill(pid, syscall.SIGUSR1); err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
@@ -209,7 +220,13 @@ func runGeoReselect() int {
 	for deadline := time.Now().Add(45 * time.Second); time.Now().Before(deadline); {
 		time.Sleep(500 * time.Millisecond)
 		s, err := geo.ReadSnapshot(geo.DefaultSnapshotPath)
-		if err == nil && s.EvaluatedAt.After(before) && !s.Evaluating {
+		if err == nil && s.AttemptedAt.After(before) && !s.Evaluating {
+			if s.Inconclusive {
+				fmt.Print("inconclusive\n\n")
+				fmt.Print(formatGeo(s, len(geo.ProbeDomains)))
+				fmt.Fprintln(os.Stderr, "no server unblocked any probe domain — is the network up? The previous choice is kept.")
+				return 1
+			}
 			fmt.Print("done\n\n")
 			fmt.Print(formatGeo(s, len(geo.ProbeDomains)))
 			return 0

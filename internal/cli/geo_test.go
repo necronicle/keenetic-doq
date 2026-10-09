@@ -77,3 +77,31 @@ func TestGeoStatusLine(t *testing.T) {
 		t.Fatalf("got %q", got)
 	}
 }
+
+func TestFormatGeoInconclusive(t *testing.T) {
+	s := sampleSnap()
+	s.EvaluatedAt = time.Date(2026, 10, 9, 13, 0, 0, 0, time.Local)
+	s.AttemptedAt = time.Date(2026, 10, 9, 14, 30, 0, 0, time.Local)
+	s.Inconclusive = true
+	s.RetryAt = time.Date(2026, 10, 9, 14, 31, 0, 0, time.Local)
+	out := formatGeo(s, 3)
+	for _, want := range []string{
+		"evaluation: 2026-10-09 13:00",
+		"last attempt 2026-10-09 14:30 was inconclusive (network down?), kept the previous choice; retry at 14:31",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("geo output misses %q:\n%s", want, out)
+		}
+	}
+}
+
+func TestFormatGeoTemporaryPin(t *testing.T) {
+	s := &geo.Snapshot{Pinned: "quic://geohide.ru"}
+	out := formatGeo(s, 3)
+	if !strings.Contains(out, "pinned:     quic://geohide.ru (temporary, until the first evaluation)") {
+		t.Fatalf("temporary pin must not show a zero date:\n%s", out)
+	}
+	if got := geoStatusLine(s); strings.Contains(got, "0001") {
+		t.Fatalf("status must not show a zero date: %q", got)
+	}
+}
