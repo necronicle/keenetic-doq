@@ -38,6 +38,10 @@ fetch() { # $1 = url, $2 = output file
     fi
 }
 
+if [ -f /etc/openwrt_release ]; then
+    die "this is OpenWRT, not Keenetic — use the OpenWRT installer:
+     wget -qO- https://raw.githubusercontent.com/$REPO/main/install-openwrt.sh | sh"
+fi
 [ -f /opt/etc/init.d/rc.func ] || die "Entware not found (/opt/etc/init.d/rc.func)"
 
 # curl is an Entware package, not a busybox applet, and the busybox wget

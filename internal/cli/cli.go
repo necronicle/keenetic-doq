@@ -6,9 +6,16 @@ package cli
 import (
 	"fmt"
 	"os"
+	"strings"
+
+	"github.com/necronicle/keenetic-doq/internal/platform"
 )
 
-const defaultConf = "/opt/etc/doqd.conf"
+// plat — прошивка, на которой запущена утилита; defaultConf — её конфиг.
+var (
+	plat        = platform.Detect()
+	defaultConf = plat.Conf
+)
 
 var subcommands = map[string]func(args []string) int{
 	"help":          func([]string) int { usage(os.Stdout); return 0 },
@@ -36,11 +43,10 @@ func Run(args []string) int {
 	return cmd(args[1:])
 }
 
-func usage(w *os.File) {
-	fmt.Fprint(w, `doqd — DNS-over-QUIC forwarder for Keenetic routers
+const usageText = `doqd — DNS-over-QUIC forwarder for Keenetic and OpenWRT routers
 
 Daemon mode (used by the init script):
-  doqd [-c /opt/etc/doqd.conf]
+  doqd [-c CONF]
 
 Management commands:
   doqd list                       upstreams from the config with live probes
@@ -53,11 +59,14 @@ Management commands:
   doqd add-domain <domain>        treat the domain (and subdomains) as geo-blocked
   doqd remove-domain <domain>     remove it again (built-in domains stay)
   doqd remove <number|url>        remove an upstream, restart the daemon
-  doqd status                     daemon, registration and resolve check
+  doqd status                     daemon, DNS integration and resolve check
   doqd geo                        pinned geo-unblocking server, ranking, proxies
   doqd geo reselect               re-evaluate the geo-unblocking servers now
 
 Flags accepted by management commands:
-  -c path    config file (default /opt/etc/doqd.conf)
-`)
+  -c path    config file (default CONF)
+`
+
+func usage(w *os.File) {
+	fmt.Fprint(w, strings.ReplaceAll(usageText, "CONF", defaultConf))
 }

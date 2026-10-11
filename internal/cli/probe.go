@@ -146,7 +146,7 @@ func bootstrapHint(results []probeResult) string {
 			return "hint: no bootstrap server resolved the upstream name, the DoQ server itself\n" +
 				"was never contacted. If your ISP filters DNS on port 53, the bootstrap list in\n" +
 				defaultConf + " needs a server on another port, e.g. \"bootstrap 77.88.8.8:1253\"\n" +
-				"(Yandex DNS); after editing: /opt/etc/init.d/S56doqd restart"
+				"(Yandex DNS); after editing: " + plat.Init + " restart"
 		}
 	}
 	return ""

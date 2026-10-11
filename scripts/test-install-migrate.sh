@@ -14,6 +14,7 @@ for src in "$ROOT"/testdata/migrate/*.in; do
     (
         . "$WORK/fns.sh"
         log() { :; }
+        # shellcheck disable=SC2034 # читают функции из fns.sh
         CONF="$WORK/conf"
         # twice: a second installer run must change nothing
         for _ in 1 2; do

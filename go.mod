@@ -1,10 +1,11 @@
 module github.com/necronicle/keenetic-doq
 
-go 1.23
+go 1.26.0
 
 require (
 	github.com/miekg/dns v1.1.62
 	github.com/quic-go/quic-go v0.48.2
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20261011195143-3b414e3e8284
 )
 
 require (

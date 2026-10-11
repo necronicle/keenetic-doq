@@ -1,8 +1,9 @@
-// doqd — DNS-over-QUIC форвардер для Keenetic (слушает обычный DNS,
-// резолвит через DoQ-апстримы). Регистрируется в KeeneticOS как
-// name-server на <LAN-IP>:5354 вместо штатных DoT/DoH (при включённых
+// doqd — DNS-over-QUIC форвардер для Keenetic и OpenWRT (слушает обычный
+// DNS, резолвит через DoQ-апстримы). На Keenetic регистрируется в KeeneticOS
+// как name-server на <LAN-IP>:5354 вместо штатных DoT/DoH (при включённых
 // DoT/DoH KeeneticOS его не спрашивает): loopback KeeneticOS в name-server
-// не принимает, а 5353 занят avahi.
+// не принимает, а 5353 занят avahi. На OpenWRT слушает 127.0.0.1:5354 и
+// стоит единственным сервером dnsmasq.
 package main
 
 import (
@@ -16,11 +17,17 @@ import (
 	"time"
 
 	"github.com/miekg/dns"
+	// Корневые сертификаты на случай, если в прошивке их нет: без них не
+	// проверить TLS ни одного апстрима. В KeeneticOS они лежат в /etc/ssl/certs,
+	// а на OpenWRT пакет ca-bundle есть не в каждой сборке. Системные корни,
+	// если они есть, важнее встроенных.
+	_ "golang.org/x/crypto/x509roots/fallback"
 
 	"github.com/necronicle/keenetic-doq/internal/cache"
 	"github.com/necronicle/keenetic-doq/internal/cli"
 	"github.com/necronicle/keenetic-doq/internal/config"
 	"github.com/necronicle/keenetic-doq/internal/geo"
+	"github.com/necronicle/keenetic-doq/internal/platform"
 	"github.com/necronicle/keenetic-doq/internal/resolver"
 	"github.com/necronicle/keenetic-doq/internal/server"
 	"github.com/necronicle/keenetic-doq/internal/upstream"
@@ -35,7 +42,8 @@ func main() {
 		os.Exit(cli.Run(os.Args[1:]))
 	}
 
-	confPath := flag.String("c", "/opt/etc/doqd.conf", "path to config file")
+	host := platform.Detect()
+	confPath := flag.String("c", host.Conf, "path to config file")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
 	if *showVersion {
@@ -61,8 +69,9 @@ func main() {
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})))
 
 	// Имена апстримов резолвятся через bootstrap, а не через системный
-	// резолвер: на Keenetic тот указывает на ndnproxy, в списке серверов
-	// которого прописан сам doqd — запрос вернулся бы нам же.
+	// резолвер: на Keenetic тот указывает на ndnproxy, на OpenWRT — на
+	// dnsmasq, и в списке серверов обоих прописан сам doqd — запрос вернулся
+	// бы нам же.
 	boot := upstream.NewBootstrap(cfg.Bootstrap)
 	// Один DoQ на URL: сервер обхода стоит и в быстрой полосе, и в гео-полосе,
 	// а соединение у него должно быть одно.
@@ -109,7 +118,7 @@ func main() {
 		Reference:    ref,
 		Static:       geo.NewMatcher(geo.BuiltinDomains(), cfg.GeoDomains),
 		Prober:       geo.NewTLSProber(2 * time.Second),
-		StatePath:    geo.DefaultStatePath,
+		StatePath:    host.State,
 		SnapshotPath: geo.DefaultSnapshotPath,
 		Flush:        c.DeleteIf,
 		Stale:        func(m *dns.Msg) *dns.Msg { return c.GetStale(cache.KeyOf(m)) },
@@ -136,7 +145,7 @@ func main() {
 	}
 	slog.Info("doqd started", "version", version, "listen", srv.Addr(), "geo", cfg.Geo,
 		"upstreams", cfg.Upstreams, "fallbacks", cfg.Fallbacks, "geo_domains", cfg.GeoDomains,
-		"bootstrap", cfg.Bootstrap)
+		"bootstrap", cfg.Bootstrap, "platform", host.String())
 
 	<-ctx.Done()
 	slog.Info("shutting down")

@@ -11,6 +11,7 @@ import (
 	"github.com/miekg/dns"
 
 	"github.com/necronicle/keenetic-doq/internal/config"
+	"github.com/necronicle/keenetic-doq/internal/platform"
 )
 
 func runStatus(args []string) int {
@@ -50,8 +51,30 @@ func runStatus(args []string) int {
 	if addrs, err := net.InterfaceAddrs(); err == nil && !hostOnInterfaces(host, addrs) {
 		fmt.Printf("                 WARNING: %s is not on any interface — the router's LAN\n", host)
 		fmt.Printf("                 address has changed, so doqd cannot bind. Fix `listen` in the\n")
-		fmt.Printf("                 config and re-register: ip name-server <new-address>:%s\n", port)
+		if plat.Kind == platform.OpenWRT {
+			fmt.Printf("                 config (127.0.0.1:%s is the usual value)\n", port)
+		} else {
+			fmt.Printf("                 config and re-register: ip name-server <new-address>:%s\n", port)
+		}
 	}
+	if plat.Kind == platform.OpenWRT {
+		for _, l := range dnsmasqReport(readDnsmasq(), dnsmasqTarget(host, port)) {
+			fmt.Println(l)
+		}
+	} else {
+		reportKeenetic(listen, host, port)
+	}
+
+	// Прямо в doqd — проверяет сам слушатель и путь до DoQ-апстрима.
+	reportResolve("resolve via doqd:", dialHost(host)+":"+port)
+	// Через штатный DNS роутера (ndnproxy на Keenetic, dnsmasq на OpenWRT) —
+	// проверяет интеграцию с ним.
+	reportResolve("resolve via :53: ", net.JoinHostPort(dialHost(host), "53"))
+	return 0
+}
+
+// reportKeenetic проверяет, что doqd прописан в name-server KeeneticOS.
+func reportKeenetic(listen, host, port string) {
 	if out, found, err := ndmShow("show ip name-server"); !found {
 		fmt.Println("registration:    unknown (ndmc/ndmq not found — not on the router?)")
 	} else if ndmSessionFailed(out, err) {
@@ -75,12 +98,6 @@ func runStatus(args []string) int {
 		fmt.Printf("registration:    NOT found — add it: ip name-server %s\n", listen)
 		fmt.Printf("                 (router CLI, or Web CLI at http://%s/a if ndmc fails here)\n", dialHost(host))
 	}
-
-	// Прямо в doqd — проверяет сам слушатель и путь до DoQ-апстрима.
-	reportResolve("resolve via doqd:", dialHost(host)+":"+port)
-	// Через штатный ndnproxy — проверяет интеграцию с системным DNS.
-	reportResolve("resolve via :53: ", net.JoinHostPort(dialHost(host), "53"))
-	return 0
 }
 
 // hostOnInterfaces сообщает, поднят ли адрес хоть на одном интерфейсе. Не-IP

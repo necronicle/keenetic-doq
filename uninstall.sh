@@ -6,6 +6,11 @@ set -e
 
 log() { echo "[keenetic-doq] $*"; }
 
+if [ -f /etc/openwrt_release ]; then
+    echo "[keenetic-doq] ERROR: this is OpenWRT — use uninstall-openwrt.sh" >&2
+    exit 1
+fi
+
 ndm_cmd() {
     if command -v ndmc >/dev/null 2>&1; then ndmc -c "$1"
     elif command -v ndmq >/dev/null 2>&1; then ndmq -p "$1"

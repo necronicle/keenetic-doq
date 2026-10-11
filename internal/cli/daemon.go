@@ -9,9 +9,9 @@ import (
 	"strings"
 	"syscall"
 	"time"
-)
 
-const initScript = "/opt/etc/init.d/S56doqd"
+	"github.com/necronicle/keenetic-doq/internal/platform"
+)
 
 // IsDaemonArgs отличает демона от процесса утилиты: у обоих одно и то же
 // имя (doqd), но утилита всегда запускается с подкомандой в argv[1],
@@ -67,8 +67,11 @@ func daemonPID() int {
 func restartDaemon() error {
 	pid := daemonPID()
 	if pid == 0 {
-		fmt.Printf("daemon is not running — config saved, start it with: %s start\n", initScript)
+		fmt.Printf("daemon is not running — config saved, start it with: %s start\n", plat.Init)
 		return nil
+	}
+	if plat.Kind == platform.OpenWRT {
+		return restartViaInit(pid)
 	}
 	args, ok := procArgs(pid)
 	if !ok || len(args) == 0 {
@@ -107,16 +110,43 @@ func restartDaemon() error {
 		return err
 	}
 
-	deadline := time.Now().Add(5 * time.Second)
-	for time.Now().Before(deadline) {
-		time.Sleep(200 * time.Millisecond)
-		if newPID := daemonPID(); newPID > 0 {
-			fmt.Printf("alive (pid %d)\n", newPID)
-			return nil
-		}
+	if newPID := waitNewDaemon(pid, 5*time.Second); newPID > 0 {
+		fmt.Printf("alive (pid %d)\n", newPID)
+		return nil
 	}
 	fmt.Println("FAIL")
-	return fmt.Errorf("daemon did not come back up — check the logs and run: %s start", initScript)
+	return fmt.Errorf("daemon did not come back up — check the logs and run: %s start", plat.Init)
+}
+
+// restartViaInit перезапускает демона на OpenWRT его init-скриптом. Убивать
+// демона самим здесь нельзя: им владеет procd с respawn и поднял бы его сам,
+// рядом с запущенным нами. procd останавливает только свой экземпляр, по pid,
+// так что процесс утилиты переживает рестарт.
+func restartViaInit(old int) error {
+	fmt.Print("restarting the daemon ... ")
+	if out, err := exec.Command(plat.Init, "restart").CombinedOutput(); err != nil {
+		fmt.Println("FAIL")
+		return fmt.Errorf("%s restart: %v %s", plat.Init, err, strings.TrimSpace(string(out)))
+	}
+	if newPID := waitNewDaemon(old, 15*time.Second); newPID > 0 {
+		fmt.Printf("alive (pid %d)\n", newPID)
+		return nil
+	}
+	fmt.Println("FAIL")
+	return fmt.Errorf("daemon did not come back up — see its log: logread -e doqd")
+}
+
+// waitNewDaemon ждёт демона с pid, отличным от old, и возвращает его pid
+// (0 — не дождались).
+func waitNewDaemon(old int, timeout time.Duration) int {
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		time.Sleep(200 * time.Millisecond)
+		if pid := daemonPID(); pid > 0 && pid != old {
+			return pid
+		}
+	}
+	return 0
 }
 
 // waitGone ждёт исчезновения процесса.

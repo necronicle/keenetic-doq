@@ -8,9 +8,6 @@ import (
 )
 
 const (
-	// DefaultStatePath — выбор сервера обхода; переживает рестарт, пишется
-	// редко: при закреплении и после оценки.
-	DefaultStatePath = "/opt/var/lib/doqd/geo.state"
 	// DefaultSnapshotPath — снимок для CLI; /tmp — это tmpfs, флешка не страдает.
 	DefaultSnapshotPath = "/tmp/doqd.state.json"
 )
