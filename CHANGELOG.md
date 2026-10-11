@@ -3,6 +3,43 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версии — [SemVer](https://semver.org/lang/ru/).
 
+## [0.5.0] — 2026-10-12
+
+### Added
+- **OpenWRT.** Установка одной командой:
+  `wget -qO- https://raw.githubusercontent.com/necronicle/keenetic-doq/main/install-openwrt.sh | sh`.
+  doqd слушает `127.0.0.1:5354` и становится единственным сервером dnsmasq
+  (`server 127.0.0.1#5354`, `noresolv 1`). Установщик меняет dnsmasq, только
+  когда doqd уже отвечает, и проверяет запрос через порт 53. Если проверка
+  не прошла, он возвращает dnsmasq в исходное состояние. procd перезапускает
+  демона после любого сбоя. Удаление — `uninstall-openwrt.sh`: оно сначала
+  возвращает dnsmasq исходные `server` и `noresolv`.
+- Имена серверов NTP на OpenWRT идут на bootstrap-серверы обычным DNS, мимо
+  doqd. После перезагрузки часы роутера могут отставать, и тогда
+  сертификаты DoQ-серверов «ещё не выданы»: doqd не может установить TLS, а
+  NTP без обхода не смог бы исправить часы. Проверено в эмуляторе: с
+  отставшими часами doqd восстановился сам, когда NTP поставил время.
+- Файлы doqd на OpenWRT попадают в список sysupgrade
+  (`/lib/upgrade/keep.d/doqd`). Обновление прошивки с сохранением настроек
+  оставляет doqd рабочим, а не dnsmasq без серверов.
+- Новые сборки: `armv7`, `armv5`, `amd64`, `386`, `mips64`, `mips64le`,
+  `riscv64`, `loong64` — всего 11 архитектур. Установщик OpenWRT выбирает
+  сборку по `DISTRIB_ARCH`; ARMv7 без FPU получает `armv5`.
+- В бинарник встроены корневые сертификаты. doqd берёт их, только если в
+  прошивке своих нет.
+- `doqd status` на OpenWRT проверяет dnsmasq: есть ли doqd в
+  `/etc/config/dhcp` и в конфиге, с которым dnsmasq работает сейчас.
+  Строка `other DNS` перечисляет серверы, которые отвечают мимо doqd.
+
+### Changed
+- Сборка на Go 1.26 (была 1.23). На тест-роутере Keenetic память демона
+  снизилась с 19 до 12,5 МБ.
+- Пути doqd выбирает по прошивке: на Keenetic всё по-прежнему в `/opt`, на
+  OpenWRT — `/etc/doqd.conf`, `/etc/doqd/geo.state`, `/etc/init.d/doqd`.
+- `install.sh` и `uninstall.sh` для Keenetic на OpenWRT останавливаются и
+  называют нужный скрипт.
+- README переписан: Keenetic и OpenWRT, короткие предложения.
+
 ## [0.4.1] — 2026-10-09
 
 ### Fixed
