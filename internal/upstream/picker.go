@@ -197,8 +197,53 @@ func exchangeTimed(ctx context.Context, ex Exchanger, m *dns.Msg) (*dns.Msg, tim
 // softFail — ответ есть, но бесполезный: так отвечает сломанный рекурсор, и
 // отвечает быстро. Такой ответ не должен выигрывать у здорового апстрима, но
 // отдаётся, если лучшего не нашлось (бывает, что домен сломан у всех).
-func softFail(resp *dns.Msg) bool {
+func softFail(resp *dns.Msg) bool { return softRcode(resp) || brokenChain(resp) }
+
+func softRcode(resp *dns.Msg) bool {
 	return resp.Rcode == dns.RcodeServerFailure || resp.Rcode == dns.RcodeRefused
+}
+
+// brokenChain — NOERROR, где цепочка CNAME от имени запроса обрывается: у
+// последнего имени нет записей запрошенного типа и нет SOA, то есть это и не
+// честный NODATA. ControlD так отвечал на www.gosuslugi.ru — одним CNAME на
+// www.gslb.gosuslugi.ru, и клиент оставался без адреса.
+func brokenChain(resp *dns.Msg) bool {
+	if resp.Rcode != dns.RcodeSuccess || len(resp.Question) != 1 {
+		return false
+	}
+	q := resp.Question[0]
+	if q.Qtype == dns.TypeCNAME || q.Qtype == dns.TypeANY {
+		return false
+	}
+	name := strings.ToLower(q.Name)
+	chained := false
+	for range len(resp.Answer) { // цепочка не длиннее ответа, петля не зациклит
+		next := ""
+		for _, rr := range resp.Answer {
+			if c, ok := rr.(*dns.CNAME); ok && strings.ToLower(c.Hdr.Name) == name {
+				next = strings.ToLower(c.Target)
+				break
+			}
+		}
+		if next == "" {
+			break
+		}
+		name, chained = next, true
+	}
+	if !chained {
+		return false
+	}
+	for _, rr := range resp.Answer {
+		if h := rr.Header(); h.Rrtype == q.Qtype && strings.ToLower(h.Name) == name {
+			return false
+		}
+	}
+	for _, rr := range resp.Ns {
+		if rr.Header().Rrtype == dns.TypeSOA {
+			return false
+		}
+	}
+	return true
 }
 
 type attempt struct {
@@ -442,5 +487,8 @@ func ExchangeTimed(ctx context.Context, ex Exchanger, m *dns.Msg) (*dns.Msg, tim
 // CapTTL ограничивает TTL всех записей ответа сверху.
 func CapTTL(m *dns.Msg, maxTTL uint32) { capTTL(m, maxTTL) }
 
-// SoftFail — SERVFAIL или REFUSED: ответ есть, но бесполезный.
-func SoftFail(resp *dns.Msg) bool { return softFail(resp) }
+// SoftFail — SERVFAIL или REFUSED: ответ есть, но бесполезный. Оборванную
+// цепочку CNAME учитывает только сам Picker: гео-полоса считает такие ответы
+// закреплённого неудачами, а сервер обхода может подменять адреса и с
+// нестандартной цепочкой — ложный отказ сменил бы закреплённый сервер.
+func SoftFail(resp *dns.Msg) bool { return softRcode(resp) }

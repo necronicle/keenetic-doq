@@ -17,7 +17,8 @@ type fakeUp struct {
 	hang     bool // висит до отмены — как апстрим, до которого не доходит QUIC
 	hangOnce bool // виснет только на первом вызове (мёртвое соединение после смены WAN)
 	rcode    int
-	ip       string // если задан — ответ несёт A-запись с этим адресом и TTL 3600
+	ip       string   // если задан — ответ несёт A-запись с этим адресом и TTL 3600
+	rrs      []string // записи ответа как есть (до A-записи из ip)
 	delay    time.Duration
 	slowNext atomic.Int64 // разовая добавка к задержке, нс
 	n        atomic.Int64
@@ -42,6 +43,10 @@ func (f *fakeUp) Exchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
 	resp := new(dns.Msg)
 	resp.SetReply(m)
 	resp.Rcode = f.rcode
+	for _, z := range f.rrs {
+		rr, _ := dns.NewRR(z)
+		resp.Answer = append(resp.Answer, rr)
+	}
 	if f.ip != "" {
 		rr, _ := dns.NewRR(m.Question[0].Name + " 3600 IN A " + f.ip)
 		resp.Answer = append(resp.Answer, rr)
@@ -306,6 +311,78 @@ func TestServfailIsSoftFailure(t *testing.T) {
 	}
 	if resp.Rcode != dns.RcodeServerFailure {
 		t.Errorf("rcode = %s, want SERVFAIL", dns.RcodeToString[resp.Rcode])
+	}
+}
+
+func msg(t *testing.T, qtype uint16, answer, ns []string) *dns.Msg {
+	t.Helper()
+	m := new(dns.Msg)
+	m.SetQuestion("www.gosuslugi.ru.", qtype)
+	m.Response = true
+	for _, z := range answer {
+		rr, err := dns.NewRR(z)
+		if err != nil {
+			t.Fatal(err)
+		}
+		m.Answer = append(m.Answer, rr)
+	}
+	for _, z := range ns {
+		rr, err := dns.NewRR(z)
+		if err != nil {
+			t.Fatal(err)
+		}
+		m.Ns = append(m.Ns, rr)
+	}
+	return m
+}
+
+// ControlD отвечал на www.gosuslugi.ru одним CNAME на www.gslb.gosuslugi.ru:
+// без адресов клиент сайт не откроет. Такой ответ бесполезен, как SERVFAIL.
+// NODATA с SOA в конце цепочки — честный ответ «записей этого типа нет».
+func TestIncompleteCNAMEChainIsSoftFailure(t *testing.T) {
+	const (
+		cname  = "www.gosuslugi.ru. 230 IN CNAME www.gslb.gosuslugi.ru."
+		cname2 = "www.gslb.gosuslugi.ru. 10 IN CNAME node.gslb.gosuslugi.ru."
+		soa    = "gslb.gosuslugi.ru. 60 IN SOA ns1.gslb.gosuslugi.ru. h.rtlabs.ru. 1 600 7200 1209600 600"
+	)
+	for _, c := range []struct {
+		name   string
+		qtype  uint16
+		answer []string
+		ns     []string
+		soft   bool
+	}{
+		{"cname without address", dns.TypeA, []string{cname}, nil, true},
+		{"cname without address, AAAA", dns.TypeAAAA, []string{cname}, nil, true},
+		{"two cnames without address", dns.TypeA, []string{cname, cname2}, nil, true},
+		{"chain to an address", dns.TypeA, []string{cname, "www.gslb.gosuslugi.ru. 10 IN A 213.59.253.7"}, nil, false},
+		{"chain of two to an address", dns.TypeA, []string{cname, cname2, "node.gslb.gosuslugi.ru. 10 IN A 213.59.253.7"}, nil, false},
+		{"address of another name only", dns.TypeA, []string{cname, "other.example. 10 IN A 192.0.2.1"}, nil, true},
+		{"nodata with soa at the end", dns.TypeAAAA, []string{cname}, []string{soa}, false},
+		{"plain address", dns.TypeA, []string{"www.gosuslugi.ru. 10 IN A 213.59.253.7"}, nil, false},
+		{"plain nodata", dns.TypeAAAA, nil, []string{soa}, false},
+		{"cname query", dns.TypeCNAME, []string{cname}, nil, false},
+		{"https record after cname", dns.TypeHTTPS, []string{cname, "www.gslb.gosuslugi.ru. 10 IN HTTPS 1 . alpn=h2"}, nil, false},
+	} {
+		if got := softFail(msg(t, c.qtype, c.answer, c.ns)); got != c.soft {
+			t.Errorf("%s: softFail = %v, want %v", c.name, got, c.soft)
+		}
+	}
+}
+
+// Апстрим с оборванной цепочкой CNAME не должен выигрывать у того, кто
+// довёл её до адреса.
+func TestIncompleteCNAMEChainLosesToFullAnswer(t *testing.T) {
+	fastPicker(t)
+	broken := &fakeUp{name: "controld", rrs: []string{"example.com. 230 IN CNAME gslb.example.com."}}
+	good := &fakeUp{name: "quad9", delay: 20 * time.Millisecond, ip: "192.0.2.7"}
+	p := NewPicker([]Exchanger{broken, good})
+	resp, err := p.Exchange(context.Background(), query())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ip, _ := answeredBy(t, resp); ip != "192.0.2.7" {
+		t.Errorf("answered %s, want the full answer of quad9", ip)
 	}
 }
 

@@ -6,10 +6,11 @@ listen 192.168.1.1:5354
 geo quic://geohide.ru
 geo quic://dns.dns-ai.ru
 
-# Plain resolvers: every other name goes to the fastest of these and the servers
-# above. Manage with: doqd add / doqd remove
+# Plain resolvers: every name that is not geo-blocked goes to the fastest of
+# these; the servers above never get it. Manage with: doqd add / doqd remove
 upstream quic://dns.quad9.net
 upstream quic://p0.freedns.controld.com
+upstream quic://dns.nextdns.io
 
 # Your own geo-blocked domains (subdomains included), on top of the built-in
 # list. Manage with: doqd add-domain / doqd remove-domain

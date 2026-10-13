@@ -73,8 +73,9 @@ func main() {
 	// dnsmasq, и в списке серверов обоих прописан сам doqd — запрос вернулся
 	// бы нам же.
 	boot := upstream.NewBootstrap(cfg.Bootstrap)
-	// Один DoQ на URL: сервер обхода стоит и в быстрой полосе, и в гео-полосе,
-	// а соединение у него должно быть одно.
+	// Один DoQ на URL: обычный резолвер стоит и в быстрой полосе, и в эталоне,
+	// а без upstream сервер обхода — и в быстрой полосе, и в гео-полосе;
+	// соединение у сервера должно быть одно.
 	doqs := map[string]upstream.Exchanger{}
 	build := func(urls []string) []upstream.Exchanger {
 		var out []upstream.Exchanger
@@ -97,9 +98,9 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	// Быстрая полоса: обычные резолверы и серверы обхода вместе — для обычных
-	// доменов серверы обхода отдают настоящие адреса и отвечают быстро.
-	fast := upstream.NewPicker(append(build(cfg.Upstreams), build(cfg.Geo)...), build(cfg.Fallbacks)...)
+	// Быстрая полоса: обычные имена идут только в обычные резолверы, серверы
+	// обхода получают одни геоблокированные имена.
+	fast := upstream.NewPicker(build(cfg.FastLane()), build(cfg.Fallbacks)...)
 	fast.StartHealthCheck(ctx, 30*time.Second)
 	// Эталон для оценки серверов обхода — только обычные резолверы.
 	var ref upstream.Exchanger

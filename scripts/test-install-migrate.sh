@@ -5,9 +5,19 @@ set -eu
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
-sed -n '/^migrate_conf() {/,/^}/p;/^drop_comss() {/,/^}/p;/^migrate_geo() {/,/^}/p' \
+sed -n '/^migrate_conf() {/,/^}/p;/^drop_comss() {/,/^}/p;/^migrate_geo() {/,/^}/p;/^split_lanes() {/,/^}/p' \
     "$ROOT/install.sh" > "$WORK/fns.sh"
 fail=0
+# install-openwrt.sh мигрирует тем же split_lanes — копии не должны разойтись.
+for f in install.sh install-openwrt.sh; do
+    sed -n '/^split_lanes() {/,/^}/p' "$ROOT/$f" > "$WORK/split.$f"
+done
+if [ -s "$WORK/split.install.sh" ] && diff -u "$WORK/split.install.sh" "$WORK/split.install-openwrt.sh"; then
+    echo "ok:   split_lanes is the same in both installers"
+else
+    echo "FAIL: split_lanes differs between install.sh and install-openwrt.sh"
+    fail=1
+fi
 for src in "$ROOT"/testdata/migrate/*.in; do
     want=${src%.in}.want
     cp "$src" "$WORK/conf"
@@ -21,6 +31,7 @@ for src in "$ROOT"/testdata/migrate/*.in; do
             migrate_conf
             drop_comss
             migrate_geo
+            split_lanes
         done
     )
     if diff -u "$want" "$WORK/conf"; then

@@ -18,7 +18,7 @@ queries to doqd.
 Keenetic:  clients → ndnproxy :53 → <LAN-IP>:5354 (doqd) ─┐
 OpenWRT:   clients → dnsmasq  :53 → 127.0.0.1:5354 (doqd) ─┤
                                                           ├ geo-blocked name → pinned unblocking server (quic://)
-                                                          └ every other name → fastest server (quic://)
+                                                          └ every other name → fastest plain server (quic://)
 ```
 
 doqd has two lanes:
@@ -27,7 +27,8 @@ doqd has two lanes:
   only to one pinned unblocking server. The unblocking server answers with
   the addresses of its proxies. All domains of a service get proxies in one
   country.
-- **Fast lane.** Every other name goes to the fastest live server.
+- **Fast lane.** Every other name goes to the fastest live plain server. The
+  unblocking servers do not get it.
 
 > This project is for research of network protocols and for study of DNS. Use it for education only.
 
@@ -56,10 +57,14 @@ doqd has two lanes:
   TLS speed to their proxies. doqd pins the best server. The pinned server
   changes only when it fails. Every 30 s doqd checks its proxies and removes
   dead and slow proxies from the answers.
-- Fast lane. A query goes to the fastest live server of `upstream` and `geo`.
-  If that server is silent for longer than ~3× its usual time, doqd also asks
-  the next one. A dead server goes to the end of the queue. doqd asks the
-  fallback servers (`fallback`) only when all other servers failed.
+- Fast lane. A query goes to the fastest live server of `upstream`. The `geo`
+  servers are not in this lane. If the config has no `upstream`, plain names
+  go to the `geo` servers. An answer with SERVFAIL, REFUSED or a broken CNAME
+  chain (a CNAME with no address at the end) does not win over a full answer
+  of another server. If the server is silent for longer than ~3× its usual
+  time, doqd also asks the next one. A dead server goes to the end of the
+  queue. doqd asks the fallback servers (`fallback`) only when all other
+  servers failed.
 - If a connection stops answering (for example, after a WAN reconnect), doqd
   replaces it. A slow answer to one query does not break the connection.
 - Answer cache by TTL with LRU eviction. Identical concurrent queries go out
@@ -273,16 +278,17 @@ The list of servers with live probes:
 GEO — geo-blocked names go only to the pinned server, marked * (/etc/doqd.conf):
  * 1. quic://geohide.ru                          alive  rtt 169 ms  proxies 4/4 ok
    2. quic://dns.dns-ai.ru                       alive  rtt 141 ms  proxies 2/2 alive, tls 144 ms
-FAST — every other name goes to the fastest of these and the servers above:
+FAST — every other name goes to the fastest of these:
    3. quic://dns.quad9.net                       alive  rtt 249 ms
    4. quic://p0.freedns.controld.com             alive  rtt 122 ms
+   5. quic://dns.nextdns.io                      alive  rtt 151 ms
 
 listen: 127.0.0.1:5354   daemon: running (pid 3560)
 ```
 
 The GEO section shows the unblocking servers. The star marks the pinned
 server. The FAST section shows the plain servers: every other name goes to
-the fastest server of FAST and GEO. doqd marks fallback servers with
+the fastest of them. doqd marks fallback servers with
 `[fallback]`.
 
 The pinned server, the ranking and the proxies:
@@ -369,8 +375,8 @@ Config keys:
 | Key | Default | What it does |
 |---|---|---|
 | `listen` | see the table above | address and port of doqd (UDP and TCP) |
-| `geo` | `quic://geohide.ru`, `quic://dns.dns-ai.ru` | unblocking server, one line per server. Geo-blocked names go only to the pinned one. These servers also get the other names (fast lane). The first `geo`, `upstream` or `fallback` line cancels the defaults of all three keys |
-| `upstream` | `quic://dns.quad9.net`, `quic://p0.freedns.controld.com` | plain DoQ server, one line per server. Other names go to the fastest live server of `upstream` and `geo` |
+| `geo` | `quic://geohide.ru`, `quic://dns.dns-ai.ru` | unblocking server, one line per server. Geo-blocked names go only to the pinned one. These servers do not get the other names. The first `geo`, `upstream` or `fallback` line cancels the defaults of all three keys |
+| `upstream` | `quic://dns.quad9.net`, `quic://p0.freedns.controld.com`, `quic://dns.nextdns.io` | plain DoQ server, one line per server. Other names go to the fastest live server of `upstream`. Without `upstream`, they go to the `geo` servers |
 | `fallback` | none | fallback DoQ server. doqd asks it only when all `geo` and `upstream` servers failed. The TTL of its answers is 60 s or less. You need at least one `geo` or `upstream` |
 | `geo-domain` | none | your own geo-blocked domain (with subdomains), one line per domain. It adds to the built-in list. `doqd add-domain` is easier |
 | `bootstrap` | `77.88.8.8`, `77.88.8.8:1253`, `8.8.8.8`, `1.1.1.1` | plain DNS servers for the addresses of the DoQ servers (on OpenWRT, also for the NTP names). IP only, a port is optional. doqd asks all of them at the same time. If a server is silent over UDP, doqd asks it again over TCP. doqd caches an answer for its TTL |
@@ -448,9 +454,10 @@ dig @192.168.1.1 -p 5354 example.com   # directly to doqd; Keenetic only, on Ope
 **Why these default servers, and not AdGuard?** geohide and dns-ai are
 unblocking servers. For ChatGPT, Gemini, Claude and other services that are
 closed for Russia, they answer with the addresses of their proxies. Thus
-geo-blocked names go only to them. Quad9 and ControlD do not know these
-addresses and give the real ones. For all other names, the four servers are
-equal: a query goes to the fastest one. In a number of Russian networks, DPI
+geo-blocked names go only to them. Quad9, ControlD and NextDNS do not know
+these addresses and give the real ones. All other names go only to these
+three, to the fastest one: the unblocking servers have no need to see
+everything you open. Cloudflare and Google have no DoQ. In a number of Russian networks, DPI
 (TSPU) blocks AdGuard DNS on DoQ and on DoT. Test your servers: `doqd list`
 tests each one with a live query. An unavailable unblocking server does not
 cause problems: queries go around it. To remove it, run
@@ -494,7 +501,7 @@ sentinel.openai.com, tcr9i.chat.openai.com, auth.openai.com, claude.ai,
 assets-proxy.anthropic.com, gemini.google.com. Without this rule, a listed
 name that the server does not replace (for example, x.ai with Cloudflare
 addresses) would pull all Cloudflare sites into the geo lane. Usual sites get
-real addresses from the fastest server.
+real addresses from the fastest plain server.
 
 **How does doqd select the unblocking server, and why does it not jump
 between servers?** At the first start (and on `doqd geo reselect`), doqd
@@ -529,7 +536,8 @@ healthy address of the same type. The filter gives an answer where all
 addresses are bad without changes.
 
 **The default servers filter something.** `dns.quad9.net` blocks malware
-domains. ControlD `p0` filters nothing. Quad9 without blocking:
+domains. ControlD `p0` and NextDNS without a profile of your own
+(`dns.nextdns.io`) filter nothing. Quad9 without blocking:
 `doqd add quic://dns10.quad9.net`, then `doqd remove` for `dns.quad9.net`.
 If AdGuard is available to you: `quic://unfiltered.adguard-dns.com`.
 

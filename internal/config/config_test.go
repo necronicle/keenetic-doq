@@ -15,7 +15,7 @@ func TestDefault(t *testing.T) {
 	if !reflect.DeepEqual(c.Geo, []string{"quic://geohide.ru", "quic://dns.dns-ai.ru"}) {
 		t.Errorf("Geo = %v", c.Geo)
 	}
-	if !reflect.DeepEqual(c.Upstreams, []string{"quic://dns.quad9.net", "quic://p0.freedns.controld.com"}) {
+	if !reflect.DeepEqual(c.Upstreams, []string{"quic://dns.quad9.net", "quic://p0.freedns.controld.com", "quic://dns.nextdns.io"}) {
 		t.Errorf("Upstreams = %v", c.Upstreams)
 	}
 	if len(c.Fallbacks) != 0 || len(c.GeoDomains) != 0 {
@@ -23,6 +23,22 @@ func TestDefault(t *testing.T) {
 	}
 	if c.CacheSize != 4096 || c.MinTTL != 60*time.Second || c.MaxTTL != 24*time.Hour || c.LogLevel != "info" {
 		t.Errorf("defaults wrong: %+v", c)
+	}
+}
+
+// Серверы обхода в быструю полосу не входят: обычные имена они не получают.
+// Исключение — конфиг без upstream: иначе обычным именам некуда идти.
+func TestFastLane(t *testing.T) {
+	geo := []string{"quic://geo.example"}
+	up := []string{"quic://up1.example", "quic://up2.example"}
+	if got := (&Config{Geo: geo, Upstreams: up}).FastLane(); !reflect.DeepEqual(got, up) {
+		t.Errorf("geo+upstream: FastLane = %v, want %v", got, up)
+	}
+	if got := (&Config{Geo: geo}).FastLane(); !reflect.DeepEqual(got, geo) {
+		t.Errorf("geo only: FastLane = %v, want %v", got, geo)
+	}
+	if got := (&Config{Upstreams: up}).FastLane(); !reflect.DeepEqual(got, up) {
+		t.Errorf("upstream only: FastLane = %v, want %v", got, up)
 	}
 }
 

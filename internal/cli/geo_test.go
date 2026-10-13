@@ -39,13 +39,27 @@ func TestFormatListGeo(t *testing.T) {
 		"proxies 3/4 alive, tls 170 ms",
 		" * 2. quic://dns.dns-ai.ru",
 		"proxies 1/2 ok, tls 120 ms",
-		"FAST",
+		"FAST — every other name goes to the fastest of these:\n",
 		"   3. quic://dns.quad9.net",
 		"down   (timeout)",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("list output misses %q:\n%s", want, out)
 		}
+	}
+}
+
+// Без upstream обычные имена идут в серверы обхода — заголовок говорит об этом.
+func TestFormatListGeoOnly(t *testing.T) {
+	ups := []confServer{{URL: "quic://geohide.ru", Geo: true}, {URL: "quic://f.example", Fallback: true}}
+	res := []probeResult{{RTT: 25 * time.Millisecond}, {RTT: 30 * time.Millisecond}}
+	out := formatList("c", ups, res, sampleSnap())
+	want := "FAST — no upstream: every other name goes to the fastest server above:\n"
+	if !strings.Contains(out, want) {
+		t.Errorf("list output misses %q:\n%s", want, out)
+	}
+	if !strings.Contains(out, "2. quic://f.example") {
+		t.Errorf("fallback missing:\n%s", out)
 	}
 }
 

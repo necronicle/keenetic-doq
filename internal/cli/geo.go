@@ -100,9 +100,10 @@ func geoInfo(url string, snap *geo.Snapshot) string {
 
 func formatList(conf string, ups []confServer, results []probeResult, snap *geo.Snapshot) string {
 	var b strings.Builder
-	hasGeo, fallbacks := false, false
+	hasGeo, hasPlain, fallbacks := false, false, false
 	for _, u := range ups {
 		hasGeo = hasGeo || u.Geo
+		hasPlain = hasPlain || !u.Geo && !u.Fallback
 		fallbacks = fallbacks || u.Fallback
 	}
 	line := func(i int, u confServer, mark string) {
@@ -136,7 +137,12 @@ func formatList(conf string, ups []confServer, results []probeResult, snap *geo.
 				line(i, u, mark)
 			}
 		}
-		b.WriteString("FAST — every other name goes to the fastest of these and the servers above:\n")
+		// Как config.FastLane: без upstream обычные имена идут в серверы обхода.
+		if hasPlain {
+			b.WriteString("FAST — every other name goes to the fastest of these:\n")
+		} else {
+			b.WriteString("FAST — no upstream: every other name goes to the fastest server above:\n")
+		}
 		for i, u := range ups {
 			if !u.Geo {
 				line(i, u, "  ")

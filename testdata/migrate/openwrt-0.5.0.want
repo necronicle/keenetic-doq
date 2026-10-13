@@ -1,0 +1,183 @@
+# doqd — DNS-over-QUIC forwarder. https://github.com/necronicle/keenetic-doq
+# dnsmasq sends every query here (server 127.0.0.1#5354 in /etc/config/dhcp).
+listen 127.0.0.1:5354
+
+# Geo-unblocking servers: geo-blocked names (ChatGPT, Gemini, Claude...) go only
+# to one of them, picked once by its proxies and kept. Manage with: doqd add --geo
+geo quic://geohide.ru
+geo quic://dns.dns-ai.ru
+
+# Plain resolvers: every name that is not geo-blocked goes to the fastest of
+# these; the servers above never get it. Manage with: doqd add / doqd remove
+upstream quic://dns.quad9.net
+upstream quic://p0.freedns.controld.com
+upstream quic://dns.nextdns.io
+
+# Your own geo-blocked domains (subdomains included), on top of the built-in
+# list. Manage with: doqd add-domain / doqd remove-domain
+# geo-domain example.ai
+
+# Plain-DNS servers used ONLY to resolve the upstream names above, and by
+# dnsmasq for the NTP server names. They must be external: dnsmasq on the
+# router forwards to doqd — asking it would mean asking ourselves.
+# All are asked at once; a server silent over UDP is retried over TCP.
+# 77.88.8.8:1253 is Yandex DNS on a non-standard port, for ISPs that drop
+# port-53 queries for some names.
+bootstrap 77.88.8.8
+bootstrap 77.88.8.8:1253
+bootstrap 8.8.8.8
+bootstrap 1.1.1.1
+
+# cache: max entries / TTL bounds in seconds
+cache_size 4096
+min_ttl 60
+max_ttl 86400
+
+# log level: debug | info | warn | error (read the log with: logread -e doqd)
+log info
+# doqd — DNS-over-QUIC forwarder. https://github.com/necronicle/keenetic-doq
+
+# After network (20): lo and WAN are up, so the first bind does not fail.
+START=21
+STOP=89
+USE_PROCD=1
+
+PROG=/usr/sbin/doqd
+CONF=/etc/doqd.conf
+
+start_service() {
+	procd_open_instance
+	procd_set_param command "$PROG" -c "$CONF"
+	# dnsmasq sends every query to doqd: restart it always, not 5 times.
+	procd_set_param respawn 3600 5 0
+	procd_set_param stderr 1
+	procd_set_param file "$CONF"
+	procd_close_instance
+}
+EOF
+chmod 755 "$INIT"
+# disable first: an older version may have used another START number.
+"$INIT" disable 2>/dev/null || true
+"$INIT" enable
+
+# sysupgrade with "keep settings" keeps /etc/config/dhcp, where dnsmasq points
+# to doqd. Keep doqd too, or the router has no DNS after the upgrade.
+mkdir -p "$(dirname "$KEEP")"
+{
+    echo "$CONF"
+    echo "$STATE_DIR/"
+    echo "$BIN"
+    echo "$INIT"
+    # The list itself, or the next sysupgrade would not keep doqd any more.
+    echo "$KEEP"
+    ls /etc/rc.d/*doqd 2>/dev/null || true
+} > "$KEEP"
+
+"$INIT" stop >/dev/null 2>&1 || true
+"$INIT" start
+log "waiting for doqd to answer"
+tries=0
+until doqd_answers; do
+    tries=$((tries + 1))
+    if [ "$tries" -ge 5 ]; then
+        warn "doqd is installed and running, but it did not resolve a test name."
+        if [ -f "$SAVED" ]; then
+            restore_dnsmasq
+            warn "dnsmasq uses the WAN DNS servers again, so the router DNS keeps working."
+        else
+            warn "dnsmasq is left as it was, so the router DNS keeps working."
+        fi
+        warn "Check the servers with: doqd list   and the log with: logread -e doqd"
+        warn "Then run this installer again."
+        exit 1
+    fi
+    sleep 3
+done
+log "doqd answers on $LISTEN"
+
+# --- dnsmasq ----------------------------------------------------------------
+
+port=$(uci -q get "$DNSMASQ.port" || true)
+if [ -n "$port" ] && [ "$port" != 53 ]; then
+    warn "dnsmasq does not serve DNS on port 53 here (port $port): another DNS server"
+    warn "answers the clients (AdGuard Home?). Set its upstream to $LISTEN yourself."
+fi
+
+# Remember the original state once: a second run must not overwrite it.
+if [ ! -f "$SAVED" ]; then
+    echo "noresolv=$(uci -q get "$DNSMASQ.noresolv" || true)" > "$SAVED"
+fi
+# $SAVED lists only the entries the installer added. An entry the user had
+# before stays theirs: uninstall must not remove it.
+add_server() { # $1 = entry, $2 = record key
+    if has_server "$1"; then
+        return 0
+    fi
+    uci add_list "$DNSMASQ.server=$1"
+    echo "$2=$1" >> "$SAVED"
+}
+
+# The doqd entry. After a change of `listen` the old entry is removed.
+old_target=$(sed -n 's/^target=//p' "$SAVED")
+sed -i '/^target=/d' "$SAVED"
+if [ -n "$old_target" ]; then
+    uci -q del_list "$DNSMASQ.server=$old_target"
+fi
+add_server "$TARGET" target
+
+# The NTP server names: plain DNS through the bootstrap servers (see the top).
+# The old entries go first: the NTP servers or the bootstrap list can change.
+sed -n 's/^ntp=//p' "$SAVED" | while read -r e; do
+    uci -q del_list "$DNSMASQ.server=$e"
+done
+sed -i '/^ntp=/d' "$SAVED"
+ntp_names=$(ntp_domains)
+if [ -n "$ntp_names" ]; then
+    for b in $(bootstrap_servers); do
+        add_server "$ntp_names/$b" ntp
+    done
+fi
+
+uci set "$DNSMASQ.noresolv=1"
+uci commit dhcp
+# A failed restart is caught by the check through port 53 below.
+/etc/init.d/dnsmasq restart >/dev/null 2>&1 || true
+
+# Other servers for every name stay as they are, but they compete with doqd.
+others=""
+for s in $(uci -q get "$DNSMASQ.server" || true); do
+    case "$s" in
+        /*|"$TARGET") ;;
+        *) others="$others $s" ;;
+    esac
+done
+if [ -n "$others" ]; then
+    warn "dnsmasq has other servers for all names:$others"
+    warn "It can send queries there instead of doqd. If another DNS proxy set them"
+    warn "(https-dns-proxy, stubby, podkop...), remove them or that proxy:"
+    warn "    uci del_list $DNSMASQ.server='<server>'; uci commit dhcp; /etc/init.d/dnsmasq restart"
+fi
+
+# The end-to-end check: a query through dnsmasq on port 53. procd restarts
+# dnsmasq in the background, so give it a few seconds.
+ok=no
+for _ in 1 2 3 4 5; do
+    sleep 2
+    if "$BIN" status 2>/dev/null | grep -q '^resolve via :53:  NOERROR'; then
+        ok=yes
+        break
+    fi
+done
+if [ "$ok" = yes ]; then
+    log "dnsmasq forwards to doqd ($TARGET), the WAN DNS servers are off"
+else
+    restore_dnsmasq
+    die "dnsmasq did not answer through doqd — dnsmasq is restored, doqd stays installed.
+     See: doqd status   and   logread -e doqd"
+fi
+
+log "done. Useful commands:"
+log "  doqd status                       # health check"
+log "  doqd list                         # upstreams with live probes"
+log "  doqd add quic://dns.example.com   # add your own DoQ upstream"
+log "  logread -e doqd                   # daemon log"

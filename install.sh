@@ -188,10 +188,38 @@ migrate_geo() {
     return 0
 }
 
+# 0.5.1: geo-unblocking servers get only geo-blocked names. Before, they also
+# raced the plain resolvers for every other name. The comment above the
+# upstream lines is rewritten; a config with exactly the old default pair
+# (Quad9 + ControlD) gets NextDNS as a third plain resolver.
+split_lanes() {
+    grep -q '^geo[[:space:]]' "$CONF" || return 0
+    ups=$(awk '$1 == "upstream" {print $2}' "$CONF" | sort | tr '\n' ' ')
+    nextdns=no
+    [ "$ups" = "quic://dns.quad9.net quic://p0.freedns.controld.com " ] && nextdns=yes
+    grep -q '^# Plain resolvers: every other name goes to the fastest of these and the servers$' "$CONF" ||
+        [ "$nextdns" = yes ] || return 0
+    last=$(awk '$1 == "upstream" {n = NR} END {print n + 0}' "$CONF")
+    awk -v last="$last" -v nextdns="$nextdns" '
+        /^# Plain resolvers: every other name goes to the fastest of these and the servers$/ {
+            print "# Plain resolvers: every name that is not geo-blocked goes to the fastest of"
+            print "# these; the servers above never get it. Manage with: doqd add / doqd remove"
+            next
+        }
+        /^# above\. Manage with: doqd add \/ doqd remove$/ { next }
+        { print }
+        NR == last && nextdns == "yes" { print "upstream quic://dns.nextdns.io" }
+    ' "$CONF" > "$CONF.new" && mv "$CONF.new" "$CONF" || { rm -f "$CONF.new"; return 1; }
+    log "config: plain names no longer go to the geo-unblocking servers"
+    [ "$nextdns" = yes ] && log "config: added upstream quic://dns.nextdns.io"
+    return 0
+}
+
 # Existing config is preserved on reinstall/upgrade.
 [ -f "$CONF" ] && { migrate_conf || log "WARNING: could not update $CONF, left as is"; }
 [ -f "$CONF" ] && { drop_comss || log "WARNING: could not update $CONF, left as is"; }
 [ -f "$CONF" ] && { migrate_geo || log "WARNING: could not update $CONF, left as is"; }
+[ -f "$CONF" ] && { split_lanes || log "WARNING: could not update $CONF, left as is"; }
 if [ ! -f "$CONF" ]; then
     cat > "$CONF" <<EOF
 # doqd — DNS-over-QUIC forwarder. https://github.com/necronicle/keenetic-doq
@@ -202,10 +230,11 @@ listen $LAN_IP:$PORT
 geo quic://geohide.ru
 geo quic://dns.dns-ai.ru
 
-# Plain resolvers: every other name goes to the fastest of these and the servers
-# above. Manage with: doqd add / doqd remove
+# Plain resolvers: every name that is not geo-blocked goes to the fastest of
+# these; the servers above never get it. Manage with: doqd add / doqd remove
 upstream quic://dns.quad9.net
 upstream quic://p0.freedns.controld.com
+upstream quic://dns.nextdns.io
 
 # Your own geo-blocked domains (subdomains included), on top of the built-in
 # list. Manage with: doqd add-domain / doqd remove-domain

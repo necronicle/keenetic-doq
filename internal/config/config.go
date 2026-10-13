@@ -21,8 +21,7 @@ type Config struct {
 	// Geo — серверы обхода геоблокировок: геоблокированные имена идут только
 	// в один из них, закреплённый.
 	Geo []string
-	// Upstreams — обычные резолверы: остальные имена идут в быстрейший из них
-	// и серверов обхода.
+	// Upstreams — обычные резолверы: остальные имена идут в быстрейший из них.
 	Upstreams []string
 	// Fallbacks спрашиваются, только когда отказали все остальные.
 	Fallbacks []string
@@ -35,15 +34,25 @@ type Config struct {
 	LogLevel   string
 }
 
+// FastLane — серверы быстрой полосы: обычные резолверы. Серверы обхода
+// получают только геоблокированные имена. Без upstream быстрая полоса —
+// серверы обхода, иначе обычным именам некуда идти.
+func (c *Config) FastLane() []string {
+	if len(c.Upstreams) == 0 {
+		return c.Geo
+	}
+	return c.Upstreams
+}
+
 func Default() *Config {
 	return &Config{
 		Listen: "127.0.0.1:5354",
 		// Серверы обхода: для заблокированных по геолокации сервисов отдают
 		// адреса своих прокси. comss убран в 0.3.5 — медленные прокси.
 		Geo: []string{"quic://geohide.ru", "quic://dns.dns-ai.ru"},
-		// Обычные резолверы без фильтрации из разных сетей. AdGuard сюда не
-		// годится — его режет ТСПУ.
-		Upstreams: []string{"quic://dns.quad9.net", "quic://p0.freedns.controld.com"},
+		// Обычные резолверы из разных сетей. AdGuard сюда не годится — его
+		// режет ТСПУ; у Cloudflare и Google DoQ нет.
+		Upstreams: []string{"quic://dns.quad9.net", "quic://p0.freedns.controld.com", "quic://dns.nextdns.io"},
 		Bootstrap: append([]string(nil), upstream.DefaultBootstrapServers...),
 		CacheSize: 4096,
 		MinTTL:    60 * time.Second,
