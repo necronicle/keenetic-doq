@@ -215,11 +215,33 @@ split_lanes() {
     return 0
 }
 
+# 0.5.2: Bezmezhau DNS (quic://dns.bezmezhau.com) replaces geohide and dns-ai
+# in the defaults. If the config has exactly the old default geo pair
+# (geohide + dns-ai), it is replaced with quic://dns.bezmezhau.com.
+migrate_bezmezhau() {
+    grep -q '^geo[[:space:]]' "$CONF" || return 0
+    geos=$(awk '$1 == "geo" {print $2}' "$CONF" | sort | tr '\n' ' ')
+    [ "$geos" = "quic://dns.dns-ai.ru quic://geohide.ru " ] || return 0
+    awk '
+        $1 == "geo" && ($2 == "quic://geohide.ru" || $2 == "quic://dns.dns-ai.ru") {
+            if (!replaced) {
+                print "geo quic://dns.bezmezhau.com"
+                replaced = 1
+            }
+            next
+        }
+        { print }
+    ' "$CONF" > "$CONF.new" && mv "$CONF.new" "$CONF" || { rm -f "$CONF.new"; return 1; }
+    log "config: replaced geohide and dns-ai with quic://dns.bezmezhau.com"
+    return 0
+}
+
 # Existing config is preserved on reinstall/upgrade.
 [ -f "$CONF" ] && { migrate_conf || log "WARNING: could not update $CONF, left as is"; }
 [ -f "$CONF" ] && { drop_comss || log "WARNING: could not update $CONF, left as is"; }
 [ -f "$CONF" ] && { migrate_geo || log "WARNING: could not update $CONF, left as is"; }
 [ -f "$CONF" ] && { split_lanes || log "WARNING: could not update $CONF, left as is"; }
+[ -f "$CONF" ] && { migrate_bezmezhau || log "WARNING: could not update $CONF, left as is"; }
 if [ ! -f "$CONF" ]; then
     cat > "$CONF" <<EOF
 # doqd — DNS-over-QUIC forwarder. https://github.com/necronicle/keenetic-doq
@@ -227,8 +249,7 @@ listen $LAN_IP:$PORT
 
 # Geo-unblocking servers: geo-blocked names (ChatGPT, Gemini, Claude...) go only
 # to one of them, picked once by its proxies and kept. Manage with: doqd add --geo
-geo quic://geohide.ru
-geo quic://dns.dns-ai.ru
+geo quic://dns.bezmezhau.com
 
 # Plain resolvers: every name that is not geo-blocked goes to the fastest of
 # these; the servers above never get it. Manage with: doqd add / doqd remove

@@ -12,7 +12,7 @@ func TestDefault(t *testing.T) {
 	if c.Listen != "127.0.0.1:5354" {
 		t.Errorf("Listen = %q", c.Listen)
 	}
-	if !reflect.DeepEqual(c.Geo, []string{"quic://geohide.ru", "quic://dns.dns-ai.ru"}) {
+	if !reflect.DeepEqual(c.Geo, []string{"quic://dns.bezmezhau.com"}) {
 		t.Errorf("Geo = %v", c.Geo)
 	}
 	if !reflect.DeepEqual(c.Upstreams, []string{"quic://dns.quad9.net", "quic://p0.freedns.controld.com", "quic://dns.nextdns.io"}) {

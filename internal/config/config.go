@@ -48,8 +48,8 @@ func Default() *Config {
 	return &Config{
 		Listen: "127.0.0.1:5354",
 		// Серверы обхода: для заблокированных по геолокации сервисов отдают
-		// адреса своих прокси. comss убран в 0.3.5 — медленные прокси.
-		Geo: []string{"quic://geohide.ru", "quic://dns.dns-ai.ru"},
+		// адреса своих прокси. geohide и dns-ai заменены на Bezmezhau в 0.5.2.
+		Geo: []string{"quic://dns.bezmezhau.com"},
 		// Обычные резолверы из разных сетей. AdGuard сюда не годится — его
 		// режет ТСПУ; у Cloudflare и Google DoQ нет.
 		Upstreams: []string{"quic://dns.quad9.net", "quic://p0.freedns.controld.com", "quic://dns.nextdns.io"},

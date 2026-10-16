@@ -3,6 +3,18 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версии — [SemVer](https://semver.org/lang/ru/).
 
+## [0.5.2] — 2026-10-17
+
+### Changed
+- **Bezmezhau DNS (`quic://dns.bezmezhau.com`) заменяет geohide и dns-ai в
+  значениях по умолчанию.** Резолвер обеспечивает быстрый и стабильный обход
+  геоблокировок (ChatGPT, Claude, Gemini и др.) по DNS-over-QUIC на порту
+  `udp/853`.
+- Установщики (Keenetic и OpenWRT) мигрируют существующие конфигурации с
+  дефолтной парой `geo` (`quic://geohide.ru` и `quic://dns.dns-ai.ru`) на
+  `quic://dns.bezmezhau.com`. Конфигурации со своими серверами обхода не
+  затрагиваются.
+
 ## [0.5.1] — 2026-10-13
 
 ### Changed

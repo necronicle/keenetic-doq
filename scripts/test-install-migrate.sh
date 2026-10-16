@@ -5,17 +5,17 @@ set -eu
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
-sed -n '/^migrate_conf() {/,/^}/p;/^drop_comss() {/,/^}/p;/^migrate_geo() {/,/^}/p;/^split_lanes() {/,/^}/p' \
+sed -n '/^migrate_conf() {/,/^}/p;/^drop_comss() {/,/^}/p;/^migrate_geo() {/,/^}/p;/^split_lanes() {/,/^}/p;/^migrate_bezmezhau() {/,/^}/p' \
     "$ROOT/install.sh" > "$WORK/fns.sh"
 fail=0
-# install-openwrt.sh мигрирует тем же split_lanes — копии не должны разойтись.
+# install-openwrt.sh мигрирует теми же split_lanes и migrate_bezmezhau — копии не должны разойтись.
 for f in install.sh install-openwrt.sh; do
-    sed -n '/^split_lanes() {/,/^}/p' "$ROOT/$f" > "$WORK/split.$f"
+    sed -n '/^split_lanes() {/,/^}/p;/^migrate_bezmezhau() {/,/^}/p' "$ROOT/$f" > "$WORK/split.$f"
 done
 if [ -s "$WORK/split.install.sh" ] && diff -u "$WORK/split.install.sh" "$WORK/split.install-openwrt.sh"; then
-    echo "ok:   split_lanes is the same in both installers"
+    echo "ok:   migrations are the same in both installers"
 else
-    echo "FAIL: split_lanes differs between install.sh and install-openwrt.sh"
+    echo "FAIL: migrations differ between install.sh and install-openwrt.sh"
     fail=1
 fi
 for src in "$ROOT"/testdata/migrate/*.in; do
@@ -32,6 +32,7 @@ for src in "$ROOT"/testdata/migrate/*.in; do
             drop_comss
             migrate_geo
             split_lanes
+            migrate_bezmezhau
         done
     )
     if diff -u "$want" "$WORK/conf"; then
