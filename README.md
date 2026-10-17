@@ -5,7 +5,8 @@
 ![CI](https://github.com/necronicle/keenetic-doq/actions/workflows/ci.yml/badge.svg)
 ![Release](https://img.shields.io/github/v/release/necronicle/keenetic-doq)
 
-**Telegram: [топик DoQ в @zapret2keenetic](https://t.me/zapret2keenetic/55256)** — вопросы, помощь с настройкой, обсуждение
+**Telegram: [топик DoQ в @zapret2keenetic](https://t.me/zapret2keenetic/55256)** — вопросы, помощь с настройкой, обсуждение  
+**Веб-интерфейс: [keenetic-doq-web](https://github.com/accept4/keenetic-doq-web)** — веб-панель управления от @accept4 (Keenetic)
 
 DNS-over-QUIC (RFC 9250) для роутеров **Keenetic** и **OpenWRT**.
 
@@ -269,6 +270,8 @@ dnsmasq.
 
 Все команды работают одинаково на Keenetic и OpenWRT. Пути к файлам doqd
 выбирает сам (см. [Конфигурация](#конфигурация)).
+
+Для управления через браузер на Keenetic доступен сторонний веб-интерфейс [keenetic-doq-web](https://github.com/accept4/keenetic-doq-web).
 
 Список серверов с живой проверкой:
 
