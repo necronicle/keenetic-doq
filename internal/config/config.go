@@ -48,8 +48,10 @@ func Default() *Config {
 	return &Config{
 		Listen: "127.0.0.1:5354",
 		// Серверы обхода: для заблокированных по геолокации сервисов отдают
-		// адреса своих прокси. geohide и dns-ai заменены на Bezmezhau в 0.5.2.
-		Geo: []string{"quic://dns.bezmezhau.com"},
+		// адреса своих прокси. Bezmezhau убран в 0.5.3: один из двух его прокси
+		// отфильтрован по 443 из РФ. eu.geohide.ru — 7 прокси DE/NL, comss — 4
+		// прокси NL, dns-ai — 1 прокси FI; у всех трёх покрытие 7/7.
+		Geo: []string{"quic://eu.geohide.ru", "quic://dns.comss.one", "quic://dns.dns-ai.ru"},
 		// Обычные резолверы из разных сетей. AdGuard сюда не годится — его
 		// режет ТСПУ; у Cloudflare и Google DoQ нет.
 		Upstreams: []string{"quic://dns.quad9.net", "quic://p0.freedns.controld.com", "quic://dns.nextdns.io"},

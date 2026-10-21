@@ -4,7 +4,9 @@ listen 127.0.0.1:5354
 
 # Geo-unblocking servers: geo-blocked names (ChatGPT, Gemini, Claude...) go only
 # to one of them, picked once by its proxies and kept. Manage with: doqd add --geo
-geo quic://dns.bezmezhau.com
+geo quic://eu.geohide.ru
+geo quic://dns.comss.one
+geo quic://dns.dns-ai.ru
 
 # Plain resolvers: every name that is not geo-blocked goes to the fastest of
 # these; the servers above never get it. Manage with: doqd add / doqd remove

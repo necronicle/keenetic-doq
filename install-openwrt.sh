@@ -306,9 +306,32 @@ migrate_bezmezhau() {
     return 0
 }
 
+# 0.5.3: Bezmezhau DNS leaves the defaults — one of its two proxies is
+# filtered on port 443 from Russian networks, so Claude and Gemini broke while
+# ChatGPT kept working. If the config has exactly the old default
+# (quic://dns.bezmezhau.com alone), it is replaced with three servers:
+# quic://eu.geohide.ru, quic://dns.comss.one and quic://dns.dns-ai.ru.
+migrate_geo_trio() {
+    grep -q '^geo[[:space:]]' "$CONF" || return 0
+    geos=$(awk '$1 == "geo" {print $2}' "$CONF" | sort | tr '\n' ' ')
+    [ "$geos" = "quic://dns.bezmezhau.com " ] || return 0
+    awk '
+        $1 == "geo" && $2 == "quic://dns.bezmezhau.com" {
+            print "geo quic://eu.geohide.ru"
+            print "geo quic://dns.comss.one"
+            print "geo quic://dns.dns-ai.ru"
+            next
+        }
+        { print }
+    ' "$CONF" > "$CONF.new" && mv "$CONF.new" "$CONF" || { rm -f "$CONF.new"; return 1; }
+    log "config: replaced quic://dns.bezmezhau.com with quic://eu.geohide.ru, quic://dns.comss.one and quic://dns.dns-ai.ru"
+    return 0
+}
+
 mkdir -p "$STATE_DIR"
 [ -f "$CONF" ] && { split_lanes || warn "could not update $CONF, left as is"; }
 [ -f "$CONF" ] && { migrate_bezmezhau || warn "could not update $CONF, left as is"; }
+[ -f "$CONF" ] && { migrate_geo_trio || warn "could not update $CONF, left as is"; }
 if [ ! -f "$CONF" ]; then
     cat > "$CONF" <<EOF
 # doqd — DNS-over-QUIC forwarder. https://github.com/necronicle/keenetic-doq
@@ -317,7 +340,9 @@ listen 127.0.0.1:$PORT
 
 # Geo-unblocking servers: geo-blocked names (ChatGPT, Gemini, Claude...) go only
 # to one of them, picked once by its proxies and kept. Manage with: doqd add --geo
-geo quic://dns.bezmezhau.com
+geo quic://eu.geohide.ru
+geo quic://dns.comss.one
+geo quic://dns.dns-ai.ru
 
 # Plain resolvers: every name that is not geo-blocked goes to the fastest of
 # these; the servers above never get it. Manage with: doqd add / doqd remove

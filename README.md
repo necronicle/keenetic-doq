@@ -278,11 +278,13 @@ dnsmasq.
 ```sh
 ~ # doqd list
 GEO — geo-blocked names go only to the pinned server, marked * (/etc/doqd.conf):
- * 1. quic://dns.bezmezhau.com                   alive  rtt 81 ms   proxies 2/2 ok, tls 220 ms
+ * 1. quic://eu.geohide.ru                       alive  rtt 70 ms   proxies 7/7 ok, tls 150 ms
+   2. quic://dns.comss.one                       alive  rtt 26 ms   proxies 4/4 alive, tls 144 ms
+   3. quic://dns.dns-ai.ru                       alive  rtt 41 ms   proxies 1/1 alive, tls 189 ms
 FAST — every other name goes to the fastest of these:
-   2. quic://dns.quad9.net                       alive  rtt 249 ms
-   3. quic://p0.freedns.controld.com             alive  rtt 122 ms
-   4. quic://dns.nextdns.io                      alive  rtt 151 ms
+   4. quic://dns.quad9.net                       alive  rtt 249 ms
+   5. quic://p0.freedns.controld.com             alive  rtt 122 ms
+   6. quic://dns.nextdns.io                      alive  rtt 151 ms
 
 listen: 127.0.0.1:5354   daemon: running (pid 3560)
 ```
@@ -295,15 +297,22 @@ listen: 127.0.0.1:5354   daemon: running (pid 3560)
 
 ```sh
 ~ # doqd geo
-pinned:     quic://dns.bezmezhau.com (since 2026-10-17 01:00)
-evaluation: 2026-10-17 01:00
+pinned:     quic://eu.geohide.ru (since 2026-10-21 14:00)
+evaluation: 2026-10-21 14:00
 
 RANKING (last evaluation):
- 1. quic://dns.bezmezhau.com            coverage 7/7  proxies 2/2 alive  tls 220 ms
+ 1. quic://eu.geohide.ru                coverage 7/7  proxies 7/7 alive  tls 150 ms
+ 2. quic://dns.comss.one                coverage 7/7  proxies 4/4 alive  tls 144 ms
+ 3. quic://dns.dns-ai.ru                coverage 7/7  proxies 1/1 alive  tls 189 ms
 
 PINNED SERVER PROXIES (checked every 30 s):
-  31.58.216.201                             healthy  tls 440 ms
-  143.20.64.55                              healthy  tls 220 ms
+  5.175.161.3                               healthy  tls 166 ms
+  5.175.161.40                              healthy  tls 150 ms
+  31.25.239.132                             healthy  tls 351 ms
+  37.221.93.128                             healthy  tls 144 ms
+  37.221.93.141                             healthy  tls 151 ms
+  45.13.237.213                             healthy  tls 148 ms
+  143.20.64.192                             healthy  tls 146 ms
 
 learned geo-blocked names: 0
 ```
@@ -370,7 +379,7 @@ restarting the daemon ... alive (pid 4016)
 | Ключ | По умолчанию | Что делает |
 |---|---|---|
 | `listen` | см. таблицу выше | адрес и порт doqd (UDP и TCP) |
-| `geo` | `quic://dns.bezmezhau.com` | сервер обхода, строка на сервер. Геоблокированные имена идут только на закреплённый из них. Остальные имена эти серверы не получают. Первая строка `geo`, `upstream` или `fallback` отменяет значения по умолчанию всех трёх ключей |
+| `geo` | `quic://eu.geohide.ru`, `quic://dns.comss.one`, `quic://dns.dns-ai.ru` | сервер обхода, строка на сервер. Геоблокированные имена идут только на закреплённый из них. Остальные имена эти серверы не получают. Первая строка `geo`, `upstream` или `fallback` отменяет значения по умолчанию всех трёх ключей |
 | `upstream` | `quic://dns.quad9.net`, `quic://p0.freedns.controld.com`, `quic://dns.nextdns.io` | обычный DoQ-сервер, строка на сервер. Остальные имена идут на самый быстрый живой сервер из `upstream`. Без `upstream` они идут на серверы `geo` |
 | `fallback` | нет | резервный DoQ-сервер. doqd спрашивает его, только когда отказали все `geo` и `upstream`. TTL его ответов не больше 60 с. Нужен хотя бы один `geo` или `upstream` |
 | `geo-domain` | нет | свой геоблокированный домен (с поддоменами), строка на домен. Добавляется к встроенному списку. Удобнее `doqd add-domain` |
@@ -399,7 +408,7 @@ Keenetic:
 ~ # doqd status
 daemon:          running (pid 4572, uptime 4s)
 listen:          192.168.1.1:5354 (udp+tcp)
-geo:             pinned dns.bezmezhau.com since 2026-10-17 01:00, proxies 2/2 healthy
+geo:             pinned eu.geohide.ru since 2026-10-21 14:00, proxies 7/7 healthy
 registration:    present in KeeneticOS name-servers
 resolve via doqd: NOERROR, 42 ms
 resolve via :53:  NOERROR, 1 ms
@@ -411,7 +420,7 @@ OpenWRT:
 ~ # doqd status
 daemon:          running (pid 3560, uptime 10s)
 listen:          127.0.0.1:5354 (udp+tcp)
-geo:             pinned dns.bezmezhau.com since 2026-10-17 01:00, proxies 2/2 healthy
+geo:             pinned eu.geohide.ru since 2026-10-21 14:00, proxies 7/7 healthy
 dnsmasq:         forwards to doqd (127.0.0.1#5354)
 resolve via doqd: NOERROR, 0 ms
 resolve via :53:  NOERROR, 0 ms
@@ -446,11 +455,11 @@ dig @192.168.1.1 -p 5354 example.com   # прямо в doqd; только Keenet
 
 ### Общие вопросы
 
-**Почему такие серверы по умолчанию, а не AdGuard?** Bezmezhau DNS
-(`quic://dns.bezmezhau.com`) — сервер обхода геоблокировок. Для ChatGPT,
-Gemini, Claude и других сервисов, закрытых для региона, он отдаёт адреса своих
-прокси. Поэтому геоблокированные имена идут только на него. Quad9, ControlD и
-NextDNS таких адресов не знают и отдают настоящие. Остальные имена идут только на
+**Почему такие серверы по умолчанию, а не AdGuard?** eu.geohide.ru, comss и
+dns-ai — серверы обхода геоблокировок. Для ChatGPT, Gemini, Claude и других
+сервисов, закрытых для России, они отдают адреса своих прокси. Поэтому
+геоблокированные имена идут только на один из них, закреплённый. Quad9,
+ControlD и NextDNS таких адресов не знают и отдают настоящие. Остальные имена идут только на
 эти три сервера, на самый быстрый: серверам обхода незачем видеть всё, что вы
 открываете. У Cloudflare и Google DoQ нет. AdGuard DNS в ряде сетей РФ блокирует
 ТСПУ — и по DoQ, и по DoT. Проверьте свои серверы: `doqd list` проверяет каждый
@@ -552,14 +561,23 @@ DNS-запросы на порт 53 с именами сервисов обхо�
 сервера. `doqd remove <номер>` убирает лишний. `doqd add` сам проверяет
 сервер и без `--force` не запишет мёртвый.
 
-**Куда делся comss?** Его убрали из значений по умолчанию в 0.3.5. DNS у
-comss отвечал быстро, но его прокси были самыми медленными: TLS до
-chatgpt.com занимал от 0,2 до 4,7 с, через dns-ai — 0,13–0,15 с. Вернуть
-comss можно: `doqd add --geo quic://dns.comss.one`.
+**Куда делся Bezmezhau?** Он был единственным сервером обхода по умолчанию
+в 0.5.2. У него два прокси, и один из них (143.20.64.55: Claude, Gemini,
+Copilot) с 21.10.2026 не отвечает по порту 443 из сетей РФ, тогда как
+ChatGPT через второй прокси работал. Отсюда жалобы «ChatGPT открывается,
+Claude нет». В 0.5.3 его место заняли три сервера: `quic://eu.geohide.ru`
+(7 прокси в DE и NL), `quic://dns.comss.one` (4 прокси в NL) и
+`quic://dns.dns-ai.ru` (1 прокси в FI). У всех трёх полное покрытие
+проверочных имён. Вернуть Bezmezhau можно: `doqd add --geo quic://dns.bezmezhau.com`.
 
-**Куда делись geohide и dns-ai?** В 0.5.2 по умолчанию используется Bezmezhau DNS
-(`quic://dns.bezmezhau.com`). Вернуть прежние серверы можно командами:
-`doqd add --geo quic://geohide.ru` и `doqd add --geo quic://dns.dns-ai.ru`.
+**Почему eu.geohide.ru, а не geohide.ru?** У российского узла geohide.ru три
+прокси из четырёх с 21.10.2026 тоже закрыты по 443, а doqd отдаёт клиентам
+весь пул, и браузер перебирает мёртвые адреса. У европейского узла все семь
+прокси живы.
+
+**Почему comss вернулся?** Его убрали в 0.3.5 за медленные прокси: TLS до
+chatgpt.com занимал от 0,2 до 4,7 с. Замер 21.10.2026 показал 0,14–0,24 с на
+всех четырёх прокси, медленных узлов больше нет.
 
 ### Keenetic
 
