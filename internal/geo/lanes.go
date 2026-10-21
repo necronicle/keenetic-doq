@@ -22,12 +22,15 @@ const (
 	maxClassifyWait      = time.Second
 	failsToFailover      = 3
 	deadCyclesToFailover = 3
-	checkInterval        = 30 * time.Second
-	evaluationTimeout    = 15 * time.Second
-	retryBase            = time.Minute
-	retryMax             = 30 * time.Minute
-	netCheckName         = "example.com." // проверка сети перед отказом закреплённого
-	netCheckTimeout      = 3 * time.Second
+	// Мёртвый прокси в пуле закреплённого столько проверок подряд —
+	// переоценка (закреплённый уступает только серверу с большим охватом).
+	deadProxyCyclesToReeval = 3
+	checkInterval           = 30 * time.Second
+	evaluationTimeout       = 15 * time.Second
+	retryBase               = time.Minute
+	retryMax                = 30 * time.Minute
+	netCheckName            = "example.com." // проверка сети перед отказом закреплённого
+	netCheckTimeout         = 3 * time.Second
 )
 
 // ErrGeoUnavailable: все серверы обхода молчат, а в кеше есть устаревший
@@ -56,7 +59,7 @@ type Lanes struct {
 	prints   *Fingerprints
 	health   *Health
 	ev       *Evaluator
-	reselect chan string
+	reselect chan reselectReq
 	interval time.Duration
 	attempt  time.Duration // предел одной попытки к серверу обхода
 	// Отсрочка повтора после оценки без охвата: retryBase, удваивается до retryMax.
@@ -77,6 +80,11 @@ type Lanes struct {
 	saved        *State // что сейчас в geo.state; nil — ещё не писали и не читали
 	fails        int
 	deadCycles   int
+	// Частично мёртвый пул: подпись набора мёртвых прокси, сколько проверок
+	// подряд он держится и по какому набору переоценка уже запрошена.
+	deadSig      string
+	deadSigCount int
+	deadSigFired string
 	rtt          time.Duration // EWMA ответа закреплённого
 }
 
@@ -99,7 +107,7 @@ func New(cfg Config) *Lanes {
 		prints:    NewFingerprints(),
 		health:    NewHealth(cfg.Prober),
 		ev:        &Evaluator{Reference: cfg.Reference, Prober: cfg.Prober, Probes: ProbeDomains, Attempts: 3, Timeout: evaluationTimeout},
-		reselect:  make(chan string, 1),
+		reselect:  make(chan reselectReq, 1),
 		interval:  checkInterval,
 		attempt:   geoAttemptTimeout,
 		retryBase: retryBase,

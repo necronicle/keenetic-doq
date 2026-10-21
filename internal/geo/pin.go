@@ -13,10 +13,23 @@ import (
 	"github.com/necronicle/keenetic-doq/internal/upstream"
 )
 
-// Reselect просит фоновый цикл переоценить серверы обхода.
-func (l *Lanes) Reselect(reason string) {
+// reselectReq — запрос переоценки. keep: закреплённый уступает только
+// серверу со строго большим охватом (см. evaluate).
+type reselectReq struct {
+	reason string
+	keep   bool
+}
+
+// Reselect просит фоновый цикл переоценить серверы обхода и закрепить лучший.
+func (l *Lanes) Reselect(reason string) { l.request(reselectReq{reason: reason}) }
+
+// reevaluate просит переоценку, при которой закреплённый остаётся, пока
+// никто не покрывает строго больше.
+func (l *Lanes) reevaluate(reason string) { l.request(reselectReq{reason: reason, keep: true}) }
+
+func (l *Lanes) request(r reselectReq) {
 	select {
-	case l.reselect <- reason:
+	case l.reselect <- r:
 	default: // переоценка уже запрошена
 	}
 }

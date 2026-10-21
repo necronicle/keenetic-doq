@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net"
 	"net/netip"
+	"slices"
 	"sort"
 	"sync"
 	"time"
@@ -340,6 +341,20 @@ func rrAddr(rr dns.RR) (netip.Addr, int) {
 		return a.Unmap(), 1
 	}
 	return netip.Addr{}, 0
+}
+
+// DeadPoolAddrs — мёртвые адреса пула, по возрастанию.
+func (h *Health) DeadPoolAddrs() []netip.Addr {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	var out []netip.Addr
+	for a, p := range h.addrs {
+		if p.pool && p.fails >= deadAfter {
+			out = append(out, a)
+		}
+	}
+	slices.SortFunc(out, func(a, b netip.Addr) int { return a.Compare(b) })
+	return out
 }
 
 // AllDead: в пуле есть адреса, и все они мертвы.

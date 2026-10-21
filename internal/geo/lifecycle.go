@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"slices"
+	"strings"
 	"time"
 )
 
@@ -98,8 +99,8 @@ func (l *Lanes) loop(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case reason := <-l.reselect:
-			evaluate(reason, false)
+		case r := <-l.reselect:
+			evaluate(r.reason, r.keep)
 		case <-retryC:
 			retry, retryC = nil, nil
 			if l.partialRetryPending() {
@@ -117,9 +118,10 @@ func (l *Lanes) loop(ctx context.Context) {
 // evaluate оценивает все серверы обхода и закрепляет лучший. Оценка, в которой
 // ни у кого нет охвата, — безрезультатная (обычно лежит сеть): рейтинг,
 // отпечатки, закреплённый и geo.state остаются прежними. Возвращает отсрочку
-// повтора; 0 — повтор не нужен. partialRetry — повтор из-за неполного охвата:
-// закреплённый меняется только на сервер со строго большим охватом, а при том
-// же выборе и том же охвате geo.state не переписывается.
+// повтора; 0 — повтор не нужен. partialRetry — повтор из-за неполного охвата
+// или переоценка из-за мёртвых прокси (reevaluate): закреплённый меняется
+// только на сервер со строго большим охватом, а при том же выборе и том же
+// охвате geo.state не переписывается.
 func (l *Lanes) evaluate(ctx context.Context, reason string, partialRetry bool) time.Duration {
 	l.mu.Lock()
 	l.evaluating = true
@@ -231,8 +233,12 @@ func (l *Lanes) partialReason() string {
 	return fmt.Sprintf("retry: pinned server covers %d/%d probe hosts", cov, len(ProbeDomains))
 }
 
-// checkProxies — цикл проверки прокси закреплённого; все мертвы три цикла
-// подряд — отказ.
+// checkProxies — цикл проверки прокси закреплённого. Все мертвы три цикла
+// подряд — отказ. Часть мертва три цикла подряд — переоценка: имя, которое
+// сервер подменяет только на мёртвый адрес, Filter спасти не может
+// (Bezmezhau 21.10.2026: из двух прокси умер тот, что для Claude и Gemini).
+// Закреплённый при такой переоценке уступает только серверу с большим
+// охватом, и по одному и тому же набору мёртвых она идёт один раз.
 func (l *Lanes) checkProxies(ctx context.Context) {
 	l.health.CheckAll(ctx)
 	if ctx.Err() != nil {
@@ -242,7 +248,11 @@ func (l *Lanes) checkProxies(ctx context.Context) {
 	l.mu.Lock()
 	if !l.health.AllDead() {
 		l.deadCycles = 0
+		reason := l.noteDeadProxiesLocked()
 		l.mu.Unlock()
+		if reason != "" {
+			l.reevaluate(reason)
+		}
 		return
 	}
 	l.deadCycles++
@@ -251,6 +261,31 @@ func (l *Lanes) checkProxies(ctx context.Context) {
 	if trip {
 		l.failover("every proxy of the pinned server is dead")
 	}
+}
+
+// noteDeadProxiesLocked ведёт счёт проверкам, на которых набор мёртвых
+// прокси пула не меняется; возвращает причину переоценки, когда пора.
+// l.mu удерживается.
+func (l *Lanes) noteDeadProxiesLocked() string {
+	dead := l.health.DeadPoolAddrs()
+	if len(dead) == 0 {
+		l.deadSig, l.deadSigCount, l.deadSigFired = "", 0, ""
+		return ""
+	}
+	parts := make([]string, len(dead))
+	for i, a := range dead {
+		parts[i] = a.String()
+	}
+	sig := strings.Join(parts, " ")
+	if sig != l.deadSig {
+		l.deadSig, l.deadSigCount = sig, 0
+	}
+	l.deadSigCount++
+	if l.deadSigCount < deadProxyCyclesToReeval || l.deadSigFired == sig {
+		return ""
+	}
+	l.deadSigFired = sig
+	return fmt.Sprintf("proxies %s of the pinned server are dead", sig)
 }
 
 // flushBad убирает из кеша ответы с прокси пула, ставшими мёртвыми или

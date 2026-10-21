@@ -531,6 +531,14 @@ The pinned server changes only when it fails:
 - or all its proxies are dead in three checks in sequence (one check every
   30 s).
 
+If only some of its proxies are dead in three checks in sequence, doqd
+evaluates the unblocking servers again. The pinned server then gives way only
+to a server that covers strictly more probe names. So a dead proxy that has a
+live one next to it in the answer changes nothing: the filter removes it
+anyway. A server that maps some name only to a dead address (Bezmezhau on
+2026-10-21: of its two proxies, the one for Claude and Gemini died) gives way.
+For the same set of dead proxies the evaluation runs once.
+
 Before a change, doqd tests the network with a query through the fast lane.
 If the fast lane is also silent, the network is the cause, and the pinned
 server stays. An evaluation where no server unblocked anything (usually no
