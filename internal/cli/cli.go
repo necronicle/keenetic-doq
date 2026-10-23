@@ -1,5 +1,5 @@
 // Package cli — режим утилиты управления doqd: подкоманды
-// list/test/add/remove/add-domain/remove-domain/status поверх того же
+// list/test/add/remove/hosts/status поверх того же
 // бинарника, что и демон.
 package cli
 
@@ -18,15 +18,13 @@ var (
 )
 
 var subcommands = map[string]func(args []string) int{
-	"help":          func([]string) int { usage(os.Stdout); return 0 },
-	"test":          runTest,
-	"list":          runList,
-	"add":           runAdd,
-	"remove":        runRemove,
-	"add-domain":    runAddDomain,
-	"remove-domain": runRemoveDomain,
-	"status":        runStatus,
-	"geo":           runGeo,
+	"help":   func([]string) int { usage(os.Stdout); return 0 },
+	"test":   runTest,
+	"list":   runList,
+	"add":    runAdd,
+	"remove": runRemove,
+	"status": runStatus,
+	"hosts":  runHosts,
 }
 
 func Run(args []string) int {
@@ -54,14 +52,12 @@ Management commands:
   doqd add [--force] quic://...   probe, add to config, restart the daemon
   doqd add --fallback quic://...  same, as a fallback: asked only when every
                                   other upstream has failed
-  doqd add --geo quic://...       same, as a geo-unblocking server: geo-blocked
-                                  names go only to the pinned one of these
-  doqd add-domain <domain>        treat the domain (and subdomains) as geo-blocked
-  doqd remove-domain <domain>     remove it again (built-in domains stay)
   doqd remove <number|url>        remove an upstream, restart the daemon
   doqd status                     daemon, DNS integration and resolve check
-  doqd geo                        pinned geo-unblocking server, ranking, proxies
-  doqd geo reselect               re-evaluate the geo-unblocking servers now
+  doqd hosts export               print the built-in hosts snapshot to stdout
+  doqd hosts check [-c CONF]       validate configured hosts
+  doqd hosts status [-c CONF]      configured hosts source and rule count
+  doqd hosts reload               request an atomic hosts reload (SIGHUP)
 
 Flags accepted by management commands:
   -c path    config file (default CONF)

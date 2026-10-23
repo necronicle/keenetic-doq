@@ -36,11 +36,18 @@ func runStatus(args []string) int {
 		fmt.Println("daemon:          not running")
 	}
 	fmt.Printf("listen:          %s (udp+tcp)\n", listen)
-	for _, s := range confServers(lines) {
-		if s.Geo {
-			fmt.Println(geoStatusLine(readSnap()))
-			break
-		}
+	if err := reportHosts(*conf); err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		return 1
+	}
+	cfg, err := loadConfig(*conf)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		return 1
+	}
+	fmt.Printf("upstreams:       %s\n", strings.Join(cfg.Upstreams, ", "))
+	if len(cfg.Fallbacks) > 0 {
+		fmt.Printf("fallbacks:       %s\n", strings.Join(cfg.Fallbacks, ", "))
 	}
 
 	host, port, err := net.SplitHostPort(listen)
@@ -90,9 +97,9 @@ func reportKeenetic(listen, host, port string) {
 		if others := otherNameServers(out, host, port); len(others) > 0 {
 			fmt.Printf("other DNS:       %s\n", strings.Join(others, ", "))
 			fmt.Println("                 the router asks these alongside doqd and takes the fastest")
-			fmt.Println("                 answer, so a geo-blocked service may resolve to its real")
+			fmt.Println("                 answer, so a hosts-listed service may resolve to its real")
 			fmt.Println("                 address instead of the unblocking one. To send every query")
-			fmt.Println("                 through doqd, see the README FAQ on geo-blocked services.")
+			fmt.Println("                 through doqd, see the README on hosts overrides.")
 		}
 	} else {
 		fmt.Printf("registration:    NOT found — add it: ip name-server %s\n", listen)

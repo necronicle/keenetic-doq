@@ -26,16 +26,15 @@ func TestDetect(t *testing.T) {
 	}
 }
 
-// Пути OpenWRT не должны вести в /opt (там нет Entware) и в /var (это tmpfs:
-// закреплённый сервер терялся бы на каждой перезагрузке).
+// OpenWRT config and init files live on the persistent root filesystem.
 func TestOpenWRTPaths(t *testing.T) {
 	p := openwrt
-	for _, path := range []string{p.Conf, p.State, p.Init} {
+	for _, path := range []string{p.Conf, p.Init} {
 		if len(path) >= 5 && (path[:5] == "/opt/" || path[:5] == "/var/" || path[:5] == "/tmp/") {
 			t.Errorf("OpenWRT path %s is not on the persistent root filesystem", path)
 		}
 	}
-	if keenetic.Conf != "/opt/etc/doqd.conf" || keenetic.State != "/opt/var/lib/doqd/geo.state" ||
+	if keenetic.Conf != "/opt/etc/doqd.conf" ||
 		keenetic.Init != "/opt/etc/init.d/S56doqd" {
 		t.Errorf("Keenetic paths changed: %+v — existing installs depend on them", keenetic)
 	}

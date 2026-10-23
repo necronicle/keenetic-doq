@@ -170,7 +170,7 @@ func dnsmasqReport(st dnsmasqState, target string) []string {
 		out = append(out,
 			"other DNS:       "+strings.Join(others, ", "),
 			"                 dnsmasq sends each query to one of its servers, not always",
-			"                 to doqd. Then a geo-blocked service can get its real address,",
+			"                 to doqd. Then a hosts-listed service can get its real address,",
 			"                 and the query leaves the router unencrypted. To send every",
 			"                 query through doqd, remove the other servers and run:",
 			"                     uci set dhcp.@dnsmasq[0].noresolv='1'",

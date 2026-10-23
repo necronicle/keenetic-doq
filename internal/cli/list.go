@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/necronicle/keenetic-doq/internal/config"
@@ -23,9 +24,6 @@ func runList(args []string) int {
 	if !exists {
 		def := config.Default()
 		ups, listen = nil, def.Listen
-		for _, u := range def.Geo {
-			ups = append(ups, confServer{URL: u, Geo: true})
-		}
 		for _, u := range def.Upstreams {
 			ups = append(ups, confServer{URL: u})
 		}
@@ -47,7 +45,7 @@ func runList(args []string) int {
 	}
 	wg.Wait()
 
-	fmt.Print(formatList(*conf, ups, results, readSnap()))
+	fmt.Print(formatList(*conf, ups, results))
 
 	if h := bootstrapHint(results); h != "" {
 		fmt.Printf("\n%s\n", h)
@@ -59,4 +57,26 @@ func runList(args []string) int {
 	}
 	fmt.Printf("\nlisten: %s   daemon: %s\n", listen, state)
 	return 0
+}
+
+func formatList(conf string, ups []confServer, results []probeResult) string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "UPSTREAMS (%s):\n", conf)
+	fallbacks := false
+	for i, u := range ups {
+		tag := ""
+		if u.Fallback {
+			tag = "  [fallback]"
+			fallbacks = true
+		}
+		if results[i].Err != nil {
+			fmt.Fprintf(&b, " %d. %-42s down   (%v)%s\n", i+1, u.URL, results[i].Err, tag)
+		} else {
+			fmt.Fprintf(&b, " %d. %-42s alive  rtt %d ms%s\n", i+1, u.URL, results[i].RTT.Milliseconds(), tag)
+		}
+	}
+	if fallbacks {
+		b.WriteString("\n[fallback] is asked only when every other upstream has failed.\n")
+	}
+	return b.String()
 }

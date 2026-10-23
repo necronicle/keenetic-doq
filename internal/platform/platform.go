@@ -17,8 +17,6 @@ type Platform struct {
 	Kind Kind
 	// Conf — конфиг по умолчанию (флаг -c).
 	Conf string
-	// State — выбор сервера обхода; переживает рестарт, пишется редко.
-	State string
 	// Init — init-скрипт демона: им CLI предлагает запускать и перезапускать.
 	Init string
 }
@@ -32,18 +30,14 @@ func (p Platform) String() string {
 
 var (
 	keenetic = Platform{
-		Kind:  Keenetic,
-		Conf:  "/opt/etc/doqd.conf",
-		State: "/opt/var/lib/doqd/geo.state",
-		Init:  "/opt/etc/init.d/S56doqd",
+		Kind: Keenetic,
+		Conf: "/opt/etc/doqd.conf",
+		Init: "/opt/etc/init.d/S56doqd",
 	}
-	// /var на OpenWRT — это tmpfs, поэтому состояние лежит в /etc: оно
-	// пишется только при закреплении сервера и после оценки.
 	openwrt = Platform{
-		Kind:  OpenWRT,
-		Conf:  "/etc/doqd.conf",
-		State: "/etc/doqd/geo.state",
-		Init:  "/etc/init.d/doqd",
+		Kind: OpenWRT,
+		Conf: "/etc/doqd.conf",
+		Init: "/etc/init.d/doqd",
 	}
 )
 

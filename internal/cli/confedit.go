@@ -26,39 +26,37 @@ func readConfLines(path string) ([]string, bool, error) {
 	for sc.Scan() {
 		lines = append(lines, sc.Text())
 	}
-	return lines, true, sc.Err()
+	if err := sc.Err(); err != nil {
+		return nil, true, err
+	}
+	_, err = config.Parse(strings.NewReader(strings.Join(lines, "\n")))
+	return lines, true, err
 }
 
-// confServer — DoQ-сервер из конфига: сервер обхода (geo), обычный
-// (upstream) или резервный (fallback).
+// confServer is an ordinary upstream or fallback.
 type confServer struct {
 	URL      string
 	Fallback bool
-	Geo      bool
 }
 
 func (c confServer) key() string {
 	switch {
-	case c.Geo:
-		return "geo"
 	case c.Fallback:
 		return "fallback"
 	}
 	return "upstream"
 }
 
-// rank — порядок блоков в конфиге: geo, upstream, fallback.
+// rank — порядок блоков в конфиге: upstream, fallback.
 func (c confServer) rank() int {
 	switch {
-	case c.Geo:
-		return 0
 	case c.Fallback:
 		return 2
 	}
 	return 1
 }
 
-// serverLine распознаёт строку "geo|upstream|fallback <url>" по тем же
+// serverLine распознаёт строку "upstream|fallback <url>" по тем же
 // правилам, что и config.Parse (первые два поля).
 func serverLine(line string) (confServer, bool) {
 	fields := strings.Fields(line)
@@ -66,8 +64,6 @@ func serverLine(line string) (confServer, bool) {
 		return confServer{}, false
 	}
 	switch fields[0] {
-	case "geo":
-		return confServer{URL: fields[1], Geo: true}, true
 	case "upstream":
 		return confServer{URL: fields[1]}, true
 	case "fallback":
@@ -117,7 +113,7 @@ func confListen(lines []string) string {
 }
 
 // addServer вставляет сервер после последней строки того же вида; первый
-// своего вида — перед первым сервером следующего блока (geo → upstream →
+// своего вида — перед первым сервером следующего блока (upstream →
 // fallback); если серверов нет вовсе — в конец.
 func addServer(lines []string, srv confServer) ([]string, error) {
 	same, anyLast, firstHigher := -1, -1, -1
@@ -183,8 +179,8 @@ func removeServer(lines []string, sel string) ([]string, confServer, error) {
 			}
 		}
 		if primaries == 1 {
-			return nil, confServer{}, fmt.Errorf("refusing to remove the last geo/upstream server — " +
-				"add another one first: doqd add [--geo] quic://...")
+			return nil, confServer{}, fmt.Errorf("refusing to remove the last upstream server — " +
+				"add another one first: doqd add quic://...")
 		}
 	}
 	var out []string
@@ -228,9 +224,7 @@ func defaultConfLines() []string {
 		"# doqd — DNS-over-QUIC forwarder. https://github.com/necronicle/keenetic-doq",
 		"listen " + def.Listen,
 	}
-	for _, u := range def.Geo {
-		lines = append(lines, "geo "+u)
-	}
+	lines = append(lines, "hosts "+def.Hosts)
 	for _, u := range def.Upstreams {
 		lines = append(lines, "upstream "+u)
 	}
@@ -245,65 +239,4 @@ func defaultConfLines() []string {
 		fmt.Sprintf("min_ttl %d", int(def.MinTTL.Seconds())),
 		fmt.Sprintf("max_ttl %d", int(def.MaxTTL.Seconds())),
 		"log "+def.LogLevel)
-}
-
-// domainLine распознаёт строку "geo-domain <домен>" и возвращает домен в
-// нормализованном виде (нижний регистр, без точки на конце).
-func domainLine(line string) (string, bool) {
-	fields := strings.Fields(line)
-	if len(fields) >= 2 && fields[0] == "geo-domain" {
-		return strings.TrimSuffix(strings.ToLower(fields[1]), "."), true
-	}
-	return "", false
-}
-
-// addDomain вставляет geo-domain после последней такой строки, иначе после
-// последнего сервера, иначе в конец.
-func addDomain(lines []string, val string) ([]string, error) {
-	d, err := config.GeoDomain(val)
-	if err != nil {
-		return nil, err
-	}
-	lastDomain, lastServer := -1, -1
-	for i, l := range lines {
-		if x, ok := domainLine(l); ok {
-			if x == d {
-				return nil, fmt.Errorf("%s is already in the config", d)
-			}
-			lastDomain = i
-		}
-		if _, ok := serverLine(l); ok {
-			lastServer = i
-		}
-	}
-	at := len(lines)
-	switch {
-	case lastDomain != -1:
-		at = lastDomain + 1
-	case lastServer != -1:
-		at = lastServer + 1
-	}
-	out := make([]string, 0, len(lines)+1)
-	out = append(out, lines[:at]...)
-	out = append(out, "geo-domain "+d)
-	return append(out, lines[at:]...), nil
-}
-
-// removeDomain удаляет geo-domain из конфига; встроенные домены в конфиге не
-// лежат, поэтому удалить их нельзя.
-func removeDomain(lines []string, val string) ([]string, error) {
-	d := strings.TrimSuffix(strings.ToLower(val), ".")
-	var out []string
-	found := false
-	for _, l := range lines {
-		if x, ok := domainLine(l); ok && x == d {
-			found = true
-			continue
-		}
-		out = append(out, l)
-	}
-	if !found {
-		return nil, fmt.Errorf("geo-domain %s is not in the config (built-in domains cannot be removed)", d)
-	}
-	return out, nil
 }
