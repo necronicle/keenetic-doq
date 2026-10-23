@@ -313,6 +313,11 @@ stops with instructions before modifying the running installation. Put the
 required names and known proxy IPs in hosts, remove the old directives and retry.
 Third-party management UIs may need updating for the new CLI.
 
+To downgrade to 0.5.x, restore **both the old binary and its matching configuration**
+from `.pre-smartdns.*`, then restart the service. Old binaries do not accept `hosts`.
+Configuration backup is not a transactional rollback of the entire installation
+in the event of power loss or flash write failure.
+
 ## Verification
 
 ```sh
