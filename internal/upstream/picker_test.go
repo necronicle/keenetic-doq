@@ -497,17 +497,59 @@ func TestStartupProbeDemotesSilentUpstream(t *testing.T) {
 // Апстрим со сломанным рекурсором отвечает SERVFAIL быстро. Проиграв
 // полезному ответу, он уходит за здоровый, а не остаётся первым навсегда.
 func TestFastServfailUpstreamIsDemoted(t *testing.T) {
-	fastPicker(t)
 	broken := &fakeUp{name: "broken", rcode: dns.RcodeServerFailure}
-	good := &fakeUp{name: "good", delay: 20 * time.Millisecond}
+	good := &fakeUp{name: "good", ip: "192.0.2.1"}
 	p := NewPicker([]Exchanger{broken, good})
-	p.Exchange(context.Background(), query())
+	resp, err := p.Exchange(context.Background(), query())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ip, _ := answeredBy(t, resp); ip != "192.0.2.1" {
+		t.Fatal(ip)
+	}
+	if !p.isDown(broken) {
+		t.Fatal("SERVFAIL loser still considered healthy")
+	}
+	// A subsequent slower healthy measurement must not promote a known broken
+	// recursor. Drive the sample explicitly instead of relying on scheduler jitter.
+	p.markSuccess(p.ups[1], 100*time.Millisecond)
+	if p.ordered()[0].ex != good {
+		t.Fatal("slower healthy sample promoted broken recursor")
+	}
 	before := broken.calls()
-	for i := 0; i < 3; i++ {
-		p.Exchange(context.Background(), query())
+	if _, err = p.Exchange(context.Background(), query()); err != nil {
+		t.Fatal(err)
 	}
 	if broken.calls() != before {
-		t.Errorf("broken upstream still asked first (%d more calls)", broken.calls()-before)
+		t.Fatal("known broken recursor was retried ahead of healthy upstream")
+	}
+}
+
+func TestHealthProbeRequiresUsefulResponseAndCanRecover(t *testing.T) {
+	for _, rcode := range []int{dns.RcodeServerFailure, dns.RcodeRefused} {
+		broken := &fakeUp{name: "broken", rcode: rcode}
+		p := NewPicker([]Exchanger{broken})
+		st := p.ups[0]
+		p.markDown(st)
+		if p.probe(context.Background(), st, false) || !p.isDown(broken) {
+			t.Fatalf("rcode %d revived failed upstream", rcode)
+		}
+		broken.rcode = dns.RcodeSuccess
+		if !p.probe(context.Background(), st, false) || p.isDown(broken) {
+			t.Fatalf("useful response failed to revive upstream after rcode %d", rcode)
+		}
+	}
+}
+
+func TestSoftFailureAloneDoesNotDemoteUpstream(t *testing.T) {
+	broken := &fakeUp{name: "broken", rcode: dns.RcodeServerFailure}
+	p := NewPicker([]Exchanger{broken})
+	resp, err := p.Exchange(context.Background(), query())
+	if err != nil || resp.Rcode != dns.RcodeServerFailure {
+		t.Fatalf("all-soft result: %v %v", resp, err)
+	}
+	if p.isDown(broken) {
+		t.Fatal("domain-specific failure without useful competing answer demoted upstream")
 	}
 }
 

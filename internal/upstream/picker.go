@@ -338,9 +338,10 @@ func (p *Picker) round(parent context.Context, m *dns.Msg, soft **dns.Msg) (resp
 					}
 				}
 				// Быстрый SERVFAIL проиграл полезному ответу — это сломанный
-				// рекурсор, а не сломанный домен: отодвинуть, как проигравшего.
-				for st, start := range softs {
-					p.markSlow(st, time.Since(start))
+				// рекурсор, а не сломанный домен. Пометить отказавшим: одна
+				// оценка RTT могла бы вернуть его вперёд при обычном джиттере.
+				for st := range softs {
+					p.markDown(st)
 				}
 				if a.st.fallback && p.hasPrimary() {
 					capTTL(a.resp, fallbackMaxTTL)
@@ -461,7 +462,10 @@ func (p *Picker) probe(ctx context.Context, st *upstreamState, startup bool) boo
 	q.SetQuestion(".", dns.TypeNS)
 	cctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	_, rtt, err := exchangeTimed(cctx, st.ex, q)
+	resp, rtt, err := exchangeTimed(cctx, st.ex, q)
+	if err == nil && softFail(resp) {
+		err = fmt.Errorf("unusable health-check response: %s", dns.RcodeToString[resp.Rcode])
+	}
 	switch {
 	case err == nil:
 		if !startup {
