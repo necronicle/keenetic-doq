@@ -25,6 +25,16 @@ for installer in install.sh install-openwrt.sh; do
     die() { echo "$*" >&2; exit 1; }
     CONF=$WORK/conf
     export CONF
+    # A fresh install must reject pre-SmartDNS binaries before writing config.
+    rm -f "$CONF"
+    printf '#!/bin/sh\necho unknown command >&2\nexit 2\n' > "$WORK/doqd-old"
+    chmod +x "$WORK/doqd-old"
+    if migrate_smartdns "$WORK/doqd-old" > "$WORK/error" 2>&1; then
+        echo 'FAIL: fresh install accepted a pre-SmartDNS binary'; exit 1
+    fi
+    [ ! -e "$CONF" ]
+    migrate_smartdns "$WORK/doqd-new"
+    [ ! -e "$CONF" ]
     cat > "$CONF" <<'CONF'
 listen 127.0.0.1:5354
  geo quic://dns.dns-ai.ru
