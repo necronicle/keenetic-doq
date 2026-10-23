@@ -339,7 +339,7 @@ nslookup chatgpt.com
 ```sh
 dig @127.0.0.1 -p 5354 releases.openai.com A
 dig @127.0.0.1 -p 5354 releases.openai.com AAAA
-dig @127.0.0.1 -p 5354 releases.openai.com HTTPS
+dig @127.0.0.1 -p 5354 releases.openai.com TYPE65
 ```
 
 Для встроенного списка A содержит два IP прокси, AAAA и HTTPS — пустые успешные

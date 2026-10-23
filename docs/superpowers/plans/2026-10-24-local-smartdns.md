@@ -28,3 +28,12 @@ Task 4 integration/release (README, changelog, workflows, release):
 - [ ] Announce only verified release in Telegram topic 55256, chat -1003834368989.
 
 Review focus: CNAME chains/ANY should not reveal direct IP for matched names; malformed input and atomic reload; CLI on stopped daemon; installer retains custom settings and fails safely before mutation; old config cannot silently use removed geo behaviour.
+
+## Execution record
+- Baseline full Go suite passed on 0.5.4.
+- Core, CLI and packaging implemented in disjoint scopes; commits 2b1a410, 8bf8f7f, 9bc678a, 07da1fb.
+- Ruling: use embedded snapshot by default; optional custom hosts replaces it. No external hosts download at install time.
+- Ruling: block local ANY/CNAME address escape too; sanitize alias chains leading into protected names and recheck after in-flight requests at reload.
+- Ruling: malformed/missing custom hosts must fail staged installer validation before config or running service mutation.
+- Live local daemon: releases.openai.com A gives both proxies; AAAA/TYPE65/TYPE64 NOERROR/NODATA, UDP and TCP checked; ordinary example.com resolves over real DoQ.
+- Historical picker demotion test proved timing-dependent under repeated execution; investigated separately before release.

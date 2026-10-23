@@ -63,7 +63,7 @@ there the binary uses less flash than its size. The OpenWRT installer
 estimates the necessary space before the copy. If the flash still becomes
 full, the installer removes doqd and restores dnsmasq.
 
-OpenWRT 24.10.8 and 25.12.5 were tested in the QEMU emulator on aarch64,
+For earlier releases, OpenWRT 24.10.8 and 25.12.5 were tested in the QEMU emulator on aarch64,
 mipsel, mips64, mips64el and armv7. The amd64, 386, riscv64 and armv5 builds
 were tested with a run and a DoQ query. The loong64 build was compiled but
 not run.
@@ -328,7 +328,7 @@ With `dig`, query doqd directly (replace 127.0.0.1 with LAN-IP on Keenetic):
 ```sh
 dig @127.0.0.1 -p 5354 releases.openai.com A
 dig @127.0.0.1 -p 5354 releases.openai.com AAAA
-dig @127.0.0.1 -p 5354 releases.openai.com HTTPS
+dig @127.0.0.1 -p 5354 releases.openai.com TYPE65
 ```
 
 With the embedded table, A returns two proxy IPs; AAAA and HTTPS return successful

@@ -12,7 +12,11 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.26'
-      - run: go test ./...
+      - run: go vet ./...
+      - run: go test -race ./...
+      - run: sh scripts/test-install-migrate.sh
+      - run: sh scripts/test-install-openwrt.sh
+      - run: shellcheck -s sh -S warning install.sh uninstall.sh install-openwrt.sh uninstall-openwrt.sh scripts/*.sh
       - name: build
         run: sh scripts/build-all.sh dist "$GITHUB_REF_NAME"
       - name: checksums
