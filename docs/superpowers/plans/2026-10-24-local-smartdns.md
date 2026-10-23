@@ -37,3 +37,7 @@ Review focus: CNAME chains/ANY should not reveal direct IP for matched names; ma
 - Ruling: malformed/missing custom hosts must fail staged installer validation before config or running service mutation.
 - Live local daemon: releases.openai.com A gives both proxies; AAAA/TYPE65/TYPE64 NOERROR/NODATA, UDP and TCP checked; ordinary example.com resolves over real DoQ.
 - Historical picker demotion test proved timing-dependent under repeated execution; investigated separately before release.
+
+- Final review: no critical/important findings; downgrade documentation nit resolved in 3c34ade.
+- Ruling: picker repeat failure was a production defect, not a timing-only test issue. f8080cb demotes soft-failure losers until successful recovery; deterministic regressions passed 30 runs, full suite/race passed.
+- Reviewer boundaries retained: no new-version physical-router deployment or all-service functional claim; remote CI/assets verified in publication step.
