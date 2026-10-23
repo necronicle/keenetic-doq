@@ -16,7 +16,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/miekg/dns"
 	// Корневые сертификаты на случай, если в прошивке их нет: без них не
 	// проверить TLS ни одного апстрима. В KeeneticOS они лежат в /etc/ssl/certs,
 	// а на OpenWRT пакет ca-bundle есть не в каждой сборке. Системные корни,
@@ -26,10 +25,10 @@ import (
 	"github.com/necronicle/keenetic-doq/internal/cache"
 	"github.com/necronicle/keenetic-doq/internal/cli"
 	"github.com/necronicle/keenetic-doq/internal/config"
-	"github.com/necronicle/keenetic-doq/internal/geo"
 	"github.com/necronicle/keenetic-doq/internal/platform"
 	"github.com/necronicle/keenetic-doq/internal/resolver"
 	"github.com/necronicle/keenetic-doq/internal/server"
+	"github.com/necronicle/keenetic-doq/internal/smartdns"
 	"github.com/necronicle/keenetic-doq/internal/upstream"
 )
 
@@ -73,9 +72,7 @@ func main() {
 	// dnsmasq, и в списке серверов обоих прописан сам doqd — запрос вернулся
 	// бы нам же.
 	boot := upstream.NewBootstrap(cfg.Bootstrap)
-	// Один DoQ на URL: обычный резолвер стоит и в быстрой полосе, и в эталоне,
-	// а без upstream сервер обхода — и в быстрой полосе, и в гео-полосе;
-	// соединение у сервера должно быть одно.
+	// Reuse one DoQ connection for each configured URL.
 	doqs := map[string]upstream.Exchanger{}
 	build := func(urls []string) []upstream.Exchanger {
 		var out []upstream.Exchanger
@@ -98,45 +95,20 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	// Быстрая полоса: обычные имена идут только в обычные резолверы, серверы
-	// обхода получают одни геоблокированные имена.
-	fast := upstream.NewPicker(build(cfg.FastLane()), build(cfg.Fallbacks)...)
-	fast.StartHealthCheck(ctx, 30*time.Second)
-	// Эталон для оценки серверов обхода — только обычные резолверы.
-	var ref upstream.Exchanger
-	if len(cfg.Upstreams)+len(cfg.Fallbacks) > 0 {
-		ref = upstream.NewPicker(build(cfg.Upstreams), build(cfg.Fallbacks)...)
-	}
-	var geoServers []geo.Server
-	for i, ex := range build(cfg.Geo) {
-		geoServers = append(geoServers, geo.Server{URL: cfg.Geo[i], Ex: ex})
-	}
-
+	pool := upstream.NewPicker(build(cfg.Upstreams), build(cfg.Fallbacks)...)
+	pool.StartHealthCheck(ctx, 30*time.Second)
 	c := cache.New(cfg.CacheSize, cfg.MinTTL, cfg.MaxTTL)
-	lanes := geo.New(geo.Config{
-		Fast:         fast,
-		Geo:          geoServers,
-		Reference:    ref,
-		Static:       geo.NewMatcher(geo.BuiltinDomains(), cfg.GeoDomains),
-		Prober:       geo.NewTLSProber(2 * time.Second),
-		StatePath:    host.State,
-		SnapshotPath: geo.DefaultSnapshotPath,
-		Flush:        c.DeleteIf,
-		Stale:        func(m *dns.Msg) *dns.Msg { return c.GetStale(cache.KeyOf(m)) },
-	})
-	// `doqd geo reselect` шлёт SIGUSR1 — переоценить серверы обхода. Подписка
-	// до Start: действие SIGUSR1 по умолчанию — завершить процесс, а снимок,
-	// по которому CLI решает, можно ли слать сигнал, пишет уже Start.
-	usr1 := make(chan os.Signal, 1)
-	signal.Notify(usr1, syscall.SIGUSR1)
-	go func() {
-		for range usr1 {
-			lanes.Reselect("requested by doqd geo reselect")
-		}
-	}()
-	lanes.Start(ctx)
+	res, err := smartdns.New(cfg.Hosts, resolver.New(c, pool))
+	if err != nil {
+		slog.Error("bad hosts source", "source", cfg.Hosts, "err", err)
+		os.Exit(1)
+	}
+	// SIGHUP reloads only the hosts source; a failed parse retains the old table.
+	hup := make(chan os.Signal, 1)
+	signal.Notify(hup, syscall.SIGHUP)
+	defer signal.Stop(hup)
+	go reloadHosts(ctx, res, hup)
 
-	res := resolver.New(c, lanes)
 	srv := server.New(cfg.Listen, res)
 	// StartWait, а не Start: на загрузке роутера адрес интерфейса может ещё
 	// не подняться, а второго шанса init-скрипт не даёт.
@@ -144,11 +116,29 @@ func main() {
 		slog.Error("listen failed", "addr", cfg.Listen, "err", err)
 		os.Exit(1)
 	}
-	slog.Info("doqd started", "version", version, "listen", srv.Addr(), "geo", cfg.Geo,
-		"upstreams", cfg.Upstreams, "fallbacks", cfg.Fallbacks, "geo_domains", cfg.GeoDomains,
+	slog.Info("doqd started", "version", version, "listen", srv.Addr(), "hosts", cfg.Hosts,
+		"upstreams", cfg.Upstreams, "fallbacks", cfg.Fallbacks,
 		"bootstrap", cfg.Bootstrap, "platform", host.String())
 
 	<-ctx.Done()
 	slog.Info("shutting down")
 	srv.Shutdown()
+}
+
+func reloadHosts(ctx context.Context, res *smartdns.Resolver, signals <-chan os.Signal) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case _, ok := <-signals:
+			if !ok {
+				return
+			}
+			if err := res.Reload(); err != nil {
+				slog.Error("hosts reload failed; retaining previous snapshot", "err", err)
+			} else {
+				slog.Info("hosts reloaded")
+			}
+		}
+	}
 }

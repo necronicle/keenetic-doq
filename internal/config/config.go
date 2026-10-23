@@ -11,47 +11,28 @@ import (
 	"strings"
 	"time"
 
-	"github.com/miekg/dns"
-
 	"github.com/necronicle/keenetic-doq/internal/upstream"
 )
 
 type Config struct {
 	Listen string
-	// Geo — серверы обхода геоблокировок: геоблокированные имена идут только
-	// в один из них, закреплённый.
-	Geo []string
+	// Hosts selects the embedded snapshot (builtin) or a replacement hosts file.
+	Hosts string
 	// Upstreams — обычные резолверы: остальные имена идут в быстрейший из них.
 	Upstreams []string
 	// Fallbacks спрашиваются, только когда отказали все остальные.
 	Fallbacks []string
-	// GeoDomains — свои геоблокированные домены сверх встроенного списка.
-	GeoDomains []string
-	Bootstrap  []string
-	CacheSize  int
-	MinTTL     time.Duration
-	MaxTTL     time.Duration
-	LogLevel   string
-}
-
-// FastLane — серверы быстрой полосы: обычные резолверы. Серверы обхода
-// получают только геоблокированные имена. Без upstream быстрая полоса —
-// серверы обхода, иначе обычным именам некуда идти.
-func (c *Config) FastLane() []string {
-	if len(c.Upstreams) == 0 {
-		return c.Geo
-	}
-	return c.Upstreams
+	Bootstrap []string
+	CacheSize int
+	MinTTL    time.Duration
+	MaxTTL    time.Duration
+	LogLevel  string
 }
 
 func Default() *Config {
 	return &Config{
 		Listen: "127.0.0.1:5354",
-		// Серверы обхода: для заблокированных по геолокации сервисов отдают
-		// адреса своих прокси. Bezmezhau убран в 0.5.3: один из двух его прокси
-		// отфильтрован по 443 из РФ. eu.geohide.ru — 7 прокси DE/NL, comss — 4
-		// прокси NL, dns-ai — 1 прокси FI; у всех трёх покрытие 7/7.
-		Geo: []string{"quic://eu.geohide.ru", "quic://dns.comss.one", "quic://dns.dns-ai.ru"},
+		Hosts:  "builtin",
 		// Обычные резолверы из разных сетей. AdGuard сюда не годится — его
 		// режет ТСПУ; у Cloudflare и Google DoQ нет.
 		Upstreams: []string{"quic://dns.quad9.net", "quic://p0.freedns.controld.com", "quic://dns.nextdns.io"},
@@ -65,7 +46,7 @@ func Default() *Config {
 
 func Parse(r io.Reader) (*Config, error) {
 	cfg := Default()
-	sawServers, sawBootstrap := false, false
+	sawServers, sawBootstrap, sawHosts := false, false, false
 	sc := bufio.NewScanner(r)
 	line := 0
 	for sc.Scan() {
@@ -82,27 +63,27 @@ func Parse(r io.Reader) (*Config, error) {
 		switch key {
 		case "listen":
 			cfg.Listen = val
-		case "geo", "upstream", "fallback":
-			// Первая же строка любого из трёх ключей отменяет все три дефолта:
+		case "geo", "geo-domain":
+			return nil, fmt.Errorf("line %d: legacy %s setting requires migration: back up this config; move custom geo servers to upstream and replace geo-domain with IP/name entries in a hosts file", line, key)
+		case "hosts":
+			if sawHosts || len(fields) != 2 {
+				return nil, fmt.Errorf("line %d: hosts requires exactly one source and may appear only once", line)
+			}
+			cfg.Hosts = val
+			sawHosts = true
+		case "upstream", "fallback":
+			// Первая строка сервера отменяет все дефолтные серверы:
 			// иначе свой список молча дополнялся бы встроенным.
 			if !sawServers {
-				cfg.Geo, cfg.Upstreams, cfg.Fallbacks = nil, nil, nil
+				cfg.Upstreams, cfg.Fallbacks = nil, nil
 				sawServers = true
 			}
 			switch key {
-			case "geo":
-				cfg.Geo = append(cfg.Geo, val)
 			case "upstream":
 				cfg.Upstreams = append(cfg.Upstreams, val)
 			default:
 				cfg.Fallbacks = append(cfg.Fallbacks, val)
 			}
-		case "geo-domain":
-			d, err := GeoDomain(val)
-			if err != nil {
-				return nil, fmt.Errorf("line %d: %w", line, err)
-			}
-			cfg.GeoDomains = append(cfg.GeoDomains, d)
 		case "bootstrap":
 			addr, err := BootstrapAddr(val)
 			if err != nil {
@@ -138,8 +119,8 @@ func Parse(r io.Reader) (*Config, error) {
 	if err := sc.Err(); err != nil {
 		return nil, err
 	}
-	if len(cfg.Upstreams) == 0 && len(cfg.Geo) == 0 {
-		return nil, fmt.Errorf("fallback servers need at least one upstream or geo server: " +
+	if len(cfg.Upstreams) == 0 {
+		return nil, fmt.Errorf("fallback servers need at least one upstream server: " +
 			"a fallback is asked only when every other server has failed")
 	}
 	listenHost, _, err := net.SplitHostPort(cfg.Listen)
@@ -155,17 +136,6 @@ func Parse(r io.Reader) (*Config, error) {
 		}
 	}
 	return cfg, nil
-}
-
-// GeoDomain приводит домен из `geo-domain` к виду для сравнения: нижний
-// регистр, без завершающей точки. Однословные имена не принимаются — суффикс
-// вроде "com" увёл бы в гео-полосу половину интернета.
-func GeoDomain(val string) (string, error) {
-	d := strings.TrimSuffix(strings.ToLower(val), ".")
-	if _, ok := dns.IsDomainName(d); !ok || !strings.Contains(d, ".") || strings.Contains(d, "..") {
-		return "", fmt.Errorf("bad geo-domain %q: want a domain like example.com", val)
-	}
-	return d, nil
 }
 
 // BootstrapAddr приводит значение к IP:порт. Имя тут недопустимо: его пришлось
