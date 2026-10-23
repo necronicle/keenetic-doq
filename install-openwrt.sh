@@ -39,8 +39,8 @@ check_legacy_config() {
     fi
 }
 
-migrate_smartdns() {
-    [ -f "$CONF" ] || return 0
+migrate_smartdns() { # $1 = verified new binary, not the installed daemon
+    if [ ! -f "$CONF" ]; then "$1" hosts check -c "$CONF"; return $?; fi
     check_legacy_config || return 1
     geos=$(awk '$1 == "geo" {print $2}' "$CONF" | LC_ALL=C sort | tr '\n' ' ')
     drop=no
@@ -65,6 +65,13 @@ migrate_smartdns() {
             }
         }
     ' "$CONF" > "$stage"; then rm -f "$stage"; return 1; fi
+    # Validate with the new version before changing config, binary or service.
+    # In particular a missing/invalid custom hosts file must leave working DNS alone.
+    if ! "$1" hosts check -c "$stage"; then
+        rm -f "$stage"
+        echo "Config/hosts validation failed; $CONF and the running service are unchanged." >&2
+        return 1
+    fi
     if cmp -s "$CONF" "$stage"; then rm -f "$stage"; return 0; fi
     backup=$(mktemp "$CONF.pre-smartdns.XXXXXX") || { rm -f "$stage"; return 1; }
     if ! cp -p "$CONF" "$backup"; then rm -f "$stage" "$backup"; return 1; fi
@@ -296,7 +303,7 @@ remove_doqd() {
     fi
     rm -f "$BIN" "$BIN.new" "$INIT" "$KEEP"
 }
-migrate_smartdns || die "config migration failed; fix $CONF before upgrading"
+migrate_smartdns "$TMPBIN" || die "config migration failed; fix $CONF before upgrading"
 
 if ! install_binary; then
     remove_doqd
