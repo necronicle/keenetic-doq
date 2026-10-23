@@ -20,10 +20,8 @@ type Exchanger interface {
 
 const downCooldown = 30 * time.Second
 
-// fallbackMaxTTL — потолок TTL ответа резервного апстрима. Пока основные
-// лежат, имена, которые нужно резолвить через сервер обхода геоблокировок,
-// получают от резерва настоящие адреса; короткий TTL не даёт им застрять в
-// кешах после того, как основной вернулся.
+// fallbackMaxTTL limits reserve answers so recovered primary upstreams can
+// replace them promptly in downstream caches.
 const fallbackMaxTTL = 60
 
 var (

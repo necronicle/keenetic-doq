@@ -8,74 +8,43 @@
 **Telegram: [DoQ topic in @zapret2keenetic](https://t.me/zapret2keenetic/55256)** — questions, setup help, discussion (in Russian)  
 **Web UI: [keenetic-doq-web](https://github.com/accept4/keenetic-doq-web)** — web management panel by @accept4 (Keenetic)
 
-DNS-over-QUIC (RFC 9250) for **Keenetic** and **OpenWRT** routers.
+DNS-over-QUIC for **Keenetic** and **OpenWRT**, with local SmartDNS.
 
-`doqd` is a small daemon on the router. It receives plain DNS queries and
-sends them to DoQ servers through an encrypted channel. doqd does not use
-port 53: the stock DNS server of the router stays in place and sends the
-queries to doqd.
+`doqd` answers names from a local hosts table with the proxy addresses in that
+table. All other names use ordinary DoQ upstreams and the existing DNS cache.
+The separate geo-DNS lane, automatic classification and pinned geo server have
+been removed.
 
-```
-Keenetic:  clients → ndnproxy :53 → <LAN-IP>:5354 (doqd) ─┐
-OpenWRT:   clients → dnsmasq  :53 → 127.0.0.1:5354 (doqd) ─┤
-                                                          ├ geo-blocked name → pinned unblocking server (quic://)
-                                                          └ every other name → fastest plain server (quic://)
+```text
+clients → router DNS → doqd → hosts match: local proxy IP response
+                           → other names: cache → ordinary DoQ upstream
 ```
 
-doqd has two lanes:
+The binary includes **1025 exact names**, a snapshot dated October 24, 2026:
+GeoHide EU hosts plus Sora names and `releases.openai.com` for Codex downloads.
+The proxy addresses are `5.175.161.3` and `5.175.161.40`. No Cloudflare Zero Trust
+account is required. **The third-party proxies are still required:** replacing
+DNS answers does not create a foreign network exit or guarantee service access.
 
-- **Geo lane.** Names of geo-blocked services (ChatGPT, Claude, Gemini...) go
-  only to one pinned unblocking server. The unblocking server answers with
-  the addresses of its proxies. All domains of a service get proxies in one
-  country.
-- **Fast lane.** Every other name goes to the fastest live plain server. The
-  unblocking servers do not get it.
+Ordinary upstream selection prefers the healthy primary with the lowest smoothed
+DNS response time. If it stalls, another attempt starts in parallel. Requests
+are not broadcast to every server. Fallback upstreams, caching, coalescing of
+identical requests and stale responses during upstream failure are retained.
 
-> This project is for research of network protocols and for study of DNS. Use it for education only.
+## Local rules
 
-## Contents
+- Exact names, case-insensitive, ignoring the trailing dot. `example.com`
+  does not include arbitrary subdomains.
+- A/AAAA answers contain only addresses from hosts. Missing IPv6 records
+  produce NOERROR/NODATA, not NXDOMAIN and not direct upstream addresses.
+- HTTPS/SVCB for matched names return NODATA, without direct IP hints or ECH
+  configuration that could bypass the proxy. HTTPS connections remain available.
+- Local TTL is 60 seconds. Synthesized answers do not assert DNSSEC validation.
+- No automatic hosts downloads or proxy-provider failover: the listed addresses
+  are the source of truth.
 
-- [Features](#features)
-- [Requirements](#requirements)
-- [Install on Keenetic](#install-on-keenetic)
-- [Install on OpenWRT](#install-on-openwrt)
-- [How doqd connects to the router DNS](#how-doqd-connects-to-the-router-dns)
-- [Management](#management)
-- [Configuration](#configuration)
-- [Verification](#verification)
-- [FAQ](#faq)
-- [Uninstall](#uninstall)
-- [Building from source](#building-from-source)
-- [Limitations](#limitations)
-
-## Features
-
-- DoQ client per RFC 9250: long-lived QUIC connections, one stream per
-  query, keep-alive and TLS resumption. The query ID on the wire is 0.
-- A server can have many addresses. doqd tries them as a ladder, so a dead
-  address does not delay a live one. doqd remembers the address that works.
-- Geo lane. doqd evaluates the unblocking servers (`geo`) once: liveness and
-  TLS speed to their proxies. doqd pins the best server. The pinned server
-  changes only when it fails. Every 30 s doqd checks its proxies and removes
-  dead and slow proxies from the answers.
-- Fast lane. A query goes to the fastest live server of `upstream`. The `geo`
-  servers are not in this lane. If the config has no `upstream`, plain names
-  go to the `geo` servers. An answer with SERVFAIL, REFUSED or a broken CNAME
-  chain (a CNAME with no address at the end) does not win over a full answer
-  of another server. If the server is silent for longer than ~3× its usual
-  time, doqd also asks the next one. A dead server goes to the end of the
-  queue. doqd asks the fallback servers (`fallback`) only when all other
-  servers failed.
-- If a connection stops answering (for example, after a WAN reconnect), doqd
-  replaces it. A slow answer to one query does not break the connection.
-- Answer cache by TTL with LRU eviction. Identical concurrent queries go out
-  once. If the servers are down or need more than 1.8 s, doqd serves a stale
-  answer from the cache (RFC 8767, up to one day, with TTL 30 s).
-- Management in the same binary: `doqd add/remove/list/test/status/geo`,
-  `add-domain`/`remove-domain`. You do not edit files. doqd tests a server
-  with a live query before it writes the server to the config.
-- One static binary without dependencies. It contains root certificates for
-  firmware that has none.
+These guarantees apply to queries reaching doqd. Client-side DNS, VPNs, other
+router DNS servers and old client caches can bypass the rules.
 
 ## Requirements
 
@@ -140,8 +109,7 @@ The installer does these steps:
 5. It writes the init script `/opt/etc/init.d/S56doqd` and starts the daemon.
 6. It registers doqd in KeeneticOS: `ip name-server <LAN-IP>:5354`.
 
-The installer does not overwrite an existing config. It converts configs of
-old versions to the current format. A second run breaks nothing.
+Existing configuration is retained subject to the legacy migration described below.
 
 Without access to GitHub, copy the binary to the router and run:
 
@@ -269,428 +237,104 @@ gives back the standard dnsmasq.
 
 ## Management
 
-All commands work the same on Keenetic and on OpenWRT. doqd finds its file
-paths automatically (see [Configuration](#configuration)).
-
-For browser-based management on Keenetic, a third-party web interface is available: [keenetic-doq-web](https://github.com/accept4/keenetic-doq-web).
-
-The list of servers with live probes:
-
 ```sh
-~ # doqd list
-GEO — geo-blocked names go only to the pinned server, marked * (/etc/doqd.conf):
- * 1. quic://eu.geohide.ru                       alive  rtt 70 ms   proxies 7/7 ok, tls 150 ms
-   2. quic://dns.comss.one                       alive  rtt 26 ms   proxies 4/4 alive, tls 144 ms
-   3. quic://dns.dns-ai.ru                       alive  rtt 41 ms   proxies 1/1 alive, tls 189 ms
-FAST — every other name goes to the fastest of these:
-   4. quic://dns.quad9.net                       alive  rtt 249 ms
-   5. quic://p0.freedns.controld.com             alive  rtt 122 ms
-   6. quic://dns.nextdns.io                      alive  rtt 151 ms
-
-listen: 127.0.0.1:5354   daemon: running (pid 3560)
+doqd list
+doqd test quic://dns.quad9.net
+doqd add quic://dns.quad9.net
+doqd add --fallback quic://host
+doqd remove <number-or-URL>
+doqd status
+doqd hosts status     # configured source and rule count, not live daemon state
+doqd hosts check      # validate the configured table
+doqd hosts export     # print the embedded snapshot
+doqd hosts reload     # request an atomic hosts reload from the daemon
 ```
 
-The GEO section shows the unblocking servers. The star marks the pinned
-server. The FAST section shows the plain servers: every other name goes to
-the fastest of them. doqd marks fallback servers with
-`[fallback]`.
-
-The pinned server, the ranking and the proxies:
-
-```sh
-~ # doqd geo
-pinned:     quic://eu.geohide.ru (since 2026-10-21 14:00)
-evaluation: 2026-10-21 14:00
-
-RANKING (last evaluation):
- 1. quic://eu.geohide.ru                coverage 7/7  proxies 7/7 alive  tls 150 ms
- 2. quic://dns.comss.one                coverage 7/7  proxies 4/4 alive  tls 144 ms
- 3. quic://dns.dns-ai.ru                coverage 7/7  proxies 1/1 alive  tls 189 ms
-
-PINNED SERVER PROXIES (checked every 30 s):
-  5.175.161.3                               healthy  tls 166 ms
-  5.175.161.40                              healthy  tls 150 ms
-  31.25.239.132                             healthy  tls 351 ms
-  37.221.93.128                             healthy  tls 144 ms
-  37.221.93.141                             healthy  tls 151 ms
-  45.13.237.213                             healthy  tls 148 ms
-  143.20.64.192                             healthy  tls 146 ms
-
-learned geo-blocked names: 0
-```
-
-doqd does not give a `slow` proxy to clients while healthy proxies are
-available.
-
-`doqd geo reselect` evaluates the unblocking servers again immediately (it
-waits up to 45 s and shows the new selection). `doqd add --geo` does not
-change the selection: the pinned server stays after a restart. To evaluate
-the new server, run `doqd geo reselect`.
-
-Test any server and keep the config as it is:
-
-```sh
-~ # doqd test quic://dns.quad9.net
-probing quic://dns.quad9.net
-  bootstrap  2 address(es) from 1.1.1.1:53 over udp in 27 ms: 149.112.112.112, 9.9.9.9
-  connect    149.112.112.112:853  OK in 113 ms
-  query      keenetic.com A  answered in 47 ms
-OK — answered in 188 ms
-```
-
-Add a server. doqd tests the server first. doqd does not add a dead server
-(the flag `--force` skips the test). Without flags, the server goes to
-`upstream`. With `--geo`, it goes to the unblocking servers. With
-`--fallback`, it goes to the fallback servers. After the change, doqd
-restarts the daemon:
-
-```sh
-~ # doqd add --fallback quic://dns10.quad9.net
-probing quic://dns10.quad9.net ... OK (273 ms)
-added to /etc/doqd.conf as fallback #5
-restarting the daemon ... alive (pid 3948)
-```
-
-Remove a server by its number in `doqd list` or by its URL. You cannot
-remove the last `geo` or `upstream` server:
-
-```sh
-~ # doqd remove 5
-removed fallback quic://dns10.quad9.net
-restarting the daemon ... alive (pid 4016)
-```
-
-Your own geo-blocked domain (with subdomains). The built-in list stays:
-
-```sh
-~ # doqd add-domain example.com
-~ # doqd remove-domain example.com
-```
+Use `-c /path/doqd.conf` for a custom configuration. `geo`, `geo reselect`,
+`--geo`, `add-domain` and `remove-domain` have been removed. A former geo-DNS
+provider can be added explicitly as an ordinary upstream with `doqd add`.
+Local hosts rules take precedence over its answers.
 
 ## Configuration
 
-| | Keenetic | OpenWRT |
-|---|---|---|
-| Config | `/opt/etc/doqd.conf` | `/etc/doqd.conf` |
-| Binary | `/opt/sbin/doqd` | `/usr/sbin/doqd` |
-| Init script | `/opt/etc/init.d/S56doqd` | `/etc/init.d/doqd` |
-| Pinned server | `/opt/var/lib/doqd/geo.state` | `/etc/doqd/geo.state` |
-| Log | not written | `logread -e doqd` |
-| `listen` | `<LAN-IP>:5354` | `127.0.0.1:5354` |
+Keenetic: `/opt/etc/doqd.conf`. OpenWRT: `/etc/doqd.conf`.
 
-Config keys:
+```text
+listen 127.0.0.1:5354
+hosts builtin
+upstream quic://dns.quad9.net
+upstream quic://p0.freedns.controld.com
+upstream quic://dns.nextdns.io
+cache_size 4096
+min_ttl 60
+max_ttl 86400
+log info
+```
 
-| Key | Default | What it does |
-|---|---|---|
-| `listen` | see the table above | address and port of doqd (UDP and TCP) |
-| `geo` | `quic://eu.geohide.ru`, `quic://dns.comss.one`, `quic://dns.dns-ai.ru` | unblocking server, one line per server. Geo-blocked names go only to the pinned one. These servers do not get the other names. The first `geo`, `upstream` or `fallback` line cancels the defaults of all three keys |
-| `upstream` | `quic://dns.quad9.net`, `quic://p0.freedns.controld.com`, `quic://dns.nextdns.io` | plain DoQ server, one line per server. Other names go to the fastest live server of `upstream`. Without `upstream`, they go to the `geo` servers |
-| `fallback` | none | fallback DoQ server. doqd asks it only when all `geo` and `upstream` servers failed. The TTL of its answers is 60 s or less. You need at least one `geo` or `upstream` |
-| `geo-domain` | none | your own geo-blocked domain (with subdomains), one line per domain. It adds to the built-in list. `doqd add-domain` is easier |
-| `bootstrap` | `77.88.8.8`, `77.88.8.8:1253`, `8.8.8.8`, `1.1.1.1` | plain DNS servers for the addresses of the DoQ servers (on OpenWRT, also for the NTP names). IP only, a port is optional. doqd asks all of them at the same time. If a server is silent over UDP, doqd asks it again over TCP. doqd caches an answer for its TTL |
-| `cache_size` | `4096` | maximum number of cache entries |
-| `min_ttl` / `max_ttl` | `60` / `86400` | TTL limits in the cache, in seconds |
-| `log` | `info` | `debug`, `info`, `warn` or `error` |
+On Keenetic, the installer uses the router LAN address for listen. `fallback`
+adds a reserve DoQ server; `bootstrap` specifies an external DNS IP for resolving
+upstream hostnames without a loop through doqd. The first upstream/fallback line
+replaces the default server list. At least one primary upstream is required.
 
-The commands `doqd add`, `remove`, `add-domain` and `remove-domain` restart
-the daemon. After a manual change of the config, restart the daemon:
+### Custom hosts
+
+Export the complete snapshot on Keenetic:
 
 ```sh
-/opt/etc/init.d/S56doqd restart    # Keenetic
-/etc/init.d/doqd restart           # OpenWRT
+doqd hosts export > /opt/etc/doqd.hosts
 ```
+
+On OpenWRT use `/etc/doqd/hosts` (create the directory if necessary). Set
+`hosts /absolute/path/to/file` in the configuration and restart doqd once.
+SIGHUP reloads the selected hosts file, not the entire configuration.
+
+File format:
+
+```text
+5.175.161.3 chatgpt.com releases.openai.com
+5.175.161.40 chatgpt.com releases.openai.com
+# Multiple names per line and multiple addresses per name are supported.
+```
+
+This is a format example, not the full service list. A custom file **replaces**
+the embedded snapshot. After editing, use `doqd hosts check` and `doqd hosts reload`.
+Reload is atomic; invalid input leaves the last working table active. The reload
+command confirms the request, not successful application: check the daemon log.
+The ordinary DNS cache cannot override local rules.
+
+### Upgrading from 0.5.x
+
+Use the new installer, not just a binary replacement. The daemon rejects old
+`geo` and `geo-domain` directives. Installers back up changed configurations,
+remove the exact former default geo trio and convert custom geo servers into
+ordinary upstreams while preserving existing upstream/fallback settings.
+Custom `geo-domain` entries cannot be translated without proxy IPs: installation
+stops with instructions before modifying the running installation. Put the
+required names and known proxy IPs in hosts, remove the old directives and retry.
+Third-party management UIs may need updating for the new CLI.
 
 ## Verification
 
-`doqd status` checks everything at once. It sends a query directly to doqd
-and through the stock DNS of the router on port 53. It also shows the pinned
-unblocking server and checks that the router DNS sends queries to doqd.
+```sh
+doqd -version
+doqd hosts check
+doqd list
+doqd status
+nslookup chatgpt.com
+```
 
-Keenetic:
+With `dig`, query doqd directly (replace 127.0.0.1 with LAN-IP on Keenetic):
 
 ```sh
-~ # doqd status
-daemon:          running (pid 4572, uptime 4s)
-listen:          192.168.1.1:5354 (udp+tcp)
-geo:             pinned eu.geohide.ru since 2026-10-21 14:00, proxies 7/7 healthy
-registration:    present in KeeneticOS name-servers
-resolve via doqd: NOERROR, 42 ms
-resolve via :53:  NOERROR, 1 ms
+dig @127.0.0.1 -p 5354 releases.openai.com A
+dig @127.0.0.1 -p 5354 releases.openai.com AAAA
+dig @127.0.0.1 -p 5354 releases.openai.com HTTPS
 ```
 
-OpenWRT:
-
-```sh
-~ # doqd status
-daemon:          running (pid 3560, uptime 10s)
-listen:          127.0.0.1:5354 (udp+tcp)
-geo:             pinned eu.geohide.ru since 2026-10-21 14:00, proxies 7/7 healthy
-dnsmasq:         forwards to doqd (127.0.0.1#5354)
-resolve via doqd: NOERROR, 0 ms
-resolve via :53:  NOERROR, 0 ms
-```
-
-On OpenWRT, the line `dnsmasq` compares two places: `/etc/config/dhcp` and
-the config that dnsmasq uses now (`/var/etc/dnsmasq.conf.*`).
-
-More checks on Keenetic:
-
-```sh
-ndmc -c 'show ip name-server'        # registration, the tool is always there
-tcpdump -ni any 'udp port 853'       # DoQ traffic; needs: opkg install tcpdump
-```
-
-More checks on OpenWRT:
-
-```sh
-uci show dhcp.@dnsmasq[0]            # server and noresolv
-nslookup chatgpt.com 127.0.0.1       # answer through dnsmasq and doqd
-logread -e doqd                      # doqd log
-```
-
-From a computer in the same network (you need `dig`):
-
-```sh
-dig @192.168.1.1 example.com           # through the router DNS
-dig @192.168.1.1 -p 5354 example.com   # directly to doqd; Keenetic only, on OpenWRT doqd listens on 127.0.0.1
-```
-
-## FAQ
-
-### General
-
-**Why these default servers, and not AdGuard?** eu.geohide.ru, comss and
-dns-ai are unblocking servers. For ChatGPT, Gemini, Claude and other services
-closed for Russia, they answer with the addresses of their proxies. Thus
-geo-blocked names go only to one of them, the pinned one. Quad9, ControlD and
-NextDNS do not know these addresses and give the real ones. All other names go only to
-these three, to the fastest one: the unblocking servers have no need to see
-everything you open. Cloudflare and Google have no DoQ. In a number of Russian
-networks, DPI (TSPU) blocks AdGuard DNS on DoQ and on DoT. Test your servers:
-`doqd list` tests each one with a live query. An unavailable unblocking server
-does not cause problems: queries go around it. To remove it, run
-`doqd remove <number>`.
-
-**A geo-blocked service (ChatGPT, Gemini...) does not open.** Do these steps
-in sequence:
-
-1. Run `doqd geo`. Look at the pinned server, the liveness and the TLS time
-   of its proxies.
-2. If the proxies are dead and no change occurred, run `doqd geo reselect`.
-3. If the domain is not in the built-in list, add it:
-   `doqd add-domain <domain>`.
-4. Restart the browser on the device. Old connections and the device cache
-   keep the old addresses.
-5. Run `doqd status`. The line `other DNS` means that the router has other
-   DNS servers, and a real address can come around doqd. To correct this,
-   read [How doqd connects to the router DNS](#how-doqd-connects-to-the-router-dns).
-
-**How does doqd tell a geo-blocked name from a usual one?** It uses three
-sources:
-
-- The built-in list: OpenAI, Anthropic, Gemini/AI Studio, NotebookLM, xAI.
-- Your own domains: `geo-domain` in the config or `doqd add-domain`.
-- Detection. For an unknown name, doqd looks at the answer of the pinned
-  server. If the answer has addresses from the proxy pool of this server,
-  the name is geo-blocked. After that, the name goes only to this server.
-
-doqd classifies only A queries directly. For AAAA, HTTPS and other types, it
-makes an internal A query first. A learned name stays geo-blocked until a
-restart.
-
-In HTTPS/SVCB answers for geo-blocked names, doqd removes the `ipv4hint` and
-`ipv6hint` hints. They can contain the real address of the service, and the
-browser would go around the proxy. If no unblocking server answered such a
-query, doqd gives an empty answer (NODATA). The browser then uses the
-addresses from A/AAAA.
-
-The proxy pool grows only from answers to the probe domains: chatgpt.com,
-sentinel.openai.com, tcr9i.chat.openai.com, auth.openai.com, claude.ai,
-assets-proxy.anthropic.com, gemini.google.com. Without this rule, a listed
-name that the server does not replace (for example, x.ai with Cloudflare
-addresses) would pull all Cloudflare sites into the geo lane. Usual sites get
-real addresses from the fastest plain server.
-
-**How does doqd select the unblocking server, and why does it not jump
-between servers?** At the first start (and on `doqd geo reselect`), doqd
-evaluates each `geo` server:
-
-- coverage — how many probe domains the server replaces with a live proxy;
-- the median TLS handshake time to its proxies.
-
-doqd compares the coverage first, then the speed. Servers with a median TLS
-time within 20 % of the best one are equal and keep their config order. Thus
-noise in the measurements does not change the selection. A server with
-partial coverage becomes pinned, but the evaluation repeats (1 min, then ×2
-up to 30 min) until a server with full coverage comes back.
-
-The pinned server changes only when it fails:
-
-- three errors in sequence on A/AAAA (SERVFAIL and REFUSED count too; errors
-  on HTTPS/SVCB do not count, because geohide always resets these queries);
-- or all its proxies are dead in three checks in sequence (one check every
-  30 s).
-
-If only some of its proxies are dead in three checks in sequence, doqd
-evaluates the unblocking servers again. The pinned server then gives way only
-to a server that covers strictly more probe names. So a dead proxy that has a
-live one next to it in the answer changes nothing: the filter removes it
-anyway. A server that maps some name only to a dead address (Bezmezhau on
-2026-10-21: of its two proxies, the one for Claude and Gemini died) gives way.
-For the same set of dead proxies the evaluation runs once.
-
-Before a change, doqd tests the network with a query through the fast lane.
-If the fast lane is also silent, the network is the cause, and the pinned
-server stays. An evaluation where no server unblocked anything (usually no
-internet) does not change the old selection and `geo.state`. It repeats
-after 1 min, 2, 4... up to 30 min. A damaged `geo.state` starts a new
-evaluation.
-
-If a proxy of the pinned server becomes dead or slow, doqd immediately
-removes the cached answers that contain it. The condition: the answer has a
-healthy address of the same type. The filter gives an answer where all
-addresses are bad without changes.
-
-**The default servers filter something.** `dns.quad9.net` blocks malware
-domains. ControlD `p0` and NextDNS without a profile of your own
-(`dns.nextdns.io`) filter nothing. Quad9 without blocking:
-`doqd add quic://dns10.quad9.net`, then `doqd remove` for `dns.quad9.net`.
-If AdGuard is available to you: `quic://unfiltered.adguard-dns.com`.
-
-**`doqd list` shows a server down with `bootstrap lookup ...: no bootstrap
-server answered`.** The DoQ server itself can be alive. doqd did not get its
-address: no bootstrap server answered the plain DNS query over UDP or TCP.
-If other servers are alive, the ISP almost certainly drops DNS queries on
-port 53 with the names of unblocking services. A bootstrap server on another
-port helps. Yandex DNS uses port 1253. New installations already have it. In
-an old config, add the line `bootstrap 77.88.8.8:1253` and restart the
-daemon. Manual check: `nslookup <name> 77.88.8.8` is silent, and
-`doqd test quic://<name>` answers after the change.
-
-**`doqd list` shows a server down with `dial ...: context deadline exceeded`
-or `no address answered`.** doqd found the address of the server, but the
-QUIC connection (udp/853) did not start. `doqd test quic://<name>` shows
-step by step which addresses it tried. If the server works from other
-networks, the ISP almost certainly blocks it. doqd cannot correct this. DNS
-continues to work: an unavailable server goes to the end of the queue.
-Remove an unnecessary server: `doqd remove <number>`.
-
-**I added a server, and it is down.** `doqd list` shows the liveness and the
-RTT of each server. `doqd remove <number>` removes an unnecessary one.
-`doqd add` tests the server and does not write a dead server without
-`--force`.
-
-**Where did Bezmezhau go?** It was the only default unblocking server in
-0.5.2. It has two proxies, and since 2026-10-21 one of them (143.20.64.55:
-Claude, Gemini, Copilot) does not answer on port 443 from Russian networks,
-while ChatGPT through the second proxy kept working. Hence the reports
-"ChatGPT opens, Claude does not". In 0.5.3 three servers take its place:
-`quic://eu.geohide.ru` (7 proxies in DE and NL), `quic://dns.comss.one`
-(4 proxies in NL) and `quic://dns.dns-ai.ru` (1 proxy in FI). All three cover
-every probe name. You can add Bezmezhau back: `doqd add --geo quic://dns.bezmezhau.com`.
-
-**Why eu.geohide.ru and not geohide.ru?** Since 2026-10-21 three of the four
-proxies of the Russian node geohide.ru are closed on 443 too, and doqd hands
-clients the whole pool, so the browser walks through dead addresses. All seven
-proxies of the European node are alive.
-
-**Why is comss back?** It left the defaults in 0.3.5 for slow proxies: TLS to
-chatgpt.com took 0.2 to 4.7 s. A measurement on 2026-10-21 showed 0.14–0.24 s
-on all four proxies; the slow nodes are gone.
-
-### Keenetic
-
-**`ndmc: system failed [0xcffd0062]` / `Cli::Main: failed to initialize`,
-and `doqd status` shows `registration: NOT found` or `registration:
-unknown`.** doqd is installed and works. This occurs when you install from a
-shell that you opened with `exec sh` in the stock router CLI (SSH on port
-22, login admin). The CLI session is in use, and `ndmc` cannot open a second
-one. Thus the installer could not add the name server. Type `exit` to go
-back to the `(config)>` prompt, and run:
-
-```
-ip name-server <LAN-IP>:5354
-system configuration save
-show ip name-server
-```
-
-These commands also work in the Web CLI (`http://<router-address>/a`).
-`ndmc` and `doqd status` work correctly in the Entware session (SSH on port
-222, login root). Until the registration is done, queries go around doqd.
-
-**After a router reboot, the internet is gone: IPs ping, names do not
-resolve, and `doqd list` shows `lookup ... on 127.0.0.1:53: i/o timeout`.**
-This is a bug of versions before 0.3.0. Update with the install command.
-Since 0.3.0, doqd gets the addresses of its servers through `bootstrap`,
-around the router DNS.
-
-**doqd does not start after a router reboot.** Since 0.2.5, the daemon waits
-for its address. If doqd still does not start, run `doqd status`. If no
-interface has the address from `listen`, `doqd status` tells you. Usually an
-upstream DHCP server gives the LAN address to the router (Relay mode), and
-the address changed after the reboot. Set a permanent LAN address on the
-router, correct `listen` in `/opt/etc/doqd.conf` and register doqd again:
-`ip name-server <new-address>:5354`.
-
-**Why port 5354, and not 5353?** On Keenetic, avahi-daemon (mDNS) uses port
-5353.
-
-**Why the LAN address, and not 127.0.0.1?** KeeneticOS does not accept
-loopback in `ip name-server` (`Dns::Manager: invalid IP address`).
-
-**How do I go back to 0.3.x?** Versions 0.3.x do not know the keys `geo` and
-`geo-domain` and do not start with a 0.4.0+ config. Before you install an
-old version, delete `/opt/etc/doqd.conf`: the old installer writes its own
-config. Or change the config manually: change the `geo` lines to `upstream`,
-change the `upstream` lines with Quad9 and ControlD to `fallback`, and
-delete the `geo-domain` lines.
-
-### OpenWRT
-
-**The installer shows `doqd ... did not resolve a test name`.** doqd is
-installed and works, but no DoQ server answered it. dnsmasq works with its
-original servers (on a reinstall, the installer restores them), and the
-router DNS works. Run `doqd list`: it shows which server is
-unavailable and why. Log: `logread -e doqd`. Correct the cause and run the
-installer again.
-
-**After a reboot, DNS does not work for some seconds.** This is normal. doqd
-starts after the network, but the WAN comes up later. Until the WAN is up,
-doqd answers SERVFAIL. In the emulator, doqd answered 20 s after the boot.
-
-**The router clock went back, and doqd does not work.** The log
-(`logread -e doqd`) shows `x509: certificate has expired or is not yet
-valid`. The installer sends the NTP names around doqd, so NTP corrects the
-clock, and doqd starts to work. If you changed the NTP servers after the
-installation, run the installer again: it updates the bypass. If the NTP
-servers are IP addresses, no bypass is necessary.
-
-**The router DNS does not work, and I cannot download the uninstaller.**
-Give dnsmasq its servers back manually. You do not need the internet for
-this:
-
-```sh
-uci del_list dhcp.@dnsmasq[0].server='127.0.0.1#5354'
-uci set dhcp.@dnsmasq[0].noresolv='0'
-uci commit dhcp
-/etc/init.d/dnsmasq restart
-```
-
-dnsmasq then asks the ISP DNS again. Then find the cause: `doqd list` and
-`logread -e doqd`. For a full removal, use `uninstall-openwrt.sh`.
-
-**Where is the log?** In the system log: `logread -e doqd`. All doqd lines
-there have the level `daemon.err`, because doqd writes to stderr. The real
-level is in the field `level=` of each line.
-
-**Can I use doqd together with https-dns-proxy, stubby or podkop?** Yes, but
-then dnsmasq has many servers. dnsmasq sends a query to one of them, and some
-queries go around doqd. To send all queries through doqd, stop the other
-proxy or remove its server from `dhcp.@dnsmasq[0].server`.
-
-**Why 127.0.0.1, and not the LAN address?** Only dnsmasq on the same router
-asks doqd. The address 127.0.0.1 is not available from the network, so no
-device can ask doqd directly.
+With the embedded table, A returns two proxy IPs; AAAA and HTTPS return successful
+empty answers. Other names such as `example.com` resolve through upstreams.
+A TLS connection or HTTP 403 alone does not prove full service functionality;
+test the site and its authenticated workflow. On OpenWRT use `logread -e doqd`.
 
 ## Uninstall
 
@@ -728,15 +372,12 @@ The settings of each architecture (GOARM, GOMIPS and others) are in
 
 ## Limitations
 
-- doqd encrypts the path "router → external server". The ISP sees this
-  path. In the LAN, devices ask the router with plain DNS: doqd does not
-  accept DoQ connections from clients. The stock DoT and DoH of KeeneticOS
-  work the same way.
-- doqd does not filter or block anything. It gives the answer of the server
-  as it is. The exception: the filter removes dead and slow proxies of the
-  unblocking server.
-- doqd does not listen on the WAN. On Keenetic, it listens on the LAN
-  address. On OpenWRT, it listens on 127.0.0.1.
+- DoQ encrypts DNS between the router and upstream; LAN queries remain plain DNS.
+- Hosts is a snapshot, not automatic discovery of every service dependency.
+- Proxy health checks and automatic removal of failed proxy addresses are not
+  part of this version. A dead proxy requires updating the table.
+- Client-side DNS, VPNs and competing router DNS can bypass doqd.
+- doqd is not a VPN and does not proxy application traffic itself.
 
 ## License
 
