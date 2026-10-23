@@ -77,6 +77,7 @@ check "bootstrap servers" "$(bootstrap_servers | tr '\n' ' ')" "77.88.8.8 77.88.
 
 # uci — заглушка: список NTP-серверов из system.ntp.server.
 NTP=""
+ # shellcheck disable=SC2329 # Called by the extracted ntp_domains function.
 uci() { [ "$*" = "-q get system.ntp.server" ] && [ -n "$NTP" ] && echo "$NTP"; }
 NTP="0.openwrt.pool.ntp.org 1.openwrt.pool.ntp.org 2.openwrt.pool.ntp.org 3.openwrt.pool.ntp.org"
 check "ntp default" "$(ntp_domains)" "/openwrt.pool.ntp.org"

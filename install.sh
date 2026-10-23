@@ -19,6 +19,54 @@ PORT=5354
 log() { echo "[keenetic-doq] $*"; }
 die() { echo "[keenetic-doq] ERROR: $*" >&2; exit 1; }
 
+# Upgrade directly to local SmartDNS. Do not replay historical migrations:
+# ordinary upstream/fallback rows are user settings and must stay untouched.
+check_legacy_config() {
+    [ -f "$CONF" ] || return 0
+    if awk '$1 == "geo-domain" {found=1} END {exit !found}' "$CONF"; then
+        echo "Cannot migrate $CONF: geo-domain has no proxy IP address. Back up the config, put explicit IP/name rows for these names in a custom hosts file, set hosts /absolute/path, then remove geo-domain rows and rerun. Exact names only; subdomains need their own rows. The binary and service have not been changed." >&2
+        return 1
+    fi
+}
+
+migrate_smartdns() {
+    [ -f "$CONF" ] || return 0
+    check_legacy_config || return 1
+    geos=$(awk '$1 == "geo" {print $2}' "$CONF" | LC_ALL=C sort | tr '\n' ' ')
+    drop=no
+    [ "$geos" = "quic://dns.comss.one quic://dns.dns-ai.ru quic://eu.geohide.ru " ] && drop=yes
+    stage=$(mktemp "$CONF.smartdns.XXXXXX") || return 1
+    # Keep permissions/ownership (configs may contain private upstream URLs).
+    if ! cp -p "$CONF" "$stage"; then rm -f "$stage"; return 1; fi
+    if ! awk -v drop="$drop" '
+        $1 == "geo" {
+            if (drop == "yes") next
+            sub(/geo/, "upstream")
+        }
+        $1 == "hosts" {hosts=1}
+        $1 == "upstream" {upstreams++}
+        {print}
+        END {
+            if (!hosts) print "hosts builtin"
+            if (!upstreams) {
+                print "upstream quic://dns.quad9.net"
+                print "upstream quic://p0.freedns.controld.com"
+                print "upstream quic://dns.nextdns.io"
+            }
+        }
+    ' "$CONF" > "$stage"; then rm -f "$stage"; return 1; fi
+    if cmp -s "$CONF" "$stage"; then rm -f "$stage"; return 0; fi
+    backup=$(mktemp "$CONF.pre-smartdns.XXXXXX") || { rm -f "$stage"; return 1; }
+    if ! cp -p "$CONF" "$backup"; then rm -f "$stage" "$backup"; return 1; fi
+    if ! mv "$stage" "$CONF"; then rm -f "$stage"; return 1; fi
+    log "config migrated to local SmartDNS; original saved as $backup"
+    if [ "$drop" = yes ]; then
+        log "config: removed the exact former default geo trio"
+    elif [ -n "$geos" ]; then
+        log "config: custom geo servers are now ordinary upstreams for all non-local names"
+    fi
+}
+
 # Keenetic CLI: ndmc (current) or ndmq (legacy)
 ndm_cmd() {
     if command -v ndmc >/dev/null 2>&1; then
@@ -67,6 +115,8 @@ case "$arch" in
 esac
 log "architecture: $arch -> doqd-linux-$goarch"
 
+check_legacy_config || die "resolve legacy geo-domain settings before upgrading"
+
 if [ "$1" = "--local" ]; then
     [ -f "$2" ] || die "file $2 not found"
     cp "$2" "$BIN.new"
@@ -89,202 +139,25 @@ fi
 chmod 755 "$BIN.new"
 "$BIN.new" -version >/dev/null || die "binary does not run (wrong architecture?)"
 
+migrate_smartdns || die "config migration failed; fix $CONF before upgrading"
+
 [ -x "$INIT" ] && "$INIT" stop >/dev/null 2>&1 || true
 mv "$BIN.new" "$BIN"
-mkdir -p /opt/var/lib/doqd || log "WARNING: cannot create /opt/var/lib/doqd — the pinned geo server will not survive a restart"
 
-# 0.3.4: Quad9 turns into a fallback, joined by ControlD. Before, queries went
-# to whichever upstream answered first, and Quad9 regularly overtook comss with
-# the real address of a geo-blocked service. A config still holding the old
-# built-in pair also gets the other two unblocking servers. Configs that
-# already use `fallback`, or where Quad9 is the only upstream, are left alone,
-# as are configs already in the 0.4.0 format (a `geo` key): there Quad9 is a
-# plain upstream on purpose.
-migrate_conf() {
-    grep -q '^geo[[:space:]]' "$CONF" && return 0
-    grep -q '^fallback[[:space:]]' "$CONF" && return 0
-    grep -qx 'upstream quic://dns.quad9.net' "$CONF" || return 0
-    n=$(grep -c '^upstream[[:space:]]' "$CONF")
-    [ "$n" -gt 1 ] || return 0
-    add=no
-    [ "$n" -eq 2 ] && grep -qx 'upstream quic://dns.comss.one' "$CONF" && add=yes
-    last=$(grep -n '^upstream[[:space:]]' "$CONF" | tail -n 1 | cut -d: -f1)
-    controld=yes
-    grep -q '^upstream[[:space:]]*quic://p0.freedns.controld.com[[:space:]]*$' "$CONF" && controld=no
-    awk -v last="$last" -v add="$add" -v controld="$controld" '
-        function fallback() {
-            print ""
-            print "# Fallbacks: asked only when every upstream above has failed. They return real"
-            print "# addresses, so they must never overtake them. Add with: doqd add --fallback"
-            print "fallback quic://dns.quad9.net"
-            if (controld == "yes") print "fallback quic://p0.freedns.controld.com"
-        }
-        /^# DoQ upstreams, in order of preference/ || /^# DoQ-апстримы, в порядке предпочтения/ {
-            print "# DoQ upstreams: queries go to the fastest live one. Manage with: doqd add / doqd remove"
-            next
-        }
-        $0 == "upstream quic://dns.quad9.net" { if (NR == last) fallback(); next }
-        { print }
-        add == "yes" && $0 == "upstream quic://dns.comss.one" {
-            print "upstream quic://geohide.ru"
-            print "upstream quic://dns.dns-ai.ru"
-        }
-        NR == last { fallback() }
-    ' "$CONF" > "$CONF.new" && mv "$CONF.new" "$CONF" || { rm -f "$CONF.new"; return 1; }
-    log "config: quic://dns.quad9.net is now a fallback (asked only when the others fail)"
-    [ "$controld" = yes ] && log "config: added fallback quic://p0.freedns.controld.com"
-    [ "$add" = yes ] && log "config: added upstreams quic://geohide.ru and quic://dns.dns-ai.ru"
-    return 0
-}
-
-# 0.3.5: comss leaves the defaults. doqd picks the upstream with the fastest
-# DNS answer, and that was comss, while its proxies for geo-blocked services
-# were the slowest: a TLS handshake to ChatGPT took from 0.2 to 4.7 s against
-# 0.15 s via dns-ai. Dropped only when other upstreams remain; configs already
-# on the `geo` key (0.4.0 format) are left alone.
-drop_comss() {
-    grep -q '^geo[[:space:]]' "$CONF" && return 0
-    grep -qx 'upstream quic://dns.comss.one' "$CONF" || return 0
-    n=$(grep -c '^upstream[[:space:]]' "$CONF")
-    [ "$n" -gt 1 ] || return 0
-    grep -vx 'upstream quic://dns.comss.one' "$CONF" > "$CONF.new" && mv "$CONF.new" "$CONF" || { rm -f "$CONF.new"; return 1; }
-    log "config: removed upstream quic://dns.comss.one (slow proxies); to bring it back: doqd add quic://dns.comss.one"
-    return 0
-}
-
-# 0.4.0: geo-unblocking servers get their own key. Before, doqd took the
-# fastest DNS answer for every name and mixed the proxy pools of different
-# servers; now geo-blocked names go to one pinned server, and Quad9/ControlD
-# stop being fallbacks — every other name goes to the fastest server.
-# Configs without a known unblocking server, or already on `geo`, are left alone.
-migrate_geo() {
-    grep -q '^geo[[:space:]]' "$CONF" && return 0
-    grep -Eq '^upstream[[:space:]]+quic://(geohide\.ru|dns\.dns-ai\.ru|dns\.comss\.one)[[:space:]]*$' "$CONF" || return 0
-    awk '
-        $1 == "upstream" && ($2 == "quic://geohide.ru" || $2 == "quic://dns.dns-ai.ru" || $2 == "quic://dns.comss.one") {
-            print "geo " $2
-            next
-        }
-        $1 == "fallback" && ($2 == "quic://dns.quad9.net" || $2 == "quic://p0.freedns.controld.com") {
-            print "upstream " $2
-            next
-        }
-        /^# DoQ upstreams: queries go to the fastest live one/ {
-            print "# Geo-unblocking servers: geo-blocked names (ChatGPT, Gemini, Claude...) go only"
-            print "# to one of them, picked once by its proxies and kept. Manage with: doqd add --geo"
-            next
-        }
-        /^# These (two|three) answer with their proxy addresses/ { next }
-        /^# geolocation \(ChatGPT, Gemini, Claude\.\.\.\)\.$/ { next }
-        /^# Fallbacks: asked only when every upstream above has failed/ {
-            print "# Plain resolvers: every other name goes to the fastest of these and the servers"
-            print "# above. Manage with: doqd add / doqd remove"
-            next
-        }
-        /^# addresses, so they must never overtake them\. Add with: doqd add --fallback$/ { next }
-        { print }
-    ' "$CONF" > "$CONF.new" && mv "$CONF.new" "$CONF" || { rm -f "$CONF.new"; return 1; }
-    log "config: geo-unblocking servers now use the 'geo' key; Quad9 and ControlD are plain upstreams"
-    return 0
-}
-
-# 0.5.1: geo-unblocking servers get only geo-blocked names. Before, they also
-# raced the plain resolvers for every other name. The comment above the
-# upstream lines is rewritten; a config with exactly the old default pair
-# (Quad9 + ControlD) gets NextDNS as a third plain resolver.
-split_lanes() {
-    grep -q '^geo[[:space:]]' "$CONF" || return 0
-    ups=$(awk '$1 == "upstream" {print $2}' "$CONF" | sort | tr '\n' ' ')
-    nextdns=no
-    [ "$ups" = "quic://dns.quad9.net quic://p0.freedns.controld.com " ] && nextdns=yes
-    grep -q '^# Plain resolvers: every other name goes to the fastest of these and the servers$' "$CONF" ||
-        [ "$nextdns" = yes ] || return 0
-    last=$(awk '$1 == "upstream" {n = NR} END {print n + 0}' "$CONF")
-    awk -v last="$last" -v nextdns="$nextdns" '
-        /^# Plain resolvers: every other name goes to the fastest of these and the servers$/ {
-            print "# Plain resolvers: every name that is not geo-blocked goes to the fastest of"
-            print "# these; the servers above never get it. Manage with: doqd add / doqd remove"
-            next
-        }
-        /^# above\. Manage with: doqd add \/ doqd remove$/ { next }
-        { print }
-        NR == last && nextdns == "yes" { print "upstream quic://dns.nextdns.io" }
-    ' "$CONF" > "$CONF.new" && mv "$CONF.new" "$CONF" || { rm -f "$CONF.new"; return 1; }
-    log "config: plain names no longer go to the geo-unblocking servers"
-    [ "$nextdns" = yes ] && log "config: added upstream quic://dns.nextdns.io"
-    return 0
-}
-
-# 0.5.2: Bezmezhau DNS (quic://dns.bezmezhau.com) replaces geohide and dns-ai
-# in the defaults. If the config has exactly the old default geo pair
-# (geohide + dns-ai), it is replaced with quic://dns.bezmezhau.com.
-migrate_bezmezhau() {
-    grep -q '^geo[[:space:]]' "$CONF" || return 0
-    geos=$(awk '$1 == "geo" {print $2}' "$CONF" | sort | tr '\n' ' ')
-    [ "$geos" = "quic://dns.dns-ai.ru quic://geohide.ru " ] || return 0
-    awk '
-        $1 == "geo" && ($2 == "quic://geohide.ru" || $2 == "quic://dns.dns-ai.ru") {
-            if (!replaced) {
-                print "geo quic://dns.bezmezhau.com"
-                replaced = 1
-            }
-            next
-        }
-        { print }
-    ' "$CONF" > "$CONF.new" && mv "$CONF.new" "$CONF" || { rm -f "$CONF.new"; return 1; }
-    log "config: replaced geohide and dns-ai with quic://dns.bezmezhau.com"
-    return 0
-}
-
-# 0.5.3: Bezmezhau DNS leaves the defaults — one of its two proxies is
-# filtered on port 443 from Russian networks, so Claude and Gemini broke while
-# ChatGPT kept working. If the config has exactly the old default
-# (quic://dns.bezmezhau.com alone), it is replaced with three servers:
-# quic://eu.geohide.ru, quic://dns.comss.one and quic://dns.dns-ai.ru.
-migrate_geo_trio() {
-    grep -q '^geo[[:space:]]' "$CONF" || return 0
-    geos=$(awk '$1 == "geo" {print $2}' "$CONF" | sort | tr '\n' ' ')
-    [ "$geos" = "quic://dns.bezmezhau.com " ] || return 0
-    awk '
-        $1 == "geo" && $2 == "quic://dns.bezmezhau.com" {
-            print "geo quic://eu.geohide.ru"
-            print "geo quic://dns.comss.one"
-            print "geo quic://dns.dns-ai.ru"
-            next
-        }
-        { print }
-    ' "$CONF" > "$CONF.new" && mv "$CONF.new" "$CONF" || { rm -f "$CONF.new"; return 1; }
-    log "config: replaced quic://dns.bezmezhau.com with quic://eu.geohide.ru, quic://dns.comss.one and quic://dns.dns-ai.ru"
-    return 0
-}
-
-# Existing config is preserved on reinstall/upgrade.
-[ -f "$CONF" ] && { migrate_conf || log "WARNING: could not update $CONF, left as is"; }
-[ -f "$CONF" ] && { drop_comss || log "WARNING: could not update $CONF, left as is"; }
-[ -f "$CONF" ] && { migrate_geo || log "WARNING: could not update $CONF, left as is"; }
-[ -f "$CONF" ] && { split_lanes || log "WARNING: could not update $CONF, left as is"; }
-[ -f "$CONF" ] && { migrate_bezmezhau || log "WARNING: could not update $CONF, left as is"; }
-[ -f "$CONF" ] && { migrate_geo_trio || log "WARNING: could not update $CONF, left as is"; }
 if [ ! -f "$CONF" ]; then
     cat > "$CONF" <<EOF
 # doqd — DNS-over-QUIC forwarder. https://github.com/necronicle/keenetic-doq
 listen $LAN_IP:$PORT
 
-# Geo-unblocking servers: geo-blocked names (ChatGPT, Gemini, Claude...) go only
-# to one of them, picked once by its proxies and kept. Manage with: doqd add --geo
-geo quic://eu.geohide.ru
-geo quic://dns.comss.one
-geo quic://dns.dns-ai.ru
+# Local exact-name proxy mappings embedded in the binary.
+# To replace them: set hosts /absolute/path/to/hosts and restart doqd.
+# After editing that file: doqd hosts reload
+hosts builtin
 
-# Plain resolvers: every name that is not geo-blocked goes to the fastest of
-# these; the servers above never get it. Manage with: doqd add / doqd remove
+# Ordinary DoQ resolvers for names outside the local hosts table.
 upstream quic://dns.quad9.net
 upstream quic://p0.freedns.controld.com
 upstream quic://dns.nextdns.io
-
-# Your own geo-blocked domains (subdomains included), on top of the built-in
-# list. Manage with: doqd add-domain / doqd remove-domain
-# geo-domain example.ai
 
 # Plain-DNS servers used ONLY to resolve the upstream names above. They must
 # be external: any DNS on the router itself is the router's own proxy, which

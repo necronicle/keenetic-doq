@@ -61,6 +61,7 @@ if [ -x "$INIT" ]; then
     "$INIT" disable >/dev/null 2>&1 || true
 fi
 rm -f "$INIT" "$BIN" "$BIN.new" "$KEEP"
-rm -rf "$STATE_DIR" /tmp/doqd.state.json
+rm -f "$SAVED" "$STATE_DIR/geo.state" /tmp/doqd.state.json
+rmdir "$STATE_DIR" 2>/dev/null || true
 log "config $CONF kept (delete it manually if unwanted)"
 log "done"
