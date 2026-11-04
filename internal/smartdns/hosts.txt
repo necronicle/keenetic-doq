@@ -120,8 +120,7 @@
 5.175.161.40 api.jetbrains.ai
 5.175.161.3 api.manus.im
 5.175.161.40 api.manus.im
-5.175.161.3 api.openai.com
-5.175.161.40 api.openai.com
+217.60.179.6 api.openai.com
 5.175.161.3 api.radarr.video
 5.175.161.40 api.radarr.video
 5.175.161.3 api.spotify.com
@@ -200,8 +199,7 @@
 5.175.161.40 auth.anthropic.com
 5.175.161.3 auth.deepl.com
 5.175.161.40 auth.deepl.com
-5.175.161.3 auth.openai.com
-5.175.161.40 auth.openai.com
+217.60.179.6 auth.openai.com
 5.175.161.3 auth.xboxlive.com
 5.175.161.40 auth.xboxlive.com
 5.175.161.3 auth0.openai.com
@@ -322,8 +320,7 @@
 5.175.161.40 ccs-service.naukri.com
 5.175.161.3 cdn-1.strava.com
 5.175.161.40 cdn-1.strava.com
-5.175.161.3 cdn.oaistatic.com
-5.175.161.40 cdn.oaistatic.com
+217.60.179.6 cdn.oaistatic.com
 5.175.161.3 cdn.platform.openai.com
 5.175.161.40 cdn.platform.openai.com
 5.175.161.3 cdn.web-platform.io
@@ -336,8 +333,8 @@
 5.175.161.40 chatclient-mobile.naukri.com
 5.175.161.3 chatclient.naukri.com
 5.175.161.40 chatclient.naukri.com
-5.175.161.3 chatgpt.com
-5.175.161.40 chatgpt.com
+217.60.179.6 chat.openai.com
+217.60.179.6 chatgpt.com
 5.175.161.3 chatgpt.site
 5.175.161.40 chatgpt.site
 5.175.161.3 checkout.www.deepl.com
@@ -590,8 +587,7 @@
 5.175.161.40 files.manuscdn.com
 5.175.161.3 files.naukri.com
 5.175.161.40 files.naukri.com
-5.175.161.3 files.oaiusercontent.com
-5.175.161.40 files.oaiusercontent.com
+217.60.179.6 files.oaiusercontent.com
 5.175.161.3 filestg.naukri.com
 5.175.161.40 filestg.naukri.com
 5.175.161.3 filevalidation.naukri.com
@@ -730,8 +726,7 @@
 5.175.161.40 internal.deepl.com
 5.175.161.3 interview.strava.com
 5.175.161.40 interview.strava.com
-5.175.161.3 ios.chat.openai.com
-5.175.161.40 ios.chat.openai.com
+217.60.179.6 ios.chat.openai.com
 5.175.161.3 iperf3serverlist.net
 5.175.161.40 iperf3serverlist.net
 5.175.161.3 ita-free.app.deepl.com
@@ -1000,8 +995,7 @@
 5.175.161.40 np.naukimg.com
 5.175.161.3 o.pki.goog
 5.175.161.40 o.pki.goog
-5.175.161.3 oaistatic.com
-5.175.161.40 oaistatic.com
+217.60.179.6 oaistatic.com
 5.175.161.3 oaiusercontent.com
 5.175.161.40 oaiusercontent.com
 5.175.161.3 octanorm.com

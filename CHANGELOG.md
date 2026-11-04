@@ -3,6 +3,17 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версии — [SemVer](https://semver.org/lang/ru/).
 
+## [0.6.1] — 2026-11-04
+
+### Changed
+- Восемь доменов OpenAI, необходимых приложениям iPhone, переключены на
+  `217.60.179.6`: `chatgpt.com`, `auth.openai.com`, `cdn.oaistatic.com`,
+  `ios.chat.openai.com`, `api.openai.com`, `chat.openai.com`,
+  `files.oaiusercontent.com` и `oaistatic.com`.
+
+### Added
+- Добавлено точное имя `chat.openai.com`; встроенный hosts содержит 1026 имён.
+
 ## [0.6.0] — 2026-10-24
 
 ### Changed

@@ -96,12 +96,27 @@ func TestInvalidHosts(t *testing.T) {
 func TestBuiltin(t *testing.T) {
 	b := Builtin()
 	table, e := Load("builtin")
-	if e != nil || table.Count() != 1025 {
-		t.Fatalf("%v %v", table, e)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if table.Count() != 1026 {
+		t.Errorf("got %d names, want 1026", table.Count())
 	}
 	r, e := New("builtin", nextFunc(upstreamAnswer))
 	if e != nil {
 		t.Fatal(e)
+	}
+	for _, name := range []string{"chatgpt.com", "auth.openai.com", "cdn.oaistatic.com", "ios.chat.openai.com", "api.openai.com", "chat.openai.com", "files.oaiusercontent.com", "oaistatic.com"} {
+		t.Run(name, func(t *testing.T) {
+			answer := query(r, name+".", dns.TypeA).Answer
+			if len(answer) != 1 {
+				t.Fatalf("got %d A answers, want 1", len(answer))
+			}
+			a, ok := answer[0].(*dns.A)
+			if !ok || a.A.String() != "217.60.179.6" {
+				t.Fatalf("got %v, want 217.60.179.6", answer[0])
+			}
+		})
 	}
 	if len(query(r, "releases.openai.com.", dns.TypeA).Answer) != 2 {
 		t.Fatal("release missing")

@@ -91,7 +91,7 @@ func TestHostsExportAndConfiguredStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 	out, code = captureStdout(t, func() int { return Run([]string{"hosts", "status", "-c", conf}) })
-	if code != 0 || !strings.Contains(out, hosts) || !strings.Contains(out, "1025 names") || !strings.Contains(out, "not live daemon state") {
+	if code != 0 || !strings.Contains(out, hosts) || !strings.Contains(out, "1026 names") || !strings.Contains(out, "not live daemon state") {
 		t.Fatalf("status = %q (%d)", out, code)
 	}
 }
