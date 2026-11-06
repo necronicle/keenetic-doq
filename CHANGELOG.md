@@ -3,6 +3,12 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версии — [SemVer](https://semver.org/lang/ru/).
 
+## [0.6.2] — 2026-11-07
+
+### Fixed
+- Удаление на Keenetic больше не прерывается при ошибке `ndmc`: doqd останавливается
+  и удаляется, а для ручного отключения name-server выводятся команды Web CLI.
+
 ## [0.6.1] — 2026-11-04
 
 ### Changed

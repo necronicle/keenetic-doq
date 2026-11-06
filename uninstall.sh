@@ -21,12 +21,13 @@ NS=$(awk '/^listen /{print $2}' /opt/etc/doqd.conf 2>/dev/null) || true
 
 if [ -n "$NS" ]; then
     log "unregistering name-server $NS"
-    ndm_cmd "no ip name-server $NS"
-    ndm_cmd "system configuration save"
-    # ndmc can fail while still exiting 0 — verify by reading it back.
-    if ndm_cmd "show ip name-server" 2>/dev/null | grep -q "${NS%:*}"; then
-        log "WARNING: the name-server is still registered. Remove it in the router"
-        log "         Web CLI (http://${NS%:*}/a):  no ip name-server $NS"
+    ndm_failed=
+    ndm_cmd "no ip name-server $NS" || ndm_failed=1
+    ndm_cmd "system configuration save" || ndm_failed=1
+    if [ -n "$ndm_failed" ] || ndm_cmd "show ip name-server" 2>/dev/null | grep -q "${NS%:*}"; then
+        log "WARNING: could not confirm name-server removal. Run in the router Web CLI"
+        log "         (http://${NS%:*}/a):  no ip name-server $NS"
+        log "                             system configuration save"
     fi
 else
     log "config not found — unregister manually: no ip name-server <address>"
