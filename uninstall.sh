@@ -17,17 +17,43 @@ ndm_cmd() {
     else echo "[keenetic-doq] run manually in the router CLI: $1"; fi
 }
 
+# The local RCI API needs no login and, unlike ndmc, also works in a shell
+# started with `exec sh` from the router CLI. It answers HTTP 200 even when a
+# command fails, so the verdict comes from the "status" field of the reply.
+rci() {
+    command -v curl >/dev/null 2>&1 || return 1
+    reply=$(curl -fsS -m 10 -H 'Content-Type: application/json' \
+        -d "[{\"parse\":\"$1\"}]" http://127.0.0.1:79/rci/ 2>/dev/null | tr -d ' \t\r\n')
+    case $reply in
+        *'"status":"error"'*) return 1 ;;
+        *'"prompt"'*) printf '%s' "$reply" ;;
+        *) return 1 ;;
+    esac
+}
+
+unregister_via_rci() {
+    # Removing an absent entry is an error too, so the read-back decides.
+    rci "no ip name-server $NS" >/dev/null || true
+    shown=$(rci "show ip name-server") || return 1
+    case $shown in *"\"address\":\"${NS%:*}\""*) return 1 ;; esac
+    rci "system configuration save" >/dev/null
+}
+
 NS=$(awk '/^listen /{print $2}' /opt/etc/doqd.conf 2>/dev/null) || true
 
 if [ -n "$NS" ]; then
     log "unregistering name-server $NS"
-    ndm_failed=
-    ndm_cmd "no ip name-server $NS" || ndm_failed=1
-    ndm_cmd "system configuration save" || ndm_failed=1
-    if [ -n "$ndm_failed" ] || ndm_cmd "show ip name-server" 2>/dev/null | grep -q "${NS%:*}"; then
-        log "WARNING: could not confirm name-server removal. Run in the router Web CLI"
-        log "         (http://${NS%:*}/a):  no ip name-server $NS"
-        log "                             system configuration save"
+    if unregister_via_rci; then
+        log "name-server removed"
+    else
+        ndm_failed=
+        ndm_cmd "no ip name-server $NS" || ndm_failed=1
+        ndm_cmd "system configuration save" || ndm_failed=1
+        if [ -n "$ndm_failed" ] || ndm_cmd "show ip name-server" 2>/dev/null | grep -q "${NS%:*}"; then
+            log "WARNING: could not confirm name-server removal. Run in the router Web CLI"
+            log "         (http://${NS%:*}/a):  no ip name-server $NS"
+            log "                             system configuration save"
+        fi
     fi
 else
     log "config not found — unregister manually: no ip name-server <address>"

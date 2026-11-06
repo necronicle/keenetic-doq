@@ -3,6 +3,13 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версии — [SemVer](https://semver.org/lang/ru/).
 
+## [Unreleased]
+
+### Fixed
+- `uninstall.sh` на Keenetic снимает name-server и из шелла `exec sh` внутри CLI роутера,
+  где `ndmc` падает с `system failed [0xcffd0062]`: теперь сначала используется локальный
+  RCI (`127.0.0.1:79`), а `ndmc` и ручные команды остались запасным вариантом.
+
 ## [0.6.2] — 2026-11-07
 
 ### Fixed
