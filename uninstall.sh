@@ -1,8 +1,11 @@
 #!/bin/sh
 # keenetic-doq uninstaller. Run ON THE ROUTER.
-# Unregisters the name-server, stops and removes the daemon.
-# The config /opt/etc/doqd.conf is kept (delete it manually if unwanted).
+# Unregisters the name-server, stops and removes the daemon and its config.
+# To upgrade or reinstall keeping the settings, rerun install.sh instead:
+# it never overwrites an existing config.
 set -e
+
+CONF=/opt/etc/doqd.conf
 
 log() { echo "[keenetic-doq] $*"; }
 
@@ -39,29 +42,56 @@ unregister_via_rci() {
     rci "system configuration save" >/dev/null
 }
 
-NS=$(awk '/^listen /{print $2}' /opt/etc/doqd.conf 2>/dev/null) || true
+# ndmc can fail while still exiting 0, and with neither tool present ndm_cmd only
+# prints a hint, so a clean status alone proves nothing.
+ndm_try() {
+    out=$(ndm_cmd "$1" 2>&1) || return 1
+    case $out in
+        *"failed to initialize"*|*"system failed"*|*"run manually"*) return 1 ;;
+    esac
+    printf '%s' "$out"
+}
+
+unregister_via_ndm() {
+    # ndmc exits non-zero for an absent entry, so here too the read-back decides.
+    ndm_try "no ip name-server $NS" >/dev/null || true
+    shown=$(ndm_try "show ip name-server") || return 1
+    case $shown in *"${NS%:*}"*) return 1 ;; esac
+    ndm_try "system configuration save" >/dev/null
+}
+
+NS=$(awk '/^listen /{print $2}' "$CONF" 2>/dev/null) || true
+removal_unconfirmed=
 
 if [ -n "$NS" ]; then
     log "unregistering name-server $NS"
-    if unregister_via_rci; then
+    if unregister_via_rci || unregister_via_ndm; then
         log "name-server removed"
     else
-        ndm_failed=
-        ndm_cmd "no ip name-server $NS" || ndm_failed=1
-        ndm_cmd "system configuration save" || ndm_failed=1
-        if [ -n "$ndm_failed" ] || ndm_cmd "show ip name-server" 2>/dev/null | grep -q "${NS%:*}"; then
-            log "WARNING: could not confirm name-server removal. Run in the router Web CLI"
-            log "         (http://${NS%:*}/a):  no ip name-server $NS"
-            log "                             system configuration save"
-        fi
+        removal_unconfirmed=1
+        log "WARNING: could not confirm name-server removal. Run in the router Web CLI"
+        log "         (http://${NS%:*}/a):  no ip name-server $NS"
+        log "                             system configuration save"
     fi
 else
-    log "config not found — unregister manually: no ip name-server <address>"
+    log "no listen address in $CONF — if a name-server is still registered: no ip name-server <address>"
 fi
 
 [ -x /opt/etc/init.d/S56doqd ] && /opt/etc/init.d/S56doqd stop || true
 rm -f /opt/etc/init.d/S56doqd /opt/sbin/doqd
 rm -f /opt/var/lib/doqd/geo.state /tmp/doqd.state.json
 rmdir /opt/var/lib/doqd 2>/dev/null || true
-log "config /opt/etc/doqd.conf kept (delete manually if unwanted)"
+
+if [ -n "$removal_unconfirmed" ]; then
+    # The config is the only record of the address a retry has to remove.
+    log "config $CONF kept for now: after removing the name-server, run this script again"
+else
+    custom_hosts=$(awk '$1 == "hosts" && $2 != "builtin" {print $2}' "$CONF" 2>/dev/null) || true
+    rm -f "$CONF" "$CONF.bak" "$CONF".pre-smartdns.* "$CONF".smartdns.* /opt/etc/doqd.hosts
+    log "config removed"
+    case $custom_hosts in
+        ""|/opt/etc/doqd.hosts) ;;
+        *) log "your hosts file $custom_hosts was left in place" ;;
+    esac
+fi
 log "done"

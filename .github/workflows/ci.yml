@@ -15,6 +15,7 @@ jobs:
       - run: go test -race ./...
       - run: sh scripts/test-install-migrate.sh
       - run: sh scripts/test-uninstall.sh
+      - run: sh scripts/test-uninstall-openwrt.sh
       - name: shell scripts
         run: |
           shellcheck -s sh -S warning install.sh uninstall.sh install-openwrt.sh uninstall-openwrt.sh scripts/*.sh

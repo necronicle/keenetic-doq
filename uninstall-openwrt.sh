@@ -4,7 +4,8 @@
 #   wget -qO- https://raw.githubusercontent.com/necronicle/keenetic-doq/main/uninstall-openwrt.sh | sh
 #
 # Gives dnsmasq back its servers first, so the router DNS keeps working, then
-# stops and removes the daemon. The config /etc/doqd.conf is kept.
+# stops and removes the daemon and its config. To upgrade or reinstall keeping
+# the settings, rerun install-openwrt.sh instead: it never overwrites a config.
 set -e
 
 BIN=/usr/sbin/doqd
@@ -61,7 +62,13 @@ if [ -x "$INIT" ]; then
     "$INIT" disable >/dev/null 2>&1 || true
 fi
 rm -f "$INIT" "$BIN" "$BIN.new" "$KEEP"
-rm -f "$SAVED" "$STATE_DIR/geo.state" /tmp/doqd.state.json
-rmdir "$STATE_DIR" 2>/dev/null || true
-log "config $CONF kept (delete it manually if unwanted)"
+rm -f /tmp/doqd.state.json
+custom_hosts=$(awk '$1 == "hosts" && $2 != "builtin" {print $2}' "$CONF" 2>/dev/null || true)
+rm -rf "$STATE_DIR"
+rm -f "$CONF" "$CONF.bak" "$CONF".pre-smartdns.* "$CONF".smartdns.*
+log "config removed"
+case $custom_hosts in
+    ""|"$STATE_DIR"/*) ;;
+    *) log "your hosts file $custom_hosts was left in place" ;;
+esac
 log "done"

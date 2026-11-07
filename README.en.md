@@ -344,6 +344,10 @@ test the site and its authenticated workflow. On OpenWRT use `logread -e doqd`.
 
 ## Uninstall
 
+Uninstalling also removes the settings. To upgrade or reinstall doqd and keep
+them, do not uninstall: run the installer again, it does not overwrite an
+existing config.
+
 Keenetic:
 
 ```sh
@@ -351,7 +355,11 @@ curl -fsSL https://raw.githubusercontent.com/necronicle/keenetic-doq/main/uninst
 ```
 
 The script removes the name-server registration, stops the daemon and
-removes it. The config `/opt/etc/doqd.conf` stays.
+removes it, then removes the config `/opt/etc/doqd.conf`, its backups and
+`/opt/etc/doqd.hosts`. If it cannot confirm that the name-server is gone, the
+config stays: the script shows the commands to remove it manually, then run the
+script again. A hosts file in another location is left in place, and the script
+says so.
 
 OpenWRT:
 
@@ -361,8 +369,9 @@ wget -qO- https://raw.githubusercontent.com/necronicle/keenetic-doq/main/uninsta
 
 The script first restores the original `server` and `noresolv` of dnsmasq.
 The router DNS continues to work. Then the script stops the daemon and
-removes it, the init script and the sysupgrade list. The config
-`/etc/doqd.conf` stays.
+removes it, the init script, the sysupgrade list, the config `/etc/doqd.conf`
+with its backups and the directory `/etc/doqd`. A hosts file in another location
+is left in place, and the script says so.
 
 ## Building from source
 
