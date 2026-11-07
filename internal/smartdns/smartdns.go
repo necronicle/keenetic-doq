@@ -1,4 +1,6 @@
-// Package smartdns applies exact local hosts overrides outside the DNS cache.
+// Package smartdns applies local hosts overrides outside the DNS cache.
+// A name is either exact (example.com) or a suffix mask (*.example.com) that
+// covers every subdomain at any depth but not example.com itself.
 package smartdns
 
 import (
@@ -10,6 +12,7 @@ import (
 	"github.com/miekg/dns"
 	"net/netip"
 	"os"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -21,10 +24,34 @@ var builtin []byte
 // Builtin returns an independent copy of the shipped snapshot.
 func Builtin() []byte { return bytes.Clone(builtin) }
 
-// Table is an immutable, validated hosts snapshot.
-type Table struct{ entries map[string][]netip.Addr }
+// Table is an immutable, validated hosts snapshot. wild is keyed by the
+// suffix without the leading "*.".
+type Table struct {
+	entries map[string][]netip.Addr
+	wild    map[string][]netip.Addr
+}
 
-func (t *Table) Count() int { return len(t.entries) }
+// Count is the number of exact names; Wildcards the number of suffix masks.
+func (t *Table) Count() int     { return len(t.entries) }
+func (t *Table) Wildcards() int { return len(t.wild) }
+
+// lookup prefers an exact name, then the longest covering suffix mask.
+func (t *Table) lookup(name string) ([]netip.Addr, bool) {
+	if a, ok := t.entries[name]; ok {
+		return a, true
+	}
+	for rest := name; len(t.wild) > 0; {
+		i := strings.IndexByte(rest, '.')
+		if i < 0 {
+			break
+		}
+		rest = rest[i+1:]
+		if a, ok := t.wild[rest]; ok {
+			return a, true
+		}
+	}
+	return nil, false
+}
 
 // Load replaces, rather than extends, the builtin list when path is a file.
 // Empty files are valid and deliberately disable all local overrides.
@@ -37,7 +64,7 @@ func Load(path string) (*Table, error) {
 			return nil, err
 		}
 	}
-	t := &Table{entries: make(map[string][]netip.Addr)}
+	t := &Table{entries: make(map[string][]netip.Addr), wild: make(map[string][]netip.Addr)}
 	sc := bufio.NewScanner(bytes.NewReader(data))
 	sc.Buffer(make([]byte, 4096), 1024*1024)
 	line := 0
@@ -57,19 +84,19 @@ func Load(path string) (*Table, error) {
 		}
 		addr = addr.Unmap()
 		for _, raw := range fields[1:] {
-			name := normalize(raw)
+			name, set := normalize(raw), t.entries
+			if suffix, ok := strings.CutPrefix(name, "*."); ok {
+				// A one-label suffix (*.com) would capture a whole TLD by typo.
+				if !strings.Contains(suffix, ".") {
+					return nil, fmt.Errorf("hosts line %d: mask %q must keep at least two labels after \"*.\"", line, raw)
+				}
+				name, set = suffix, t.wild
+			}
 			if !validName(name) {
 				return nil, fmt.Errorf("hosts line %d: invalid name %q", line, raw)
 			}
-			found := false
-			for _, a := range t.entries[name] {
-				if a == addr {
-					found = true
-					break
-				}
-			}
-			if !found {
-				t.entries[name] = append(t.entries[name], addr)
+			if !slices.Contains(set[name], addr) {
+				set[name] = append(set[name], addr)
 			}
 		}
 	}
@@ -137,7 +164,8 @@ func localType(typ uint16) bool {
 }
 func (t *Table) records(name string, typ uint16) []dns.RR {
 	var out []dns.RR
-	for _, ip := range t.entries[normalize(name)] {
+	ips, _ := t.lookup(normalize(name))
+	for _, ip := range ips {
 		h := dns.RR_Header{Name: dns.Fqdn(name), Class: dns.ClassINET, Ttl: 60}
 		if ip.Is4() && (typ == dns.TypeA || typ == dns.TypeANY) {
 			h.Rrtype = dns.TypeA
@@ -155,7 +183,7 @@ func (t *Table) local(req *dns.Msg) *dns.Msg {
 	if q.Qclass != dns.ClassINET || !localType(q.Qtype) {
 		return nil
 	}
-	if _, ok := t.entries[normalize(q.Name)]; !ok {
+	if _, ok := t.lookup(normalize(q.Name)); !ok {
 		return nil
 	}
 	m := new(dns.Msg)
@@ -206,7 +234,7 @@ func (t *Table) sanitize(req, resp *dns.Msg) *dns.Msg {
 		seen := map[string]bool{}
 		for !seen[name] {
 			seen[name] = true
-			if _, ok := t.entries[name]; ok {
+			if _, ok := t.lookup(name); ok {
 				m.Answer = append(chain, t.records(dns.Fqdn(name), q.Qtype)...)
 				m.Rcode = dns.RcodeSuccess
 				// The original authority/glue describes the discarded direct chain.
@@ -238,7 +266,7 @@ func (t *Table) sanitize(req, resp *dns.Msg) *dns.Msg {
 	filter := func(in []dns.RR) []dns.RR {
 		var out []dns.RR
 		for _, rr := range in {
-			_, protected := t.entries[normalize(rr.Header().Name)]
+			_, protected := t.lookup(normalize(rr.Header().Name))
 			if protected && localType(rr.Header().Rrtype) {
 				changed = true
 				continue

@@ -20,9 +20,13 @@ clients → router DNS → doqd → hosts match: local proxy IP response
                            → other names: cache → ordinary DoQ upstream
 ```
 
-The binary includes **1030 exact names**, a snapshot dated October 24, 2026:
-GeoHide EU hosts plus Sora names, `releases.openai.com` for Codex downloads,
-and Clash Royale names.
+The binary includes a snapshot dated November 8, 2026: **234 `*.domain`
+masks** and **405 exact names**. It is based on the GeoHide EU hosts plus Sora
+names, `releases.openai.com` for Codex downloads, and Clash Royale names. Masks
+are used only where GeoHide itself answers proxy addresses for any subdomain;
+shared domains such as `google.com`, `googleapis.com` and `microsoft.com` stay
+exact names. Gemini, AI Studio, NotebookLM, Labs, Jules, Antigravity and
+DeepMind go through the MagicDNS proxy `45.88.163.92`.
 Proxy addresses come from the built-in hosts table. No Cloudflare Zero Trust
 account is required. **The third-party proxies are still required:** replacing
 DNS answers does not create a foreign network exit or guarantee service access.
@@ -34,8 +38,11 @@ identical requests and stale responses during upstream failure are retained.
 
 ## Local rules
 
-- Exact names, case-insensitive, ignoring the trailing dot. `example.com`
-  does not include arbitrary subdomains.
+- Names are case-insensitive and ignore the trailing dot. `example.com` matches
+  only that name. The mask `*.example.com` matches every subdomain at any depth,
+  but not `example.com` itself; add it on its own line. An exact name wins over a
+  mask, and the longest mask wins over shorter ones. One-label masks such as
+  `*.com` are rejected.
 - A/AAAA answers contain only addresses from hosts. Missing IPv6 records
   produce NOERROR/NODATA, not NXDOMAIN and not direct upstream addresses.
 - HTTPS/SVCB for matched names return NODATA, without direct IP hints or ECH
@@ -294,6 +301,7 @@ File format:
 ```text
 5.175.161.3 chatgpt.com releases.openai.com
 5.175.161.40 chatgpt.com releases.openai.com
+5.175.161.3 *.example.com
 # Multiple names per line and multiple addresses per name are supported.
 ```
 

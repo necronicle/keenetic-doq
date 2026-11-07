@@ -24,7 +24,7 @@ die() { echo "[keenetic-doq] ERROR: $*" >&2; exit 1; }
 check_legacy_config() {
     [ -f "$CONF" ] || return 0
     if awk '$1 == "geo-domain" {found=1} END {exit !found}' "$CONF"; then
-        echo "Cannot migrate $CONF: geo-domain has no proxy IP address. Back up the config, put explicit IP/name rows for these names in a custom hosts file, set hosts /absolute/path, then remove geo-domain rows and rerun. Exact names only; subdomains need their own rows. The binary and service have not been changed." >&2
+        echo "Cannot migrate $CONF: geo-domain has no proxy IP address. Back up the config, put explicit IP/name rows for these names in a custom hosts file, set hosts /absolute/path, then remove geo-domain rows and rerun. Use *.example.com rows to cover subdomains. The binary and service have not been changed." >&2
         return 1
     fi
 }

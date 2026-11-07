@@ -84,7 +84,7 @@ func TestParserAndLocalAnswers(t *testing.T) {
 	}
 }
 func TestInvalidHosts(t *testing.T) {
-	for _, s := range []string{"bad example.com", "192.0.2.1", "192.0.2.1 *.example.com", "192.0.2.1 bad..example", "192.0.2.1 https://example.com", "192.0.2.1 -bad.example", "192.0.2.1 example.com extra!"} {
+	for _, s := range []string{"bad example.com", "192.0.2.1", "192.0.2.1 *.com", "192.0.2.1 *", "192.0.2.1 *.", "192.0.2.1 a.*.example.com", "192.0.2.1 *example.com", "192.0.2.1 **.example.com", "192.0.2.1 *.*.example.com", "192.0.2.1 bad..example", "192.0.2.1 https://example.com", "192.0.2.1 -bad.example", "192.0.2.1 example.com extra!"} {
 		if _, e := Load(file(t, s)); e == nil {
 			t.Errorf("accepted %q", s)
 		}
@@ -99,8 +99,8 @@ func TestBuiltin(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	if table.Count() != 1030 {
-		t.Errorf("got %d names, want 1030", table.Count())
+	if table.Count() != 405 || table.Wildcards() != 234 {
+		t.Errorf("got %d names and %d masks, want 405 and 234", table.Count(), table.Wildcards())
 	}
 	r, e := New("builtin", nextFunc(upstreamAnswer))
 	if e != nil {
@@ -130,8 +130,21 @@ func TestBuiltin(t *testing.T) {
 	if len(query(r, "releases.openai.com.", dns.TypeA).Answer) != 2 {
 		t.Fatal("release missing")
 	}
-	if query(r, "ws.chatgpt.com.", dns.TypeA).Answer[0].(*dns.A).A.String() != "203.0.113.99" {
-		t.Fatal("ws added")
+	// Masks cover unlisted subdomains, but not the bare domain.
+	for _, name := range []string{"ws.chatgpt.com", "a.b.naukri.com", "new.claude.ai"} {
+		answer := query(r, name+".", dns.TypeA).Answer
+		if len(answer) != 2 || answer[0].(*dns.A).A.String() != "5.175.161.3" {
+			t.Fatalf("%s: %v", name, answer)
+		}
+	}
+	if query(r, "unlisted.google.com.", dns.TypeA).Answer[0].(*dns.A).A.String() != "203.0.113.99" {
+		t.Fatal("google.com must not be masked")
+	}
+	for _, name := range []string{"gemini.google.com", "aistudio.google.com", "generativelanguage.googleapis.com", "notebooklm.google.com", "content-push.googleapis.com"} {
+		answer := query(r, name+".", dns.TypeA).Answer
+		if len(answer) != 1 || answer[0].(*dns.A).A.String() != "45.88.163.92" {
+			t.Fatalf("%s: %v", name, answer)
+		}
 	}
 	b[0] = '!'
 	if _, e := Load("builtin"); e != nil {
@@ -339,5 +352,79 @@ func TestUnlistedAndOtherTypesPassThrough(t *testing.T) {
 		if !m.AuthenticatedData || len(m.Answer) != 1 || m.Answer[0].(*dns.TXT).Txt[0] != "ordinary" {
 			t.Fatal(m)
 		}
+	}
+}
+
+func TestWildcardSuffix(t *testing.T) {
+	p := file(t, "192.0.2.1 *.example.com\n192.0.2.2 exact.example.com\n192.0.2.3 *.deep.example.com\n2001:db8::1 *.Example.COM.\n192.0.2.4 *.cdn.test\n")
+	table, e := Load(p)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if table.Count() != 1 || table.Wildcards() != 3 {
+		t.Fatalf("names=%d wildcards=%d", table.Count(), table.Wildcards())
+	}
+	r, e := New(p, nextFunc(upstreamAnswer))
+	if e != nil {
+		t.Fatal(e)
+	}
+	for _, tc := range []struct {
+		n    string
+		typ  uint16
+		want []string
+	}{
+		{"a.example.com.", dns.TypeA, []string{"192.0.2.1"}},
+		{"A.B.C.Example.Com.", dns.TypeA, []string{"192.0.2.1"}},
+		{"a.example.com.", dns.TypeAAAA, []string{"2001:db8::1"}},
+		{"a.example.com.", dns.TypeHTTPS, nil},
+		{"exact.example.com.", dns.TypeA, []string{"192.0.2.2"}},
+		{"exact.example.com.", dns.TypeAAAA, nil},
+		{"sub.exact.example.com.", dns.TypeA, []string{"192.0.2.1"}},
+		{"deep.example.com.", dns.TypeA, []string{"192.0.2.1"}},
+		{"x.deep.example.com.", dns.TypeA, []string{"192.0.2.3"}},
+		{"x.y.deep.example.com.", dns.TypeA, []string{"192.0.2.3"}},
+		{"example.com.", dns.TypeA, []string{"203.0.113.99"}},
+		{"notexample.com.", dns.TypeA, []string{"203.0.113.99"}},
+		{"x.cdn.test.", dns.TypeA, []string{"192.0.2.4"}},
+	} {
+		m := query(r, tc.n, tc.typ)
+		var got []string
+		for _, rr := range m.Answer {
+			switch v := rr.(type) {
+			case *dns.A:
+				got = append(got, v.A.String())
+			case *dns.AAAA:
+				got = append(got, v.AAAA.String())
+			}
+		}
+		if m.Rcode != dns.RcodeSuccess || fmt.Sprint(got) != fmt.Sprint(tc.want) {
+			t.Errorf("%s %s: got %v want %v", tc.n, dns.TypeToString[tc.typ], got, tc.want)
+		}
+		for _, rr := range m.Answer {
+			if rr.Header().Name != tc.n {
+				t.Errorf("%s: owner %s", tc.n, rr.Header().Name)
+			}
+		}
+	}
+}
+
+func TestWildcardCNAMETargetAndSectionFilter(t *testing.T) {
+	r, e := New(file(t, "192.0.2.1 *.proxied.test"), nextFunc(func(_ context.Context, q *dns.Msg) (*dns.Msg, error) {
+		m := new(dns.Msg)
+		m.SetReply(q)
+		for _, s := range []string{"alias.example. 300 IN CNAME edge.proxied.test.", "edge.proxied.test. 300 IN A 203.0.113.99"} {
+			rr, _ := dns.NewRR(s)
+			m.Answer = append(m.Answer, rr)
+		}
+		rr, _ := dns.NewRR("ns.proxied.test. 300 IN A 203.0.113.98")
+		m.Extra = []dns.RR{rr}
+		return m, nil
+	}))
+	if e != nil {
+		t.Fatal(e)
+	}
+	m := query(r, "alias.example.", dns.TypeA)
+	if len(m.Answer) != 2 || m.Answer[1].(*dns.A).A.String() != "192.0.2.1" || m.Answer[1].Header().Name != "edge.proxied.test." || len(m.Extra) != 0 {
+		t.Fatalf("wildcard CNAME target not overridden: %v", m)
 	}
 }

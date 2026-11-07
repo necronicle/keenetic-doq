@@ -79,7 +79,7 @@ func captureStdout(t *testing.T, run func() int) (string, int) {
 
 func TestHostsExportAndConfiguredStatus(t *testing.T) {
 	out, code := captureStdout(t, func() int { return Run([]string{"hosts", "export"}) })
-	if code != 0 || !strings.Contains(out, "releases.openai.com") || strings.Contains(out, "ws.chatgpt.com") {
+	if code != 0 || !strings.Contains(out, "5.175.161.3 *.openai.com\n") || !strings.Contains(out, "45.88.163.92 gemini.google.com\n") {
 		t.Fatalf("invalid builtin export (code %d)", code)
 	}
 	hosts := filepath.Join(t.TempDir(), "hosts")
@@ -91,7 +91,7 @@ func TestHostsExportAndConfiguredStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 	out, code = captureStdout(t, func() int { return Run([]string{"hosts", "status", "-c", conf}) })
-	if code != 0 || !strings.Contains(out, hosts) || !strings.Contains(out, "1030 names") || !strings.Contains(out, "not live daemon state") {
+	if code != 0 || !strings.Contains(out, hosts) || !strings.Contains(out, "405 names, 234 wildcard masks") || !strings.Contains(out, "not live daemon state") {
 		t.Fatalf("status = %q (%d)", out, code)
 	}
 }

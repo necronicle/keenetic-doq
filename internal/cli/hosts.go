@@ -28,7 +28,7 @@ func reportHosts(path string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("hosts (configured): %s, %d names (not live daemon state)\n", cfg.Hosts, table.Count())
+	fmt.Printf("hosts (configured): %s, %d names, %d wildcard masks (not live daemon state)\n", cfg.Hosts, table.Count(), table.Wildcards())
 	return nil
 }
 
