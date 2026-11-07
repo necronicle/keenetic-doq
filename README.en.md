@@ -20,8 +20,9 @@ clients → router DNS → doqd → hosts match: local proxy IP response
                            → other names: cache → ordinary DoQ upstream
 ```
 
-The binary includes **1026 exact names**, a snapshot dated October 24, 2026:
-GeoHide EU hosts plus Sora names and `releases.openai.com` for Codex downloads.
+The binary includes **1030 exact names**, a snapshot dated October 24, 2026:
+GeoHide EU hosts plus Sora names, `releases.openai.com` for Codex downloads,
+and Clash Royale names.
 Proxy addresses come from the built-in hosts table. No Cloudflare Zero Trust
 account is required. **The third-party proxies are still required:** replacing
 DNS answers does not create a foreign network exit or guarantee service access.

@@ -22,6 +22,8 @@
 5.175.161.40 accounts.scdn.co
 5.175.161.3 accounts.spotify.com
 5.175.161.40 accounts.spotify.com
+5.175.161.3 accounts.supercell.com
+5.175.161.40 accounts.supercell.com
 5.175.161.3 accounts.x.ai
 5.175.161.40 accounts.x.ai
 5.175.161.3 adobe.io
@@ -622,6 +624,9 @@
 5.175.161.40 frontend-api-v3.pump.fun
 5.175.161.3 g2a.com
 5.175.161.40 g2a.com
+5.175.161.3 game-assets.clashroyaleapp.com
+5.175.161.40 game-assets.clashroyaleapp.com
+81.17.20.82 game.clashroyaleapp.com
 5.175.161.3 game8.co
 5.175.161.40 game8.co
 5.175.161.3 game8.co.jp
@@ -1316,6 +1321,8 @@
 5.175.161.40 store.last.fm
 5.175.161.3 store.strava.com
 5.175.161.40 store.strava.com
+5.175.161.3 store.supercell.com
+5.175.161.40 store.supercell.com
 5.175.161.3 stories.strava.com
 5.175.161.40 stories.strava.com
 5.175.161.3 strava.com

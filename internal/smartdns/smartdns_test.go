@@ -99,8 +99,8 @@ func TestBuiltin(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	if table.Count() != 1026 {
-		t.Errorf("got %d names, want 1026", table.Count())
+	if table.Count() != 1030 {
+		t.Errorf("got %d names, want 1030", table.Count())
 	}
 	r, e := New("builtin", nextFunc(upstreamAnswer))
 	if e != nil {
@@ -117,6 +117,15 @@ func TestBuiltin(t *testing.T) {
 				t.Fatalf("got %v, want 217.60.179.6", answer[0])
 			}
 		})
+	}
+	if answer := query(r, "game.clashroyaleapp.com.", dns.TypeA).Answer; len(answer) != 1 || answer[0].(*dns.A).A.String() != "81.17.20.82" {
+		t.Fatalf("clash royale game: %v", answer)
+	}
+	for _, name := range []string{"game-assets.clashroyaleapp.com", "accounts.supercell.com", "store.supercell.com"} {
+		answer := query(r, name+".", dns.TypeA).Answer
+		if len(answer) != 2 || answer[0].(*dns.A).A.String() != "5.175.161.3" || answer[1].(*dns.A).A.String() != "5.175.161.40" {
+			t.Fatalf("%s: %v", name, answer)
+		}
 	}
 	if len(query(r, "releases.openai.com.", dns.TypeA).Answer) != 2 {
 		t.Fatal("release missing")

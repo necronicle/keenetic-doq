@@ -5,6 +5,15 @@
 
 ## [Unreleased]
 
+## [0.6.3] — 2026-11-07
+
+### Added
+- Clash Royale в обход геоблока Supercell. Игровой сервер `game.clashroyaleapp.com`
+  (TCP 9339, без SNI) направлен на `81.17.20.82`, игровой прокси Null's Proxy: наши прокси
+  пробрасывают 9339 на другие игры Supercell. `game-assets.clashroyaleapp.com`,
+  `accounts.supercell.com` и `store.supercell.com` идут через `5.175.161.3` и `5.175.161.40`.
+  Встроенный hosts содержит 1030 имён.
+
 ### Fixed
 - `uninstall.sh` на Keenetic снимает name-server и из шелла `exec sh` внутри CLI роутера,
   где `ndmc` падает с `system failed [0xcffd0062]`: теперь сначала используется локальный
