@@ -20,7 +20,7 @@ log() { echo "[keenetic-doq] $*"; }
 die() { echo "[keenetic-doq] ERROR: $*" >&2; exit 1; }
 
 # Upgrade directly to local SmartDNS. Do not replay historical migrations:
-# ordinary upstream/fallback rows are user settings and must stay untouched.
+# Preserve custom upstream/fallback rows, except the retired Quad9/NextDNS/Control D defaults.
 check_legacy_config() {
     [ -f "$CONF" ] || return 0
     if awk '$1 == "geo-domain" {found=1} END {exit !found}' "$CONF"; then
@@ -43,16 +43,25 @@ migrate_smartdns() { # $1 = verified new binary, not the installed daemon
             if (drop == "yes") next
             sub(/geo/, "upstream")
         }
+        ($1 == "upstream" || $1 == "fallback") &&
+            ($2 == "quic://dns.quad9.net" || $2 == "quic://dns.nextdns.io" ||
+             $2 == "quic://p0.freedns.controld.com") {next}
         $1 == "hosts" {hosts=1}
+        $1 == "fallback" && $2 == "quic://dns.hostux.net" && !hostuxFallback {
+            hostuxFallback=count+1
+        }
         $1 == "upstream" {upstreams++}
-        {print}
+        {lines[++count]=$0}
         END {
-            if (!hosts) print "hosts builtin"
-            if (!upstreams) {
-                print "upstream quic://dns.quad9.net"
-                print "upstream quic://p0.freedns.controld.com"
-                print "upstream quic://dns.nextdns.io"
+            # If retiring the old primary leaves only Hostux as a reserve,
+            # promote that row instead of creating a duplicate server.
+            if (!upstreams && hostuxFallback) {
+                sub(/fallback/, "upstream", lines[hostuxFallback])
+                upstreams++
             }
+            for (i=1; i<=count; i++) print lines[i]
+            if (!hosts) print "hosts builtin"
+            if (!upstreams) print "upstream quic://dns.hostux.net"
         }
     ' "$CONF" > "$stage"; then rm -f "$stage"; return 1; fi
     # Validate with the new version before changing config, binary or service.
@@ -162,9 +171,7 @@ listen $LAN_IP:$PORT
 hosts builtin
 
 # Ordinary DoQ resolvers for names outside the local hosts table.
-upstream quic://dns.quad9.net
-upstream quic://p0.freedns.controld.com
-upstream quic://dns.nextdns.io
+upstream quic://dns.hostux.net
 
 # Plain-DNS servers used ONLY to resolve the upstream names above. They must
 # be external: any DNS on the router itself is the router's own proxy, which

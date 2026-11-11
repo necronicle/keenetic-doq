@@ -19,16 +19,22 @@ DNS-over-QUIC для **Keenetic** и **OpenWRT** с локальным SmartDNS.
                             → остальные имена: кэш → обычные DoQ upstream
 ```
 
-В бинарник включён снимок от 8 ноября 2026 года: **234 маски** `*.домен`
+В бинарник включён снимок от 11 ноября 2026 года: **234 маски** `*.домен`
 и **405 точных имён**. Основа — список GeoHide EU, добавления Sora,
 `releases.openai.com` для загрузки Codex и имена Clash Royale. Маски стоят
 только там, где сам GeoHide отвечает адресами прокси на любой поддомен; общие
 домены вроде `google.com`, `googleapis.com` и `microsoft.com` остаются точными
 именами. Gemini, AI Studio, NotebookLM, Labs, Jules, Antigravity и DeepMind идут
-через прокси MagicDNS `45.88.163.92`.
+через прокси GeoHide `5.175.161.3` и `5.175.161.40`.
 Адреса прокси берутся из встроенного hosts. Cloudflare Zero Trust для этого не нужен.
 **Сторонние прокси по-прежнему нужны:** doqd подставляет адрес, а не создаёт
 зарубежный выход. Доступность каждого сервиса зависит от прокси и полноты списка.
+
+По умолчанию используется нефильтрующий Hostux (`quic://dns.hostux.net`). При обновлении
+установщик удаляет `quic://dns.quad9.net`, `quic://dns.nextdns.io` и
+`quic://p0.freedns.controld.com` из upstream/fallback; остальные пользовательские
+серверы сохраняются. Если основных серверов не осталось, добавляется Hostux
+или его существующая резервная запись становится основной без дублирования.
 
 Обычный DNS выбирается по сглаженному времени ответа среди здоровых основных
 серверов. При задержке первого параллельно спрашивается следующий. Это не
@@ -250,8 +256,8 @@ dnsmasq.
 
 ```sh
 doqd list                        # обычные и резервные upstream, живые пробы
-doqd test quic://dns.quad9.net    # проверить сервер без изменения конфига
-doqd add quic://dns.quad9.net     # проверить, добавить, перезапустить
+doqd test quic://dns.hostux.net    # проверить сервер без изменения конфига
+doqd add quic://dns.hostux.net     # проверить, добавить, перезапустить
 doqd add --fallback quic://host   # добавить резервный сервер
 doqd remove <номер-или-URL>
 doqd status
@@ -273,9 +279,7 @@ Keenetic: `/opt/etc/doqd.conf`. OpenWRT: `/etc/doqd.conf`.
 ```text
 listen 127.0.0.1:5354
 hosts builtin
-upstream quic://dns.quad9.net
-upstream quic://p0.freedns.controld.com
-upstream quic://dns.nextdns.io
+upstream quic://dns.hostux.net
 cache_size 4096
 min_ttl 60
 max_ttl 86400

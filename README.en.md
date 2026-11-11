@@ -20,16 +20,22 @@ clients → router DNS → doqd → hosts match: local proxy IP response
                            → other names: cache → ordinary DoQ upstream
 ```
 
-The binary includes a snapshot dated November 8, 2026: **234 `*.domain`
+The binary includes a snapshot dated November 11, 2026: **234 `*.domain`
 masks** and **405 exact names**. It is based on the GeoHide EU hosts plus Sora
 names, `releases.openai.com` for Codex downloads, and Clash Royale names. Masks
 are used only where GeoHide itself answers proxy addresses for any subdomain;
 shared domains such as `google.com`, `googleapis.com` and `microsoft.com` stay
 exact names. Gemini, AI Studio, NotebookLM, Labs, Jules, Antigravity and
-DeepMind go through the MagicDNS proxy `45.88.163.92`.
+DeepMind go through the GeoHide proxies `5.175.161.3` and `5.175.161.40`.
 Proxy addresses come from the built-in hosts table. No Cloudflare Zero Trust
 account is required. **The third-party proxies are still required:** replacing
 DNS answers does not create a foreign network exit or guarantee service access.
+
+Unfiltered Hostux (`quic://dns.hostux.net`) is the default upstream. On upgrade,
+installers remove `quic://dns.quad9.net`, `quic://dns.nextdns.io`, and
+`quic://p0.freedns.controld.com` from upstream/fallback rows, preserving other custom
+servers. If no primary remains, Hostux is added or its existing fallback row is
+promoted without duplicating the server.
 
 Ordinary upstream selection prefers the healthy primary with the lowest smoothed
 DNS response time. If it stalls, another attempt starts in parallel. Requests
@@ -247,8 +253,8 @@ gives back the standard dnsmasq.
 
 ```sh
 doqd list
-doqd test quic://dns.quad9.net
-doqd add quic://dns.quad9.net
+doqd test quic://dns.hostux.net
+doqd add quic://dns.hostux.net
 doqd add --fallback quic://host
 doqd remove <number-or-URL>
 doqd status
@@ -270,9 +276,7 @@ Keenetic: `/opt/etc/doqd.conf`. OpenWRT: `/etc/doqd.conf`.
 ```text
 listen 127.0.0.1:5354
 hosts builtin
-upstream quic://dns.quad9.net
-upstream quic://p0.freedns.controld.com
-upstream quic://dns.nextdns.io
+upstream quic://dns.hostux.net
 cache_size 4096
 min_ttl 60
 max_ttl 86400
@@ -316,7 +320,8 @@ The ordinary DNS cache cannot override local rules.
 Use the new installer, not just a binary replacement. The daemon rejects old
 `geo` and `geo-domain` directives. Installers back up changed configurations,
 remove the exact former default geo trio and convert custom geo servers into
-ordinary upstreams while preserving existing upstream/fallback settings.
+ordinary upstreams while preserving other existing upstream/fallback settings
+except the retired Quad9/NextDNS/Control D URLs described above.
 Custom `geo-domain` entries cannot be translated without proxy IPs: installation
 stops with instructions before modifying the running installation. Put the
 required names and known proxy IPs in hosts, remove the old directives and retry.

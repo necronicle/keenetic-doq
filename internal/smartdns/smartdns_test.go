@@ -142,7 +142,7 @@ func TestBuiltin(t *testing.T) {
 	}
 	for _, name := range []string{"gemini.google.com", "aistudio.google.com", "generativelanguage.googleapis.com", "notebooklm.google.com", "content-push.googleapis.com"} {
 		answer := query(r, name+".", dns.TypeA).Answer
-		if len(answer) != 1 || answer[0].(*dns.A).A.String() != "45.88.163.92" {
+		if len(answer) != 2 || answer[0].(*dns.A).A.String() != "5.175.161.3" || answer[1].(*dns.A).A.String() != "5.175.161.40" {
 			t.Fatalf("%s: %v", name, answer)
 		}
 	}

@@ -33,9 +33,8 @@ func Default() *Config {
 	return &Config{
 		Listen: "127.0.0.1:5354",
 		Hosts:  "builtin",
-		// Обычные резолверы из разных сетей. AdGuard сюда не годится — его
-		// режет ТСПУ; у Cloudflare и Google DoQ нет.
-		Upstreams: []string{"quic://dns.quad9.net", "quic://p0.freedns.controld.com", "quic://dns.nextdns.io"},
+		// Нефильтрующий резолвер, проверенный по DNS и соединениям с Apple CDN.
+		Upstreams: []string{"quic://dns.hostux.net"},
 		Bootstrap: append([]string(nil), upstream.DefaultBootstrapServers...),
 		CacheSize: 4096,
 		MinTTL:    60 * time.Second,

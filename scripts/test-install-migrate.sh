@@ -65,20 +65,65 @@ CONF
     grep -qx 'hosts builtin' "$CONF"
     printf 'geo quic://dns.comss.one\ngeo quic://dns.dns-ai.ru\ngeo quic://eu.geohide.ru\nfallback quic://backup.example\n' > "$CONF"
     migrate_smartdns "$WORK/doqd-new"
-    [ "$(grep -c '^upstream ' "$CONF")" = 3 ]
+    [ "$(grep -c '^upstream ' "$CONF")" = 1 ]
     grep -qx 'fallback quic://backup.example' "$CONF"
-    # A subset of former defaults is a custom choice, so preserve it.
+    # Retired defaults must be removed even without legacy geo rows.
+    printf 'hosts /etc/custom-hosts\nupstream quic://dns.quad9.net # retired\nfallback quic://dns.nextdns.io\ncache_size 123\n' > "$CONF"
+    migrate_smartdns "$WORK/doqd-new"
+    grep -qx 'hosts /etc/custom-hosts' "$CONF"
+    grep -qx 'cache_size 123' "$CONF"
+    grep -qx 'upstream quic://dns.hostux.net' "$CONF"
+    [ "$(grep -c '^upstream ' "$CONF")" = 1 ]
+    if grep -q 'dns.quad9.net\|dns.nextdns.io\|p0.freedns.controld.com' "$CONF"; then exit 1; fi
+    cp "$CONF" "$WORK/once"
+    migrate_smartdns "$WORK/doqd-new"
+    cmp "$CONF" "$WORK/once"
+    # An existing default-only config receives new defaults exactly once.
+    printf 'hosts builtin\nupstream quic://p0.freedns.controld.com\n' > "$CONF"
+    migrate_smartdns "$WORK/doqd-new"
+    grep -qx 'upstream quic://dns.hostux.net' "$CONF"
+    [ "$(grep -c '^upstream ' "$CONF")" = 1 ]
+    cp "$CONF" "$WORK/once"
+    migrate_smartdns "$WORK/doqd-new"
+    cmp "$CONF" "$WORK/once"
+    # Removing retired Control D leaves exactly one primary, without duplicates.
+    for roles in control-primary hostux-primary; do
+        if [ "$roles" = control-primary ]; then
+            printf 'upstream quic://p0.freedns.controld.com\nfallback quic://dns.hostux.net\n' > "$CONF"
+        else
+            printf 'upstream quic://dns.hostux.net\nfallback quic://p0.freedns.controld.com\n' > "$CONF"
+        fi
+        migrate_smartdns "$WORK/doqd-new"
+        [ "$(grep -c '^upstream ' "$CONF")" = 1 ]
+        if grep -q '^fallback ' "$CONF"; then exit 1; fi
+        cp "$CONF" "$WORK/once"
+        migrate_smartdns "$WORK/doqd-new"
+        cmp "$CONF" "$WORK/once"
+    done
+    # Preserve a reserve role when another custom primary still exists.
+    printf 'upstream quic://custom.example\nfallback quic://dns.hostux.net\n' > "$CONF"
+    migrate_smartdns "$WORK/doqd-new"
+    grep -qx 'upstream quic://custom.example' "$CONF"
+    grep -qx 'fallback quic://dns.hostux.net' "$CONF"
+    [ "$(grep -c '^upstream ' "$CONF")" = 1 ]
+    # A subset of former geo defaults is a custom choice, so preserve it.
     printf 'geo quic://dns.comss.one\n' > "$CONF"
     migrate_smartdns "$WORK/doqd-new"
     grep -qx 'upstream quic://dns.comss.one' "$CONF"
     [ "$(grep -c '^upstream ' "$CONF")" = 1 ]
-    # Historical ordinary upstreams are preserved, not reclassified/dropped.
+    # Custom ordinary servers are preserved; retired defaults are removed.
     for fixture in "$ROOT"/testdata/migrate/*.in; do
         cp "$fixture" "$CONF"
         if awk '$1 == "geo-domain" {found=1} END {exit !found}' "$CONF"; then continue; fi
         awk '$1 == "upstream" || $1 == "fallback" {print}' "$CONF" > "$WORK/servers"
         migrate_smartdns "$WORK/doqd-new"
-        while IFS= read -r line; do grep -qxF "$line" "$CONF"; done < "$WORK/servers"
+        while IFS= read -r line; do
+            case "$line" in
+                'upstream quic://dns.quad9.net'|'upstream quic://dns.nextdns.io'|'fallback quic://dns.quad9.net'|'fallback quic://dns.nextdns.io'|'upstream quic://p0.freedns.controld.com'|'fallback quic://p0.freedns.controld.com') continue ;;
+            esac
+            grep -qxF "$line" "$CONF"
+        done < "$WORK/servers"
+        if grep -Eq '^(upstream|fallback) quic://dns\.(quad9\.net|nextdns\.io)([[:space:]]|$)' "$CONF"; then exit 1; fi
         if awk '$1 == "geo" {found=1} END {exit !found}' "$CONF"; then exit 1; fi
     done
 
@@ -107,7 +152,8 @@ CONF
     sed -n '/    cat > "\$CONF" <<EOF/,/^EOF/p' "$ROOT/$installer" > "$WORK/fresh"
     LAN_IP=192.168.1.1 PORT=5354 sh "$WORK/fresh"
     grep -qx 'hosts builtin' "$CONF"
-    [ "$(grep -c '^upstream ' "$CONF")" = 3 ]
+    grep -qx 'upstream quic://dns.hostux.net' "$CONF"
+    [ "$(grep -c '^upstream ' "$CONF")" = 1 ]
     if grep -q '^geo' "$CONF"; then exit 1; fi
     echo "ok: $installer fresh defaults, migration, backup, rejection and idempotence"
 done
