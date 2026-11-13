@@ -29,7 +29,16 @@ Review limits retained: authenticated generation, every ISP and future proxy sta
 
 ## Publication
 
-Pending tagged release, downloaded-asset verification and authorized Telegram announcement.
+Completed for source commit e6ba4da53f9285dfdc5fc9ea3c1bef2568a9faf9 (annotated tag v0.6.6):
+
+- Release workflow succeeded: https://github.com/necronicle/keenetic-doq/actions/runs/43401355726
+- Source CI succeeded: https://github.com/necronicle/keenetic-doq/actions/runs/43401355616
+- Public, non-prerelease, latest release: https://github.com/necronicle/keenetic-doq/releases/tag/v0.6.6
+- All 12 assets downloaded: 11 binaries and SHA256SUMS. Every checksum matches the downloaded file; every binary contains the exact final hosts.txt bytes. Go build metadata identifies module version v0.6.6, source revision e6ba4da and an unmodified source tree. Published build toolchain: Go 1.26.10. Version ldflags are not exposed by this toolchain's build metadata; the release source script supplies main.version from the tag.
+- Verified checksum manifest copied to docs/verification/2026-11-13-v066-SHA256SUMS.
+- Telegram Bot API returned ok=true, message_id=91323, message_thread_id=55256, is_topic_message=true in chat -1003834368989 (@zapret2keenetic). Announcement: https://t.me/zapret2keenetic/91323
+
+SC-001, SC-002 and SC-003 are satisfied by the mapping/test checks, downloaded release assets and Telegram result respectively. Post-publication evidence is recorded on main after the immutable release tag; no tag was moved.
 
 ## Open verification
 
