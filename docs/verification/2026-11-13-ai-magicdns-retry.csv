@@ -1,0 +1,19 @@
+host,proxy_ip,http_status,tls_verify_result,seconds,curl_exit,location,note
+anthropic.com,217.144.190.216,301,0,0.305158,0,https://www.anthropic.com/,301 Moved Permanently
+anthropic.com,109.120.187.249,301,0,0.372124,0,https://www.anthropic.com/,301 Moved Permanently
+chatgpt.com,217.144.190.216,200,0,0.866778,0,,ChatGPT
+chatgpt.com,109.120.187.249,200,0,0.971225,0,,ChatGPT
+codeiumdata.com,217.144.190.216,000,1,0.153539,35,,curl: (35) LibreSSL SSL_connect: SSL_ERROR_SYSCALL in connection to codeiumdata.com:443
+codeiumdata.com,109.120.187.249,000,1,0.188928,35,,curl: (35) LibreSSL SSL_connect: SSL_ERROR_SYSCALL in connection to codeiumdata.com:443
+geller-pa.googleapis.com,217.144.190.216,404,0,0.683296,0,,Error 404 (Not Found)!!1
+geller-pa.googleapis.com,109.120.187.249,000,0,5.006938,28,,curl: (28) Failed to connect to geller-pa.googleapis.com port 443 after 5006 ms: Timeout was reached
+oaiusercontent.com,217.144.190.216,000,1,0.136286,35,,curl: (35) LibreSSL SSL_connect: SSL_ERROR_SYSCALL in connection to oaiusercontent.com:443
+oaiusercontent.com,109.120.187.249,000,1,0.136180,35,,curl: (35) LibreSSL SSL_connect: SSL_ERROR_SYSCALL in connection to oaiusercontent.com:443
+openrouter.ai,217.144.190.216,000,1,0.177213,35,,curl: (35) Recv failure: Connection reset by peer
+openrouter.ai,109.120.187.249,000,1,0.147693,35,,curl: (35) Recv failure: Connection reset by peer
+proactivebackend-pa.googleapis.com,217.144.190.216,404,0,0.788271,0,,Error 404 (Not Found)!!1
+proactivebackend-pa.googleapis.com,109.120.187.249,404,0,0.837379,0,,Error 404 (Not Found)!!1
+sora.com,217.144.190.216,403,0,0.226085,0,,Just a moment...
+sora.com,109.120.187.249,403,0,0.307552,0,,Just a moment...
+www.antigravity.google,217.144.190.216,301,0,0.732877,0,https://antigravity.google/,301 Moved Permanently
+www.antigravity.google,109.120.187.249,301,0,0.780006,0,https://antigravity.google/,301 Moved Permanently

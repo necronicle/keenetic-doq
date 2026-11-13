@@ -1,0 +1,87 @@
+api.openai.com/v1/models through 217.144.190.216: {
+  "error": {
+    "message": "Missing bearer authentication in header",
+    "type": "invalid_request_error",
+    "param": null,
+    "code": null
+  }
+}
+HTTP 401 TLS 0 
+
+api.openai.com/v1/models through 109.120.187.249: {
+  "error": {
+    "message": "Missing bearer authentication in header",
+    "type": "invalid_request_error",
+    "param": null,
+    "code": null
+  }
+}
+HTTP 401 TLS 0 
+
+generativelanguage.googleapis.com/v1beta/models through 217.144.190.216: {
+  "error": {
+    "code": 403,
+    "message": "Permission denied on the service.",
+    "status": "PERMISSION_DENIED",
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+        "reason": "ACCESS_DENIED",
+        "domain": "googleapis.com",
+        "metadata": {
+          "service": "generativelanguage.googleapis.com"
+        }
+      },
+      {
+        "@type": "type.googleapis.com/google.rpc.LocalizedMessage",
+        "locale": "en-US",
+        "message": "Permission denied on the service."
+      }
+    ]
+  }
+}
+
+HTTP 403 TLS 0 
+
+generativelanguage.googleapis.com/v1beta/models through 109.120.187.249: {
+  "error": {
+    "code": 403,
+    "message": "Permission denied on the service.",
+    "status": "PERMISSION_DENIED",
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+        "reason": "ACCESS_DENIED",
+        "domain": "googleapis.com",
+        "metadata": {
+          "service": "generativelanguage.googleapis.com"
+        }
+      },
+      {
+        "@type": "type.googleapis.com/google.rpc.LocalizedMessage",
+        "locale": "en-US",
+        "message": "Permission denied on the service."
+      }
+    ]
+  }
+}
+
+HTTP 403 TLS 0 
+
+api.anthropic.com/v1/messages through 217.144.190.216: {
+  "type": "error",
+  "error": {
+    "type": "invalid_request_error",
+    "message": "Method Not Allowed"
+  }
+}
+HTTP 405 TLS 0 
+
+api.anthropic.com/v1/messages through 109.120.187.249: {
+  "type": "error",
+  "error": {
+    "type": "invalid_request_error",
+    "message": "Method Not Allowed"
+  }
+}
+HTTP 405 TLS 0 

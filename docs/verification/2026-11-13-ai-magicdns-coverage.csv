@@ -1,0 +1,159 @@
+host,proxy_ip,http_status,tls_verify_result,seconds,curl_exit,location,note
+ai.google.dev,217.144.190.216,301,0,0.882967,0,https://ai.google/,Redirecting...
+ai.google.dev,109.120.187.249,301,0,0.898300,0,https://ai.google/,Redirecting...
+aicode.googleapis.com,217.144.190.216,404,0,0.681616,0,,Error 404 (Not Found)!!1
+aicode.googleapis.com,109.120.187.249,404,0,0.303589,0,,Error 404 (Not Found)!!1
+aida.googleapis.com,217.144.190.216,404,0,0.831510,0,,Error 404 (Not Found)!!1
+aida.googleapis.com,109.120.187.249,404,0,0.243457,0,,Error 404 (Not Found)!!1
+aisandbox-pa.googleapis.com,217.144.190.216,404,0,0.742064,0,,Error 404 (Not Found)!!1
+aisandbox-pa.googleapis.com,109.120.187.249,404,0,0.756133,0,,Error 404 (Not Found)!!1
+aistudio.google.com,217.144.190.216,302,0,0.989863,0,https://aistudio.google.com/welcome,
+aistudio.google.com,109.120.187.249,302,0,0.743847,0,https://aistudio.google.com/welcome,
+aitestkitchen.withgoogle.com,217.144.190.216,308,0,0.775107,0,https://labs.google/fx,https://labs.google/fx
+aitestkitchen.withgoogle.com,109.120.187.249,308,0,0.905713,0,https://labs.google/fx,https://labs.google/fx
+alkalicore-pa.clients6.google.com,217.144.190.216,404,0,0.848289,0,,<h1>Not Found</h1> <h2>Error 404</h2> 
+alkalicore-pa.clients6.google.com,109.120.187.249,404,0,0.846734,0,,<h1>Not Found</h1> <h2>Error 404</h2> 
+alkalimakersuite-pa.clients6.google.com,217.144.190.216,302,0,0.706409,0,https://alkalimakersuite-pa.clients6.google.com/welcome,
+alkalimakersuite-pa.clients6.google.com,109.120.187.249,302,0,1.474759,0,https://alkalimakersuite-pa.clients6.google.com/welcome,
+anthropic.com,217.144.190.216,301,0,0.276059,0,https://www.anthropic.com/,301 Moved Permanently
+anthropic.com,109.120.187.249,000,0,5.006175,28,,curl: (28) Failed to connect to anthropic.com port 443 after 5006 ms: Timeout was reached
+antigravity-pa.googleapis.com,217.144.190.216,404,0,0.734395,0,,Error 404 (Not Found)!!1
+antigravity-pa.googleapis.com,109.120.187.249,404,0,0.339811,0,,Error 404 (Not Found)!!1
+antigravity-unleash.goog,217.144.190.216,404,0,0.850557,0,,404
+antigravity-unleash.goog,109.120.187.249,404,0,0.822575,0,,404
+antigravity.google,217.144.190.216,200,0,1.148419,0,,Google Antigravity
+antigravity.google,109.120.187.249,200,0,1.127156,0,,Google Antigravity
+antigravity.googleapis.com,217.144.190.216,404,0,0.770847,0,,Error 404 (Not Found)!!1
+antigravity.googleapis.com,109.120.187.249,404,0,0.372995,0,,Error 404 (Not Found)!!1
+api.groq.com,217.144.190.216,200,0,0.375443,0,,"{""message"":""Welcome to the Groq API! Documentation is available at https://console.groq.com/docs/""} "
+api.groq.com,109.120.187.249,200,0,0.463822,0,,"{""message"":""Welcome to the Groq API! Documentation is available at https://console.groq.com/docs/""} "
+api.jetbrains.ai,217.144.190.216,404,0,0.519501,0,,
+api.jetbrains.ai,109.120.187.249,404,0,0.355910,0,,
+api.openai.com,217.144.190.216,421,0,0.455021,0,,"{ ""message"": ""Welcome to the OpenAI API! Documentation is available at https://platform.openai.com/docs/api-reference"" }"
+api.openai.com,109.120.187.249,421,0,0.512946,0,,"{ ""message"": ""Welcome to the OpenAI API! Documentation is available at https://platform.openai.com/docs/api-reference"" }"
+apis.google.com,217.144.190.216,301,0,0.674628,0,http://developers.google.com/,"<HTML><HEAD><meta http-equiv=""content-type"" content=""text/html;charset=utf-8""> <TITLE>301 Moved</TITLE></HEAD><BODY> <H1>301 Moved</H1> The document has moved <A HREF=""http://developers.google.com/"">here</A>. </BODY></HTML> "
+apis.google.com,109.120.187.249,301,0,0.664489,0,http://developers.google.com/,"<HTML><HEAD><meta http-equiv=""content-type"" content=""text/html;charset=utf-8""> <TITLE>301 Moved</TITLE></HEAD><BODY> <H1>301 Moved</H1> The document has moved <A HREF=""http://developers.google.com/"">here</A>. </BODY></HTML> "
+auth.openai.com,217.144.190.216,403,0,0.240650,0,,Just a moment...
+auth.openai.com,109.120.187.249,403,0,0.346406,0,,Just a moment...
+bard.google.com,217.144.190.216,301,0,0.673053,0,https://gemini.google.com/,"<HTML><HEAD><meta http-equiv=""content-type"" content=""text/html;charset=utf-8""> <TITLE>301 Moved</TITLE></HEAD><BODY> <H1>301 Moved</H1> The document has moved <A HREF=""https://gemini.google.com/"">here</A>. </BODY></HTML> "
+bard.google.com,109.120.187.249,301,0,0.657261,0,https://gemini.google.com/,"<HTML><HEAD><meta http-equiv=""content-type"" content=""text/html;charset=utf-8""> <TITLE>301 Moved</TITLE></HEAD><BODY> <H1>301 Moved</H1> The document has moved <A HREF=""https://gemini.google.com/"">here</A>. </BODY></HTML> "
+cdn.oaistatic.com,217.144.190.216,404,0,0.467203,0,,"﻿<?xml version=""1.0"" encoding=""utf-8""?><Error><Code>ResourceNotFound</Code><Message>The specified resource does not exist. RequestId:d54acb7d-a01e-009f-274f-73febd000000 Time:2026-11-13T09:16:47.6364741Z</Message></Error>"
+cdn.oaistatic.com,109.120.187.249,404,0,0.329264,0,,"﻿<?xml version=""1.0"" encoding=""utf-8""?><Error><Code>ResourceNotFound</Code><Message>The specified resource does not exist. RequestId:d54acb7d-a01e-009f-274f-73febd000000 Time:2026-11-13T09:16:47.6364741Z</Message></Error>"
+chat.openai.com,217.144.190.216,308,0,0.258608,0,https://chatgpt.com/,308 Permanent Redirect
+chat.openai.com,109.120.187.249,308,0,0.323209,0,https://chatgpt.com/,308 Permanent Redirect
+chatgpt.com,217.144.190.216,200,0,0.863702,0,,ChatGPT
+chatgpt.com,109.120.187.249,000,0,5.006234,28,,curl: (28) Failed to connect to chatgpt.com port 443 after 5006 ms: Timeout was reached
+claude.ai,217.144.190.216,403,0,0.231296,0,,Just a moment...
+claude.ai,109.120.187.249,403,0,0.360591,0,,Just a moment...
+claude.com,217.144.190.216,200,0,2.465229,0,,Claude by Anthropic | The AI for problem solvers
+claude.com,109.120.187.249,200,0,0.687360,0,,Claude by Anthropic | The AI for problem solvers
+claudeusercontent.com,217.144.190.216,301,0,0.494052,0,https://claude.com/,301 Moved Permanently
+claudeusercontent.com,109.120.187.249,301,0,0.480432,0,https://claude.com/,301 Moved Permanently
+codeium.com,217.144.190.216,301,0,0.586913,0,https://windsurf.com/,Redirecting... 
+codeium.com,109.120.187.249,301,0,0.386257,0,https://windsurf.com/,Redirecting... 
+codeiumdata.com,217.144.190.216,000,1,0.143613,35,,curl: (35) LibreSSL SSL_connect: SSL_ERROR_SYSCALL in connection to codeiumdata.com:443
+codeiumdata.com,109.120.187.249,000,1,0.166720,35,,curl: (35) LibreSSL SSL_connect: SSL_ERROR_SYSCALL in connection to codeiumdata.com:443
+console.groq.com,217.144.190.216,307,0,0.257242,0,/home,Redirecting... 
+console.groq.com,109.120.187.249,307,0,0.316731,0,/home,Redirecting... 
+content-push.googleapis.com,217.144.190.216,404,0,0.794907,0,,Error 404 (Not Found)!!1
+content-push.googleapis.com,109.120.187.249,404,0,0.339824,0,,Error 404 (Not Found)!!1
+copilot.microsoft.com,217.144.190.216,301,0,0.270319,0,https://copilot.com/,301 Moved Permanently
+copilot.microsoft.com,109.120.187.249,301,0,0.363422,0,https://copilot.com/,301 Moved Permanently
+daily-cloudcode-pa.googleapis.com,217.144.190.216,404,0,0.637398,0,,Error 404 (Not Found)!!1
+daily-cloudcode-pa.googleapis.com,109.120.187.249,404,0,0.739768,0,,Error 404 (Not Found)!!1
+deepl.com,217.144.190.216,301,0,0.283583,0,https://www.deepl.com/,301 Moved Permanently
+deepl.com,109.120.187.249,301,0,0.431813,0,https://www.deepl.com/,301 Moved Permanently
+deepmind.com,217.144.190.216,302,0,0.745670,0,https://deepmind.google/,Redirecting...
+deepmind.com,109.120.187.249,302,0,0.734423,0,https://deepmind.google/,Redirecting...
+deepmind.google,217.144.190.216,200,0,2.963170,0,,
+deepmind.google,109.120.187.249,200,0,0.942443,0,,
+designer.microsoft.com,217.144.190.216,200,0,0.245949,0,,Microsoft Designer - Stunning designs in a flash
+designer.microsoft.com,109.120.187.249,200,0,0.286287,0,,Microsoft Designer - Stunning designs in a flash
+edgeservices.bing.com,217.144.190.216,200,0,0.676383,0,,Suche – Microsoft Bing
+edgeservices.bing.com,109.120.187.249,200,0,0.651709,0,,Haku – Microsoft Bing
+elevenlabs.io,217.144.190.216,200,0,0.797415,0,,Free AI Voice Generator &amp; Voice Agents Platform | ElevenLabs
+elevenlabs.io,109.120.187.249,200,0,0.823033,0,,Free AI Voice Generator &amp; Voice Agents Platform | ElevenLabs
+files.oaiusercontent.com,217.144.190.216,404,0,0.371809,0,,"﻿<?xml version=""1.0"" encoding=""utf-8""?><Error><Code>ResourceNotFound</Code><Message>The specified resource does not exist. RequestId:405c5e84-c01e-0106-1f4f-73205b000000 Time:2026-11-13T09:18:26.8609555Z</Message></Error>"
+files.oaiusercontent.com,109.120.187.249,404,0,0.504184,0,,"﻿<?xml version=""1.0"" encoding=""utf-8""?><Error><Code>ResourceNotFound</Code><Message>The specified resource does not exist. RequestId:21de5c3e-201e-0018-804f-730e5c000000 Time:2026-11-13T09:18:27.0494387Z</Message></Error>"
+flow.google,217.144.190.216,301,0,0.708846,0,https://flow.google.com/,"<HTML><HEAD><meta http-equiv=""content-type"" content=""text/html;charset=utf-8""> <TITLE>301 Moved</TITLE></HEAD><BODY> <H1>301 Moved</H1> The document has moved <A HREF=""https://flow.google.com/"">here</A>. </BODY></HTML> "
+flow.google,109.120.187.249,301,0,0.814630,0,https://flow.google.com/,"<HTML><HEAD><meta http-equiv=""content-type"" content=""text/html;charset=utf-8""> <TITLE>301 Moved</TITLE></HEAD><BODY> <H1>301 Moved</H1> The document has moved <A HREF=""https://flow.google.com/"">here</A>. </BODY></HTML> "
+flow.google.com,217.144.190.216,200,0,1.037432,0,,"Google Flow - AI Creative Studio for Video, Images &amp; Custom Tools"
+flow.google.com,109.120.187.249,200,0,2.386052,0,,"Google Flow - AI Creative Studio for Video, Images &amp; Custom Tools"
+geller-pa.googleapis.com,217.144.190.216,404,0,0.901379,0,,Error 404 (Not Found)!!1
+geller-pa.googleapis.com,109.120.187.249,000,0,5.005060,28,,curl: (28) Failed to connect to geller-pa.googleapis.com port 443 after 5004 ms: Timeout was reached
+gemini.google,217.144.190.216,302,0,0.701376,0,https://gemini.google.com/,Found. Redirecting to https://gemini.google.com/
+gemini.google,109.120.187.249,302,0,0.810965,0,https://gemini.google.com/,Found. Redirecting to https://gemini.google.com/
+gemini.google.com,217.144.190.216,200,0,1.321631,0,,‎Google Gemini
+gemini.google.com,109.120.187.249,200,0,1.401223,0,,‎Google Gemini
+geminiweb-pa.clients.google.com,217.144.190.216,404,0,1.045274,0,,Error 404 (Not Found)!!1
+geminiweb-pa.clients.google.com,109.120.187.249,404,0,0.884571,0,,Error 404 (Not Found)!!1
+geminiweb-pa.clients6.google.com,217.144.190.216,404,0,0.677972,0,,Error 404 (Not Found)!!1
+geminiweb-pa.clients6.google.com,109.120.187.249,404,0,0.697933,0,,Error 404 (Not Found)!!1
+generativeai.google,217.144.190.216,302,0,1.017744,0,https://ai.google/discover/generativeai/,"<HTML><HEAD><meta http-equiv=""content-type"" content=""text/html;charset=utf-8""> <TITLE>302 Moved</TITLE></HEAD><BODY> <H1>302 Moved</H1> The document has moved <A HREF=""https://ai.google/discover/generativeai/"">here</A>. </BODY></HTML> "
+generativeai.google,109.120.187.249,302,0,1.291899,0,https://ai.google/discover/generativeai/,"<HTML><HEAD><meta http-equiv=""content-type"" content=""text/html;charset=utf-8""> <TITLE>302 Moved</TITLE></HEAD><BODY> <H1>302 Moved</H1> The document has moved <A HREF=""https://ai.google/discover/generativeai/"">here</A>. </BODY></HTML> "
+generativelanguage.googleapis.com,217.144.190.216,404,0,0.679553,0,,
+generativelanguage.googleapis.com,109.120.187.249,404,0,0.665149,0,,
+genspark.ai,217.144.190.216,301,0,0.239913,0,https://www.genspark.ai/,301 Moved Permanently
+genspark.ai,109.120.187.249,301,0,0.334676,0,https://www.genspark.ai/,301 Moved Permanently
+grok.com,217.144.190.216,200,0,1.397728,0,,Grok
+grok.com,109.120.187.249,200,0,1.482420,0,,Grok
+ios.chat.openai.com,217.144.190.216,403,0,0.245576,0,,"{""cf_details"":""Request is not allowed. Please try again later."", ""type"":""dc""}"
+ios.chat.openai.com,109.120.187.249,403,0,0.342481,0,,"{""cf_details"":""Request is not allowed. Please try again later."", ""type"":""dc""}"
+jules.google,217.144.190.216,200,0,1.185966,0,,
+jules.google,109.120.187.249,200,0,0.884711,0,,Jules - An Autonomous Coding Agent
+jules.google.com,217.144.190.216,200,0,1.115090,0,,
+jules.google.com,109.120.187.249,200,0,1.185402,0,,
+labs.google,217.144.190.216,200,0,1.004007,0,,
+labs.google,109.120.187.249,200,0,1.178216,0,,
+labs.google.com,217.144.190.216,301,0,0.993626,0,https://labs.google/,"<HTML><HEAD><meta http-equiv=""content-type"" content=""text/html;charset=utf-8""> <TITLE>301 Moved</TITLE></HEAD><BODY> <H1>301 Moved</H1> The document has moved <A HREF=""https://labs.google/"">here</A>. </BODY></HTML> "
+labs.google.com,109.120.187.249,301,0,0.731096,0,https://labs.google/,"<HTML><HEAD><meta http-equiv=""content-type"" content=""text/html;charset=utf-8""> <TITLE>301 Moved</TITLE></HEAD><BODY> <H1>301 Moved</H1> The document has moved <A HREF=""https://labs.google/"">here</A>. </BODY></HTML> "
+labstailwind.pa.googleapis.com,217.144.190.216,404,0,0.835722,0,,Error 404 (Not Found)!!1
+labstailwind.pa.googleapis.com,109.120.187.249,404,0,0.810991,0,,Error 404 (Not Found)!!1
+makersuite.google.com,217.144.190.216,302,0,0.824027,0,https://aistudio.google.com/,
+makersuite.google.com,109.120.187.249,302,0,0.745151,0,https://aistudio.google.com/,
+notebook.google,217.144.190.216,200,0,1.389677,0,,Gemini Notebook | AI Research Tool & Thinking Partner
+notebook.google,109.120.187.249,200,0,1.085112,0,,Gemini Notebook | AI Research Tool & Thinking Partner
+notebook.google.com,217.144.190.216,200,0,1.245136,0,,Gemini Notebook
+notebook.google.com,109.120.187.249,200,0,1.331980,0,,Gemini Notebook
+notebooklm-pa.googleapis.com,217.144.190.216,404,0,0.948443,0,,Error 404 (Not Found)!!1
+notebooklm-pa.googleapis.com,109.120.187.249,404,0,2.722771,0,,Error 404 (Not Found)!!1
+notebooklm.google,217.144.190.216,301,0,0.767492,0,https://notebook.google/,
+notebooklm.google,109.120.187.249,301,0,0.731961,0,https://notebook.google/,
+notebooklm.google.com,217.144.190.216,301,0,0.974547,0,https://notebook.google.com/,
+notebooklm.google.com,109.120.187.249,301,0,0.762860,0,https://notebook.google.com/,
+oaistatic.com,217.144.190.216,404,0,0.231498,0,,Not found.
+oaistatic.com,109.120.187.249,404,0,0.321024,0,,Not found.
+oaiusercontent.com,217.144.190.216,000,1,0.146304,35,,curl: (35) LibreSSL SSL_connect: SSL_ERROR_SYSCALL in connection to oaiusercontent.com:443
+oaiusercontent.com,109.120.187.249,000,1,0.168549,35,,curl: (35) LibreSSL SSL_connect: SSL_ERROR_SYSCALL in connection to oaiusercontent.com:443
+opal.google,217.144.190.216,200,0,0.673886,0,,Opal [Experiment]
+opal.google,109.120.187.249,200,0,0.687479,0,,Opal [Experiment]
+opal.google.com,217.144.190.216,200,0,1.022388,0,,Opal
+opal.google.com,109.120.187.249,200,0,0.527263,0,,Opal
+opal.withgoogle.com,217.144.190.216,301,0,0.714823,0,https://opal.google/,301 Moved Permanently
+opal.withgoogle.com,109.120.187.249,301,0,0.734007,0,https://opal.google/,301 Moved Permanently
+openai.com,217.144.190.216,403,0,0.499081,0,,
+openai.com,109.120.187.249,403,0,0.503689,0,,
+openrouter.ai,217.144.190.216,000,1,0.173595,35,,curl: (35) Recv failure: Connection reset by peer
+openrouter.ai,109.120.187.249,000,1,0.145772,35,,curl: (35) Recv failure: Connection reset by peer
+people-pa.clients6.google.com,217.144.190.216,404,0,0.985369,0,,Error 404 (Not Found)!!1
+people-pa.clients6.google.com,109.120.187.249,404,0,0.735215,0,,Error 404 (Not Found)!!1
+proactivebackend-pa.googleapis.com,217.144.190.216,404,0,1.669984,0,,Error 404 (Not Found)!!1
+proactivebackend-pa.googleapis.com,109.120.187.249,000,0,5.006214,28,,curl: (28) Failed to connect to proactivebackend-pa.googleapis.com port 443 after 5006 ms: Timeout was reached
+robinfrontend-pa.googleapis.com,217.144.190.216,404,0,0.876999,0,,Error 404 (Not Found)!!1
+robinfrontend-pa.googleapis.com,109.120.187.249,404,0,0.702945,0,,Error 404 (Not Found)!!1
+signaler-pa.clients6.google.com,217.144.190.216,404,0,0.693254,0,,Error 404 (Not Found)!!1
+signaler-pa.clients6.google.com,109.120.187.249,404,0,0.706430,0,,Error 404 (Not Found)!!1
+sora.com,217.144.190.216,403,0,0.229204,0,,Just a moment...
+sora.com,109.120.187.249,000,0,5.004619,28,,curl: (28) Failed to connect to sora.com port 443 after 5004 ms: Timeout was reached
+stitch.withgoogle.com,217.144.190.216,302,0,0.727394,0,https://stitch.google.com/,"<HTML><HEAD><meta http-equiv=""content-type"" content=""text/html;charset=utf-8""> <TITLE>302 Moved</TITLE></HEAD><BODY> <H1>302 Moved</H1> The document has moved <A HREF=""https://stitch.google.com/"">here</A>. </BODY></HTML> "
+stitch.withgoogle.com,109.120.187.249,302,0,0.726326,0,https://stitch.google.com/,"<HTML><HEAD><meta http-equiv=""content-type"" content=""text/html;charset=utf-8""> <TITLE>302 Moved</TITLE></HEAD><BODY> <H1>302 Moved</H1> The document has moved <A HREF=""https://stitch.google.com/"">here</A>. </BODY></HTML> "
+sydney.bing.com,217.144.190.216,400,0,0.368321,0,,<h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>07tX2agAAAACLE+SMWOdJRbvq010Lhkl1RlJBMjYxMDcxNTAyMDQyAEVkZ2U=
+sydney.bing.com,109.120.187.249,400,0,0.442053,0,,<h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>07tX2agAAAAAmr4S8AL0bRpiFQtj4rDMjSEVMMDJFREdFMDIwOABFZGdl
+webchannel-alkalimakersuite-pa.clients6.google.com,217.144.190.216,302,0,1.093142,0,https://webchannel-alkalimakersuite-pa.clients6.google.com/welcome,
+webchannel-alkalimakersuite-pa.clients6.google.com,109.120.187.249,302,0,0.858865,0,https://webchannel-alkalimakersuite-pa.clients6.google.com/welcome,
+windsurf.com,217.144.190.216,308,0,0.296434,0,https://devin.ai/desktop,Redirecting... 
+windsurf.com,109.120.187.249,308,0,0.447720,0,https://devin.ai/desktop,Redirecting... 
+www.antigravity.google,217.144.190.216,301,0,1.043669,0,https://antigravity.google/,301 Moved Permanently
+www.antigravity.google,109.120.187.249,000,1,2.381423,35,,curl: (35) LibreSSL SSL_connect: SSL_ERROR_SYSCALL in connection to www.antigravity.google:443
+x.ai,217.144.190.216,403,0,0.286035,0,,Attention Required! | Cloudflare
+x.ai,109.120.187.249,403,0,0.419304,0,,Attention Required! | Cloudflare

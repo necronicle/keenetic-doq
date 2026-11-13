@@ -1,0 +1,61 @@
+host,proxy_ip,http_status,tls_verify_result,seconds,curl_exit,location,note
+gemini.google.com,217.144.190.216,200,0,1.342925,0,,‎Google Gemini
+gemini.google.com,109.120.187.249,200,0,2.547933,0,,‎Google Gemini
+gemini.google,217.144.190.216,302,0,0.963027,0,https://gemini.google.com/,Found. Redirecting to https://gemini.google.com/
+gemini.google,109.120.187.249,302,0,0.887622,0,https://gemini.google.com/,Found. Redirecting to https://gemini.google.com/
+aistudio.google.com,217.144.190.216,302,0,0.980848,0,https://aistudio.google.com/welcome,
+aistudio.google.com,109.120.187.249,302,0,0.988661,0,https://aistudio.google.com/welcome,
+notebooklm.google.com,217.144.190.216,301,0,0.864782,0,https://notebook.google.com/,
+notebooklm.google.com,109.120.187.249,301,0,0.905971,0,https://notebook.google.com/,
+antigravity.google,217.144.190.216,200,0,1.189231,0,,Google Antigravity
+antigravity.google,109.120.187.249,200,0,1.467884,0,,Google Antigravity
+chatgpt.com,217.144.190.216,200,0,0.770286,0,,ChatGPT
+chatgpt.com,109.120.187.249,200,0,1.122793,0,,ChatGPT
+api.openai.com,217.144.190.216,421,0,0.222905,0,,"{ ""message"": ""Welcome to the OpenAI API! Documentation is available at https://platform.openai.com/docs/api-reference"" }"
+api.openai.com,109.120.187.249,421,0,1.046414,0,,"{ ""message"": ""Welcome to the OpenAI API! Documentation is available at https://platform.openai.com/docs/api-reference"" }"
+releases.openai.com,217.144.190.216,404,0,0.515953,0,,Not Found
+releases.openai.com,109.120.187.249,404,0,0.531197,0,,Not Found
+sora.com,217.144.190.216,403,0,0.497247,0,,Just a moment...
+sora.com,109.120.187.249,403,0,0.295630,0,,Just a moment...
+claude.ai,217.144.190.216,403,0,0.226156,0,,Just a moment...
+claude.ai,109.120.187.249,403,0,0.361023,0,,Just a moment...
+claude.com,217.144.190.216,200,0,1.324582,0,,Claude by Anthropic | The AI for problem solvers
+claude.com,109.120.187.249,200,0,1.236037,0,,Claude by Anthropic | The AI for problem solvers
+api.anthropic.com,217.144.190.216,404,0,0.302830,0,, ▐▛███▜▌ Anthropic API ▝▜█████▛▘ POST /v1/messages ▘▘ ▝▝ https://docs.anthropic.com 
+api.anthropic.com,109.120.187.249,404,0,0.326143,0,, ▐▛███▜▌ Anthropic API ▝▜█████▛▘ POST /v1/messages ▘▘ ▝▝ https://docs.anthropic.com 
+cursor.com,217.144.190.216,000,1,0.174211,35,,curl: (35) Recv failure: Connection reset by peer
+cursor.com,109.120.187.249,000,1,0.166546,35,,curl: (35) Recv failure: Connection reset by peer
+api2.cursor.sh,217.144.190.216,000,1,0.190375,35,,curl: (35) Recv failure: Connection reset by peer
+api2.cursor.sh,109.120.187.249,000,1,0.144052,35,,curl: (35) Recv failure: Connection reset by peer
+windsurf.com,217.144.190.216,308,0,0.340186,0,https://devin.ai/desktop,Redirecting... 
+windsurf.com,109.120.187.249,308,0,0.592092,0,https://devin.ai/desktop,Redirecting... 
+codeium.com,217.144.190.216,301,0,0.407782,0,https://windsurf.com/,Redirecting... 
+codeium.com,109.120.187.249,301,0,0.508937,0,https://windsurf.com/,Redirecting... 
+copilot.microsoft.com,217.144.190.216,301,0,0.727973,0,https://copilot.com/,301 Moved Permanently
+copilot.microsoft.com,109.120.187.249,301,0,1.687319,0,https://copilot.com/,301 Moved Permanently
+grok.com,217.144.190.216,200,0,1.204822,0,,Grok
+grok.com,109.120.187.249,200,0,2.084227,0,,Grok
+x.ai,217.144.190.216,403,0,0.426576,0,,Attention Required! | Cloudflare
+x.ai,109.120.187.249,403,0,0.487841,0,,Attention Required! | Cloudflare
+meta.ai,217.144.190.216,000,1,0.245094,35,,curl: (35) Recv failure: Connection reset by peer
+meta.ai,109.120.187.249,000,1,0.290982,35,,curl: (35) Recv failure: Connection reset by peer
+api.groq.com,217.144.190.216,200,0,0.499958,0,,"{""message"":""Welcome to the Groq API! Documentation is available at https://console.groq.com/docs/""} "
+api.groq.com,109.120.187.249,200,0,0.512441,0,,"{""message"":""Welcome to the Groq API! Documentation is available at https://console.groq.com/docs/""} "
+openrouter.ai,217.144.190.216,000,1,0.223576,35,,curl: (35) Recv failure: Connection reset by peer
+openrouter.ai,109.120.187.249,000,1,0.145506,35,,curl: (35) Recv failure: Connection reset by peer
+cerebras.ai,217.144.190.216,000,1,0.332544,35,,curl: (35) Recv failure: Connection reset by peer
+cerebras.ai,109.120.187.249,000,0,5.006990,28,,curl: (28) Failed to connect to cerebras.ai port 443 after 5006 ms: Timeout was reached
+genspark.ai,217.144.190.216,301,0,0.575378,0,https://www.genspark.ai/,301 Moved Permanently
+genspark.ai,109.120.187.249,301,0,0.344569,0,https://www.genspark.ai/,301 Moved Permanently
+elevenlabs.io,217.144.190.216,200,0,0.678272,0,,Free AI Voice Generator &amp; Voice Agents Platform | ElevenLabs
+elevenlabs.io,109.120.187.249,200,0,1.726348,0,,Free AI Voice Generator &amp; Voice Agents Platform | ElevenLabs
+deepl.com,217.144.190.216,301,0,0.605890,0,https://www.deepl.com/,301 Moved Permanently
+deepl.com,109.120.187.249,301,0,0.537237,0,https://www.deepl.com/,301 Moved Permanently
+pi.ai,217.144.190.216,000,1,0.424063,35,,curl: (35) Recv failure: Connection reset by peer
+pi.ai,109.120.187.249,000,1,0.204965,35,,curl: (35) Recv failure: Connection reset by peer
+manus.im,217.144.190.216,000,1,0.296542,35,,curl: (35) Recv failure: Connection reset by peer
+manus.im,109.120.187.249,000,1,0.297575,35,,curl: (35) Recv failure: Connection reset by peer
+qoder.com,217.144.190.216,000,1,0.178016,35,,curl: (35) Recv failure: Connection reset by peer
+qoder.com,109.120.187.249,000,1,0.155904,35,,curl: (35) Recv failure: Connection reset by peer
+reve.art,217.144.190.216,000,1,0.333918,35,,curl: (35) Recv failure: Connection reset by peer
+reve.art,109.120.187.249,000,1,0.117075,35,,curl: (35) Recv failure: Connection reset by peer

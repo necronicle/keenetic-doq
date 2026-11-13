@@ -1,0 +1,19 @@
+host,proxy_ip,http_status,tls_verify_result,seconds,curl_exit,location,note
+cursor.com,5.175.161.3,200,0,8.835597,0,,AI Coding Agent for Building Ambitious Software | Cursor
+cursor.com,5.175.161.40,200,0,5.715482,0,,AI Coding Agent for Building Ambitious Software | Cursor
+api2.cursor.sh,5.175.161.3,200,0,2.373695,0,,Welcome to Cursor. From 20261113-082113-0b68f89d7ea11040ed69a071bb27443054653c41 (dp5ux8ilb4jlebly7lk3) in 0.01824000000488013ms.
+api2.cursor.sh,5.175.161.40,200,0,2.670620,0,,Welcome to Cursor. From 20261113-082113-0b68f89d7ea11040ed69a071bb27443054653c41 (0q6efnjycvxeg07rthnntch) in 0.015190000063739717ms.
+meta.ai,5.175.161.3,403,0,0.699057,0,,Meta AI
+meta.ai,5.175.161.40,403,0,0.490041,0,,Meta AI
+openrouter.ai,5.175.161.3,200,0,6.202556,0,,OpenRouter
+openrouter.ai,5.175.161.40,200,0,4.820605,0,,OpenRouter
+cerebras.ai,5.175.161.3,308,0,0.622857,0,https://www.cerebras.ai/,Redirecting... 
+cerebras.ai,5.175.161.40,308,0,0.307104,0,https://www.cerebras.ai/,Redirecting... 
+pi.ai,5.175.161.3,403,0,0.719641,0,,Just a moment...
+pi.ai,5.175.161.40,403,0,0.664301,0,,Just a moment...
+manus.im,5.175.161.3,200,0,3.038423,0,,Manus: Hands On AI
+manus.im,5.175.161.40,200,0,2.214669,0,,Manus: Hands On AI
+qoder.com,5.175.161.3,000,1,5.006030,28,,curl: (28) SSL connection timeout
+qoder.com,5.175.161.40,200,0,5.571797,0,,Qoder - AI Coding Assistant | Autonomous Development IDE
+reve.art,5.175.161.3,308,0,1.272951,0,https://reve.com/,
+reve.art,5.175.161.40,308,0,0.899989,0,https://reve.com/,
