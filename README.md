@@ -19,15 +19,15 @@ DNS-over-QUIC для **Keenetic** и **OpenWRT** с локальным SmartDNS.
                             → остальные имена: кэш → обычные DoQ upstream
 ```
 
-В бинарник включён снимок от 13 ноября 2026 года: **234 маски** `*.домен`
-и **405 точных имён**. Основа — список GeoHide EU, добавления Sora,
+В бинарник включён снимок от 24 ноября 2026 года: **234 маски** `*.домен`
+и **407 точных имён**. Основа — список GeoHide EU, добавления Sora,
 `releases.openai.com` для загрузки Codex и имена Clash Royale. Маски стоят
 только там, где сам GeoHide отвечает адресами прокси на любой поддомен; общие
 домены вроде `google.com`, `googleapis.com` и `microsoft.com` остаются точными
-именами. Поддерживаемые нейросети и их API/CDN (101 правило: 75 точных имён и 26 масок), включая
+именами. Поддерживаемые нейросети и их API/CDN, включая
 Google AI, ChatGPT/OpenAI/Sora, Claude, Windsurf, Copilot, Grok,
 ElevenLabs и DeepL, идут через MagicDNS `217.144.190.216` и `109.120.187.249`.
-Оба IP возвращаются в DNS-ответе; это не механизм переключения основной/резервный.
+Для `api.openai.com`, `chatgpt.com`, `gemini.google.com`, `portal.anthropic.com`, `releases.openai.com` возвращается только `109.120.187.249`.
 Записи, не прошедшие проверку новых прокси (включая Cursor, OpenRouter и Manus),
 и остальные сервисы сохраняют прежние адреса.
 Адреса прокси берутся из встроенного hosts. Cloudflare Zero Trust для этого не нужен.
@@ -313,7 +313,6 @@ doqd hosts export > /opt/etc/doqd.hosts
 Формат файла:
 
 ```text
-217.144.190.216 chatgpt.com releases.openai.com
 109.120.187.249 chatgpt.com releases.openai.com
 5.175.161.3 *.example.com
 # Комментарии разрешены. Несколько строк дают несколько адресов.

@@ -99,14 +99,14 @@ func TestBuiltin(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	if table.Count() != 405 || table.Wildcards() != 234 {
-		t.Errorf("got %d names and %d masks, want 405 and 234", table.Count(), table.Wildcards())
+	if table.Count() != 407 || table.Wildcards() != 234 {
+		t.Errorf("got %d names and %d masks, want 407 and 234", table.Count(), table.Wildcards())
 	}
 	r, e := New("builtin", nextFunc(upstreamAnswer))
 	if e != nil {
 		t.Fatal(e)
 	}
-	for _, name := range []string{"chatgpt.com", "auth.openai.com", "cdn.oaistatic.com", "ios.chat.openai.com", "api.openai.com", "chat.openai.com", "files.oaiusercontent.com", "oaistatic.com"} {
+	for _, name := range []string{"auth.openai.com", "cdn.oaistatic.com", "ios.chat.openai.com", "chat.openai.com", "files.oaiusercontent.com", "oaistatic.com"} {
 		t.Run(name, func(t *testing.T) {
 			answer := query(r, name+".", dns.TypeA).Answer
 			if len(answer) != 2 {
@@ -127,8 +127,11 @@ func TestBuiltin(t *testing.T) {
 			t.Fatalf("%s: %v", name, answer)
 		}
 	}
-	if len(query(r, "releases.openai.com.", dns.TypeA).Answer) != 2 {
-		t.Fatal("release missing")
+	for _, name := range []string{"api.openai.com", "chatgpt.com", "gemini.google.com", "portal.anthropic.com", "releases.openai.com"} {
+		answer := query(r, name+".", dns.TypeA).Answer
+		if len(answer) != 1 || answer[0].(*dns.A).A.String() != "109.120.187.249" {
+			t.Fatalf("%s: %v", name, answer)
+		}
 	}
 	// Masks cover unlisted subdomains, but not the bare domain.
 	for _, name := range []string{"a.b.naukri.com", "api2.cursor.sh", "cursor.com", "openrouter.ai", "new.openrouter.ai", "manus.im", "files.manuscdn.com", "codeiumdata.com", "oaiusercontent.com", "geller-pa.googleapis.com"} {
@@ -140,7 +143,7 @@ func TestBuiltin(t *testing.T) {
 	if query(r, "unlisted.google.com.", dns.TypeA).Answer[0].(*dns.A).A.String() != "203.0.113.99" {
 		t.Fatal("google.com must not be masked")
 	}
-	for _, name := range []string{"gemini.google.com", "aistudio.google.com", "generativelanguage.googleapis.com", "notebooklm.google.com", "content-push.googleapis.com", "ws.chatgpt.com", "new.claude.ai", "api.anthropic.com", "windsurf.com", "copilot.microsoft.com", "grok.com", "elevenlabs.io", "deepl.com", "releases.openai.com"} {
+	for _, name := range []string{"aistudio.google.com", "generativelanguage.googleapis.com", "notebooklm.google.com", "content-push.googleapis.com", "ws.chatgpt.com", "new.claude.ai", "api.anthropic.com", "windsurf.com", "copilot.microsoft.com", "grok.com", "elevenlabs.io", "deepl.com"} {
 		answer := query(r, name+".", dns.TypeA).Answer
 		if len(answer) != 2 || answer[0].(*dns.A).A.String() != "217.144.190.216" || answer[1].(*dns.A).A.String() != "109.120.187.249" {
 			t.Fatalf("%s: %v", name, answer)

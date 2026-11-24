@@ -20,16 +20,14 @@ clients → router DNS → doqd → hosts match: local proxy IP response
                            → other names: cache → ordinary DoQ upstream
 ```
 
-The binary includes a snapshot dated November 13, 2026: **234 `*.domain`
-masks** and **405 exact names**. It is based on the GeoHide EU hosts plus Sora
+The binary includes a snapshot dated November 24, 2026: **234 `*.domain`
+masks** and **407 exact names**. It is based on the GeoHide EU hosts plus Sora
 names, `releases.openai.com` for Codex downloads, and Clash Royale names. Masks
 are used only where GeoHide itself answers proxy addresses for any subdomain;
 shared domains such as `google.com`, `googleapis.com` and `microsoft.com` stay
-exact names. Supported AI services and their API/CDN hosts (101 rules: 75 exact names and
-26 masks), including Google AI, ChatGPT/OpenAI/Sora, Claude, Windsurf,
+exact names. Supported AI services and their API/CDN hosts, including Google AI, ChatGPT/OpenAI/Sora, Claude, Windsurf,
 Copilot, Grok, ElevenLabs and DeepL, use MagicDNS `217.144.190.216` and
-`109.120.187.249`. Both IPs are returned in DNS answers; this does not implement
-primary/backup failover. Entries that failed new-proxy checks (including Cursor,
+`109.120.187.249`. For `api.openai.com`, `chatgpt.com`, `gemini.google.com`, `portal.anthropic.com`, `releases.openai.com`, only `109.120.187.249` is returned. Entries that failed new-proxy checks (including Cursor,
 OpenRouter and Manus) and other services retain their existing addresses.
 Proxy addresses come from the built-in hosts table. No Cloudflare Zero Trust
 account is required. **The third-party proxies are still required:** replacing
@@ -309,7 +307,6 @@ SIGHUP reloads the selected hosts file, not the entire configuration.
 File format:
 
 ```text
-217.144.190.216 chatgpt.com releases.openai.com
 109.120.187.249 chatgpt.com releases.openai.com
 5.175.161.3 *.example.com
 # Multiple names per line and multiple addresses per name are supported.

@@ -1,6 +1,7 @@
 # GeoHide EU 2026-10-20 + Sora, Codex, Clash Royale additions.
 # *.domain masks: GeoHide itself answers proxy IPs for every subdomain of these (checked 2026-11-08).
 # Supported AI rules -> MagicDNS 217.144.190.216 and 109.120.187.249 (2026-11-13).
+# Five exact names use 109.120.187.249 only (2026-11-24).
 # Other rules retain their previous proxies; scope and HTTPS evidence: specs/002-ai-magicdns/.
 # Exact names win over masks; a mask does not cover the domain itself.
 5.175.161.3 *.37signals.com
@@ -545,7 +546,6 @@
 5.175.161.40 api.imgur.com
 217.144.190.216 api.jetbrains.ai
 109.120.187.249 api.jetbrains.ai
-217.144.190.216 api.openai.com
 109.120.187.249 api.openai.com
 5.175.161.3 api.radarr.video
 5.175.161.40 api.radarr.video
@@ -663,7 +663,6 @@
 5.175.161.40 cerebras.ai
 217.144.190.216 chat.openai.com
 109.120.187.249 chat.openai.com
-217.144.190.216 chatgpt.com
 109.120.187.249 chatgpt.com
 5.175.161.3 chatgpt.site
 5.175.161.40 chatgpt.site
@@ -850,7 +849,6 @@
 5.175.161.40 geller-pa.googleapis.com
 217.144.190.216 gemini.google
 109.120.187.249 gemini.google
-217.144.190.216 gemini.google.com
 109.120.187.249 gemini.google.com
 217.144.190.216 geminiweb-pa.clients.google.com
 109.120.187.249 geminiweb-pa.clients.google.com
@@ -1066,6 +1064,7 @@
 5.175.161.40 play.date
 5.175.161.3 playground.google
 5.175.161.40 playground.google
+109.120.187.249 portal.anthropic.com
 5.175.161.3 powertoolsuk.co.uk
 5.175.161.40 powertoolsuk.co.uk
 5.175.161.3 ppkas.com
@@ -1090,6 +1089,7 @@
 5.175.161.40 qualtrics.com
 5.175.161.3 qwant.com
 5.175.161.40 qwant.com
+109.120.187.249 releases.openai.com
 5.175.161.3 remove.bg
 5.175.161.40 remove.bg
 5.175.161.3 repo42.cursor.sh
