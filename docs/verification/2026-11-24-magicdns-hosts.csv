@@ -1,0 +1,642 @@
+rule,https_host,path,magicdns_rcode,magicdns_A,wildcard_rcode,wildcard_A,109.120.187.249,217.144.190.216,77.90.47.223,77.90.47.224,repeat_https,redirect,previous,released,decision
+*.37signals.com,www.37signals.com,/,0,104.18.1.135 104.18.0.135,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.aave.com,www.aave.com,/,0,104.18.20.145 104.18.21.145,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.adobe.io,www.adobe.io,/,0,109.120.187.249,0,109.120.187.249,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-developer.adobe.com-200,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+*.affinity.studio,www.affinity.studio,/,0,104.18.34.170 172.64.153.86,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.amd.com,www.amd.com,/,0,2.23.88.118,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.analog.com,www.analog.com,/,0,96.17.7.116,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.anthropic.com,portal.anthropic.com,/verify,0,109.120.187.249,0,109.120.187.249,307,ERR28,ERR28,ERR28,109.120.187.249=redirect/error-28/redirect,109.120.187.249=verified-portal.anthropic.com-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+*.antigravity-unleash.goog,www.antigravity-unleash.goog,/,0,109.120.187.249,0,109.120.187.249,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-35/error-35,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+*.antigravity.google,www.antigravity.google,/,0,109.120.187.249,0,109.120.187.249,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-35/error-35,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+*.arduino.cc,www.arduino.cc,/,0,104.18.12.135 104.18.13.135,3,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.arkoselabs.com,www.arkoselabs.com,/,0,109.120.187.249,0,109.120.187.249,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+*.arrow.com,www.arrow.com,/,0,96.17.4.51,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.astockcdn.net,www.astockcdn.net,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.atlassian.com,www.atlassian.com,/,0,13.227.180.4,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.audacy.com,www.audacy.com,/,0,151.101.130.132 151.101.194.132 151.101.2.132 151.101.66.132,3,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.autodesk.com,www.autodesk.com,/,0,23.32.26.94,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.autodesk.net,www.autodesk.net,/,0,23.32.26.94,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.avast.com,www.avast.com,/,0,23.32.25.252,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.avast.ru,www.avast.ru,/,0,2.16.56.76 2.16.56.90,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.aybest.xyz,www.aybest.xyz,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.badoo.app,www.badoo.app,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.badoo.com,www.badoo.com,/,0,31.222.67.112,0,31.222.67.112,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.badoocdn.com,www.badoocdn.com,/,0,31.222.66.68,0,31.222.66.68,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.basecamp.com,www.basecamp.com,/,0,104.18.14.58 104.18.15.58,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.basecampapi.com,www.basecampapi.com,/,0,,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.behance.net,www.behance.net,/,0,151.101.129.197 151.101.193.197 151.101.65.197 151.101.1.197,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.bestbuy.com,www.bestbuy.com,/,0,104.103.64.203,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.bike-components.de,www.bike-components.de,/,0,2.22.145.92 2.22.145.98,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.bike24.com,www.bike24.com,/,0,62.115.252.162 62.115.252.160,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.brave.com,www.brave.com,/,0,3.164.68.54 3.164.68.49 3.164.68.34 3.164.68.113,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.buf.build,www.buf.build,/,0,34.49.132.220,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.bumble.com,www.bumble.com,/,0,31.222.67.113,0,31.222.67.113,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.buymeacoffee.com,www.buymeacoffee.com,/,0,104.26.2.199 172.67.75.15 104.26.3.199,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.camelai.com,www.camelai.com,/,0,104.26.0.43 104.26.1.43 172.67.69.50,0,172.67.69.50 104.26.1.43 104.26.0.43,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.canva-apps.com,www.canva-apps.com,/,0,104.18.37.68 172.64.150.188,0,104.18.37.68 172.64.150.188,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.canva.com,www.canva.com,/,0,109.120.187.249,0,109.120.187.249,ERR35,ERR28,ERR35,ERR35,109.120.187.249=error-35/error-35,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.canva.dev,www.canva.dev,/,0,172.64.146.218 104.18.41.38,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.capcut.com,www.capcut.com,/,0,95.101.133.66 95.101.133.35 95.101.133.18,3,,ERR35,ERR28,ERR35,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.cerebras.ai,www.cerebras.ai,/,0,76.76.21.164 66.33.60.34,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.chatgpt.com,www.chatgpt.com,/,0,109.120.187.249,0,109.120.187.249,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-chatgpt.com-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+*.chatgpt.site,www.chatgpt.site,/,0,104.18.23.186 104.18.22.186,0,104.18.22.186 104.18.23.186,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.chess.com,www.chess.com,/,0,104.18.140.67 104.18.139.67 104.18.141.67 104.18.137.67 104.18.138.67,3,,ERR35,ERR28,ERR35,ERR35,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.cici.com,www.cici.com,/,0,2.16.56.203 2.16.56.47,0,2.16.56.45 2.16.56.40,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.claude.ai,www.claude.ai,/,0,109.120.187.249,0,109.120.187.249,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=failed-claude.ai-403,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+*.claude.com,www.claude.com,/,0,109.120.187.249,0,109.120.187.249,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-claude.com-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+*.claudemcpclient.com,www.claudemcpclient.com,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.claudeusercontent.com,www.claudeusercontent.com,/,0,109.120.187.249,0,109.120.187.249,200,ERR28,ERR28,ERR28,109.120.187.249=error-28/response/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+*.clickup.com,www.clickup.com,/,0,52.85.154.115 52.85.154.62 52.85.154.71 52.85.154.65,0,13.33.235.129 13.33.235.2 13.33.235.127 13.33.235.78,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.codeium.com,www.codeium.com,/,0,109.120.187.249,0,109.120.187.249,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-devin.ai-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+*.coreweave.com,www.coreweave.com,/,0,172.64.149.77 104.18.38.179,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.corsair.com,www.corsair.com,/,0,104.18.31.41 104.18.30.41,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.crunchyroll.com,www.crunchyroll.com,/,0,172.64.153.54 104.18.34.202,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.cummins.com,www.cummins.com,/,0,172.64.154.161 104.18.33.95,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.cursor-cdn.com,www.cursor-cdn.com,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.cursor.com,www.cursor.com,/,0,109.120.187.249,0,109.120.187.249,308,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-cursor.com-200,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+*.cursorvm.com,www.cursorvm.com,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.deepl.app,www.deepl.app,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.deepl.com,www.deepl.com,/,0,109.120.187.249,0,109.120.187.249,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=failed-www.deepl.com-000,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+*.deepmind.com,www.deepmind.com,/,0,109.120.187.249,0,109.120.187.249,302,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-deepmind.google-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+*.deepmind.google,www.deepmind.google,/,0,109.120.187.249,0,109.120.187.249,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-deepmind.google-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+*.deezer.com,www.deezer.com,/,0,2.22.145.96 2.22.145.84,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.dell.com,www.dell.com,/,0,104.103.64.8,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.dellcdn.com,www.dellcdn.com,/,0,104.103.64.8,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.deniko.xyz,www.deniko.xyz,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.designify.com,www.designify.com,/,0,104.18.39.144 172.64.148.112,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.digikey.com,www.digikey.com,/,0,104.18.7.58 104.18.6.58,0,204.221.76.76,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.digikeyassets.com,www.digikeyassets.com,/,0,204.221.76.76,0,204.221.76.76,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.dnsspeedtest.online,www.dnsspeedtest.online,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.dola.com,www.dola.com,/,0,2.16.56.49 2.16.56.213,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.dyson.com,www.dyson.com,/,0,172.66.2.169 162.159.142.173,0,52.59.125.242 52.59.122.122,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.dyson.de,www.dyson.de,/,0,172.66.2.169 162.159.142.173,0,52.59.125.242 52.59.122.122,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.dyson.se,www.dyson.se,/,0,162.159.142.173 172.66.2.169,0,52.59.125.242 52.59.122.122,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.ecosia.org,www.ecosia.org,/,0,172.64.150.71 104.18.37.185,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.efsanetv.xyz,www.efsanetv.xyz,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.elevenlabs.io,www.elevenlabs.io,/,0,109.120.187.249,0,109.120.187.249,ERR28,ERR28,ERR28,ERR28,109.120.187.249=error-28/redirect/error-28,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+*.elevenmusic.io,www.elevenmusic.io,/,0,35.190.88.92,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.elevenreader.io,www.elevenreader.io,/,0,34.117.39.235,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.elgato.com,www.elgato.com,/,0,104.18.10.119 104.18.11.119,3,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.elmastvnet.xyz,www.elmastvnet.xyz,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.eneba.com,www.eneba.com,/,0,172.66.167.85 104.20.31.209,3,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.enscape3d.com,www.enscape3d.com,/,0,34.149.157.193,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.etsy.com,www.etsy.com,/,0,151.101.131.52 151.101.67.52 151.101.195.52 151.101.3.52,0,35.190.25.237,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.euro.com.pl,www.euro.com.pl,/,0,2.22.145.85 2.22.145.88,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.evike.com,www.evike.com,/,0,104.16.210.16 104.17.7.38,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.eyyo.xyz,www.eyyo.xyz,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.flow.google,www.flow.google,/,0,109.120.187.249,0,109.120.187.249,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-28/error-35,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+*.flowmusic.app,www.flowmusic.app,/,0,104.26.3.189 104.26.2.189 172.67.68.145,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.fmhy.net,www.fmhy.net,/,0,188.114.97.1 188.114.96.1,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.formula1.com,www.formula1.com,/,0,13.33.235.111 13.33.235.29 13.33.235.28 13.33.235.14,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.framer.com,www.framer.com,/,0,31.43.160.19 31.43.161.19,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.freakhosting.com,www.freakhosting.com,/,0,104.26.6.183 172.67.68.34 104.26.7.183,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.g2a.com,www.g2a.com,/,0,23.32.25.152,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.game8.co,www.game8.co,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.game8.co.jp,www.game8.co.jp,/,0,13.33.235.33 13.33.235.58 13.33.235.102 13.33.235.73,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.game8.jp,www.game8.jp,/,0,13.33.235.41 13.33.235.31 13.33.235.14 13.33.235.36,3,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.gamestop.com,www.gamestop.com,/,0,172.64.152.187 104.18.35.69,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.gemini.google,www.gemini.google,/,0,109.120.187.249,0,109.120.187.249,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-gemini.google.com-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+*.generativeai.google,www.generativeai.google,/,0,109.120.187.249,0,109.120.187.249,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+*.genspark.ai,www.genspark.ai,/,0,109.120.187.249,0,109.120.187.249,403,ERR28,ERR28,ERR28,109.120.187.249=blocked/blocked,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+*.grok.com,www.grok.com,/,0,109.120.187.249,0,109.120.187.249,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-grok.com-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+*.guidedhacking.com,www.guidedhacking.com,/,0,104.26.5.19 104.26.4.19 172.67.69.76,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.guilded.gg,www.guilded.gg,/,0,52.85.154.95 52.85.154.32 52.85.154.125 52.85.154.53,0,52.85.154.98 52.85.154.105 52.85.154.93 52.85.154.53,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.hume.ai,www.hume.ai,/,0,216.150.1.193 216.150.16.193,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.ikea.com,www.ikea.com,/,0,104.18.11.81 104.18.10.81,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.inceptionlabs.ai,www.inceptionlabs.ai,/,0,31.43.160.6 31.43.161.6,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.indeed.com,www.indeed.com,/,0,162.159.130.67 162.159.129.67,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.intel.com,www.intel.com,/,0,23.43.27.82,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.intel.de,www.intel.de,/,0,96.17.7.19,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.intel.se,www.intel.se,/,0,96.17.7.19,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.iperf3serverlist.net,www.iperf3serverlist.net,/,0,104.21.95.137 172.67.145.1,0,172.67.145.1 104.21.95.137,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.jetbrains.com,www.jetbrains.com,/,0,109.120.187.249,0,109.120.187.249,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+*.jetbrains.space,www.jetbrains.space,/,2,,2,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.jules.google,www.jules.google,/,0,109.120.187.249,0,109.120.187.249,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+*.kaleido.ai,www.kaleido.ai,/,0,172.64.144.31 104.18.43.225,3,,ERR35,ERR28,ERR35,ERR35,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.labs.google,www.labs.google,/,0,109.120.187.249,0,109.120.187.249,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+*.last.fm,www.last.fm,/,0,151.101.2.132 151.101.130.132 151.101.66.132 151.101.194.132,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.lego.com,www.lego.com,/,0,104.18.9.208 104.18.8.208,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.linear.app,www.linear.app,/,0,104.18.40.45 172.64.147.211,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.linguee.com,www.linguee.com,/,0,109.120.187.249,0,109.120.187.249,200,ERR28,ERR28,ERR28,109.120.187.249=error-28/response/response,,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+*.m3u.in,www.m3u.in,/,0,104.21.38.138 172.67.223.44,0,104.21.38.138 172.67.223.44,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.madmapper.com,www.madmapper.com,/,0,217.70.184.56,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.make.com,www.make.com,/,0,104.18.37.111 172.64.150.145,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.makita.ca,www.makita.ca,/,0,172.67.68.138 104.26.0.113 104.26.1.113,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.makita.cl,www.makita.cl,/,0,35.168.54.230,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.makita.co.nz,www.makita.co.nz,/,0,180.92.195.10,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.makita.com.au,www.makita.com.au,/,0,172.66.145.208 104.20.35.18,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.makita.com.kh,www.makita.com.kh,/,0,188.114.96.1 188.114.97.1,3,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.makita.com.tw,www.makita.com.tw,/,0,188.114.97.1 188.114.96.1,0,188.114.96.1 188.114.97.1,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.makita.sk,www.makita.sk,/,0,195.181.248.173,0,195.181.248.173,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.makita.ua,www.makita.ua,/,0,5.79.99.4,3,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.makitalatinamerica.com,www.makitalatinamerica.com,/,0,72.167.227.146,0,72.167.227.146,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.malwarebytes.com,www.malwarebytes.com,/,0,192.0.66.233,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.manus.im,www.manus.im,/,0,3.164.68.58 3.164.68.57 3.164.68.84 3.164.68.73,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.manybooks.net,www.manybooks.net,/,0,172.67.75.139 104.26.13.6 104.26.12.6,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.mediaexpert.pl,www.mediaexpert.pl,/,0,104.18.43.43 172.64.144.213,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.mediamarkt.pl,www.mediamarkt.pl,/,0,141.101.90.99 141.101.90.97 141.101.90.98 141.101.90.96,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.meta.ai,www.meta.ai,/,0,157.240.205.1,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.microcenter.com,www.microcenter.com,/,0,104.18.10.120 104.18.11.120,3,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.microchip.com,www.microchip.com,/,0,96.17.7.164,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.minicircuits.com,www.minicircuits.com,/,0,18.190.57.28 18.227.59.39,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.miro.com,www.miro.com,/,0,109.120.187.249,0,109.120.187.249,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-miro.com-200,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+*.misterfpga.org,www.misterfpga.org,/,0,172.67.168.1 104.21.74.88,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.modivo.pl,www.modivo.pl,/,0,104.17.250.184 104.17.251.184,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.mongodb.com,www.mongodb.com,/,0,18.165.140.60 18.165.140.33 18.165.140.118 18.165.140.120,0,3.231.100.222 52.70.103.84,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.monica.im,www.monica.im,/,0,13.33.235.123 13.33.235.79 13.33.235.13 13.33.235.80,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.mouser.com,www.mouser.com,/,0,23.32.24.83,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.myjetbrains.com,www.myjetbrains.com,/,0,3.77.160.85,0,52.28.82.191,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.n8n.cloud,www.n8n.cloud,/,0,104.26.12.13 172.67.72.185 104.26.13.13,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.naukimg.com,www.naukimg.com,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.naukri.com,www.naukri.com,/,0,23.32.25.53,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.ndi.tv,www.ndi.tv,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.ndi.video,www.ndi.video,/,0,192.0.66.174,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.netapp.com,www.netapp.com,/,0,80.239.254.25 80.239.254.30,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.notebook.google,www.notebook.google,/,0,109.120.187.249,0,109.120.187.249,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-28/error-35,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+*.notebooklm.google,www.notebooklm.google,/,0,109.120.187.249,0,109.120.187.249,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-35/error-35,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+*.notion.com,www.notion.com,/,0,109.120.187.249,0,109.120.187.249,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+*.notion.so,www.notion.so,/,0,109.120.187.249,0,109.120.187.249,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-www.notion.com-200,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+*.oaistatic.com,cdn.oaistatic.com,/,0,109.120.187.249,0,109.120.187.249,ERR28,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+*.oaiusercontent.com,files.oaiusercontent.com,/,0,109.120.187.249,0,109.120.187.249,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.octanorm.com,www.octanorm.com,/,0,62.153.73.242,0,62.153.73.242,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.opal.google,www.opal.google,/,0,109.120.187.249,0,109.120.187.249,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-28/error-35,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+*.openai.com,api.openai.com,/v1/models,0,109.120.187.249,0,109.120.187.249,401,ERR28,ERR28,ERR28,109.120.187.249=auth-required/auth-required,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+*.opencode.ai,www.opencode.ai,/,0,104.18.11.66 104.18.10.66,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.openrouter.ai,www.openrouter.ai,/,0,109.120.187.249,0,109.120.187.249,308,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-openrouter.ai-200,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+*.oracle.com,www.oracle.com,/,0,104.103.65.74,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.padi.com,www.padi.com,/,0,104.18.31.210 104.18.30.210,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.pandasecurity.com,www.pandasecurity.com,/,0,184.51.234.129,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.panic.com,www.panic.com,/,0,172.67.68.104 104.26.2.172 104.26.3.172,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.pcmag.com,www.pcmag.com,/,0,104.16.20.118 104.16.21.118,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.pi.ai,www.pi.ai,/,0,172.64.148.124 104.18.39.132,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.play.date,www.play.date,/,0,172.66.148.240 104.20.47.109,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.playground.google,www.playground.google,/,0,216.239.32.27,0,216.239.32.27,404,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.powertoolsuk.co.uk,www.powertoolsuk.co.uk,/,0,104.26.9.10 172.67.74.97 104.26.8.10,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.ppkas.com,www.ppkas.com,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.pr0gramm.com,www.pr0gramm.com,/,0,195.201.207.45 88.198.134.234 88.198.134.233,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.promods.net,www.promods.net,/,0,104.26.3.60 172.67.72.12 104.26.2.60,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.pump.fun,www.pump.fun,/,0,104.18.34.22 172.64.153.234,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.qoder.com,www.qoder.com,/,0,139.95.0.9 139.95.4.188,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.qualtrics.com,www.qualtrics.com,/,0,2.23.90.35,0,2.23.90.35,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.qwant.com,www.qwant.com,/,0,51.91.211.91 51.91.211.16,0,51.91.151.171,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.remove.bg,www.remove.bg,/,0,104.18.34.156 172.64.153.100,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.reve.art,www.reve.art,/,0,34.102.145.198,0,34.102.145.198,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.reve.com,www.reve.com,/,0,34.111.54.145,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.romsgames.net,www.romsgames.net,/,0,188.114.96.1 188.114.97.1,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.scdn.co,www.scdn.co,/,0,109.120.187.249,0,109.120.187.249,403,ERR28,ERR28,ERR28,109.120.187.249=blocked/blocked,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.scribd.com,www.scribd.com,/,0,151.101.130.152 151.101.66.152 151.101.194.152 151.101.2.152,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.scribdassets.com,www.scribdassets.com,/,0,151.101.66.152 151.101.194.152 151.101.130.152 151.101.2.152,0,151.101.66.152 151.101.194.152 151.101.130.152 151.101.2.152,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.se.com,www.se.com,/,0,96.17.4.67,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.securitytrails.com,www.securitytrails.com,/,0,172.66.42.218 172.66.41.38,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.singlekey-id.com,www.singlekey-id.com,/,0,20.33.66.163,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.sketchup.com,www.sketchup.com,/,0,15.197.167.90 3.33.186.135,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.slack-core.com,www.slack-core.com,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.slack-edge.com,www.slack-edge.com,/,0,,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.slack-files.com,www.slack-files.com,/,0,3.68.124.168 18.159.197.225 3.68.124.95 52.29.238.212 3.68.175.98 3.68.170.153,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.slack-imgs.com,www.slack-imgs.com,/,0,,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.slack.com,www.slack.com,/,0,3.68.124.95 52.29.238.212 3.68.170.153 18.159.197.225 3.68.124.168 3.68.175.98,0,3.68.175.98 52.29.238.212 3.68.170.153 3.68.124.95 18.159.197.225 3.68.124.168,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.slackb.com,www.slackb.com,/,0,0.0.0.0,0,0.0.0.0,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.spotify.com,www.spotify.com,/,0,151.101.3.42 151.101.67.42 151.101.195.42 151.101.131.42,3,,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-www.spotify.com-200,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.spotify.dev,www.spotify.dev,/,0,35.186.224.24,3,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.squareup.com,www.squareup.com,/,0,172.66.0.28 162.159.140.28,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.strava.com,www.strava.com,/,0,3.164.68.34 3.164.68.38 3.164.68.77 3.164.68.111,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.superpharm.eu,www.superpharm.eu,/,0,104.18.18.242 104.18.19.242,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.superpharm.pl,www.superpharm.pl,/,0,104.18.6.92 104.18.7.92,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.tableau.com,www.tableau.com,/,0,95.101.133.58 95.101.133.43,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.ti.com,www.ti.com,/,0,96.17.7.212,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.tokenharbor.ai,www.tokenharbor.ai,/,0,76.76.21.123 66.33.60.35,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.tria.ge,www.tria.ge,/,0,8.6.112.0 8.47.69.0,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.trimble.com,www.trimble.com,/,0,3.33.186.135 15.197.167.90,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.trueachievements.com,www.trueachievements.com,/,0,104.20.47.71 172.66.148.149,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.truthsocial.com,www.truthsocial.com,/,0,172.64.148.163 104.18.39.93,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.tuta.com,www.tuta.com,/,0,185.205.69.12,0,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.uainvest.com.ua,www.uainvest.com.ua,/,0,46.101.168.144,3,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.ultimaker.com,www.ultimaker.com,/,0,104.20.21.157 172.66.170.108,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.unscreen.com,www.unscreen.com,/,0,172.64.152.45 104.18.35.211,3,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.vipvera.com,www.vipvera.com,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.w-x.co,www.w-x.co,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.wbagora.com,www.wbagora.com,/,3,,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.wbgames.com,www.wbgames.com,/,0,13.33.235.71 13.33.235.5 13.33.235.49 13.33.235.88,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.weather.com,www.weather.com,/,0,184.51.234.186,3,,ERR35,ERR28,ERR35,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.weborama.nl,www.weborama.nl,/,0,83.136.17.131,0,159.223.12.170,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.whimsical.com,www.whimsical.com,/,0,172.66.43.77 172.66.40.179,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.windguru.cz,www.windguru.cz,/,0,82.208.41.65,0,82.208.41.65,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.windsurf.com,www.windsurf.com,/,0,109.120.187.249,0,109.120.187.249,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-devin.ai-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+*.wise.com,www.wise.com,/,0,172.64.148.140 104.18.39.116,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.wund.com,www.wund.com,/,0,18.158.212.228,0,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.wunderground.com,www.wunderground.com,/,0,184.51.234.186,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.wxug.com,www.wxug.com,/,0,18.158.212.228,0,54.160.9.107,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.x.ai,www.x.ai,/,0,109.120.187.249,0,109.120.187.249,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=failed-x.ai-403,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+*.xerox.com,www.xerox.com,/,0,80.239.254.35 80.239.254.23,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.xiaomi.eu,www.xiaomi.eu,/,0,78.129.218.159,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.yeggi.com,www.yeggi.com,/,0,104.20.34.222 172.66.144.108,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.yupp.ai,www.yupp.ai,/,0,216.150.1.129 216.150.16.129,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.zapier-deployment.com,www.zapier-deployment.com,/,0,64.239.109.193 64.239.109.129,0,64.239.123.193 64.239.109.193,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+*.zapier.com,www.zapier.com,/,0,108.156.22.94 108.156.22.100 108.156.22.50 108.156.22.109,3,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+37signals.com,37signals.com,/,0,104.18.0.135 104.18.1.135,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+aave.com,aave.com,/,0,104.18.20.145 104.18.21.145,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+access.broadcom.com,access.broadcom.com,/,0,162.159.140.167 172.66.0.165,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+accounts.chaos.com,accounts.chaos.com,/,0,35.241.43.115,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+accounts.supercell.com,accounts.supercell.com,/,0,3.164.230.26 3.164.230.39 3.164.230.110 3.164.230.128,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+adobe.io,adobe.io,/,0,109.120.187.249,,,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-developer.adobe.com-200,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+affinity.studio,affinity.studio,/,0,172.64.153.86 104.18.34.170,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+agentn.api2.cursor.sh,agentn.api2.cursor.sh,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+agentn.api3.cursor.sh,agentn.api3.cursor.sh,/,0,109.120.187.249,,,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-35/error-35,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+agentn.api4.cursor.sh,agentn.api4.cursor.sh,/,0,109.120.187.249,,,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-35/error-35,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+agentn.api5.cursor.sh,agentn.api5.cursor.sh,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+agentn.global.api2.cursor.sh,agentn.global.api2.cursor.sh,/,0,109.120.187.249,,,ERR60,ERR28,ERR28,ERR28,109.120.187.249=error-60/error-60,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+agentn.global.api3.cursor.sh,agentn.global.api3.cursor.sh,/,0,109.120.187.249,,,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-28/error-35,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+agentn.global.api4.cursor.sh,agentn.global.api4.cursor.sh,/,0,109.120.187.249,,,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-35/error-35,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+agentn.global.api5.cursor.sh,agentn.global.api5.cursor.sh,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=error-28/response/response,,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+ai.google.dev,ai.google.dev,/,0,109.120.187.249,,,ERR28,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-ai.google-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+aicode.googleapis.com,aicode.googleapis.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+aida.googleapis.com,aida.googleapis.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+aisandbox-pa.googleapis.com,aisandbox-pa.googleapis.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+aistudio.google.com,aistudio.google.com,/,0,109.120.187.249,,,302,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-aistudio.google.com-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+aitestkitchen.withgoogle.com,aitestkitchen.withgoogle.com,/,0,109.120.187.249,,,308,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-labs.google-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+alkalicore-pa.clients6.google.com,alkalicore-pa.clients6.google.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+alkalimakersuite-pa.clients6.google.com,alkalimakersuite-pa.clients6.google.com,/,0,109.120.187.249,,,302,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=failed-alkalimakersuite-pa.clients6.google.com-404,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+amd.com,amd.com,/,0,23.12.156.165,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+analog.com,analog.com,/,0,137.71.173.128,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+anthropic.com,anthropic.com,/,0,109.120.187.249,,,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-www.anthropic.com-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+antigravity-pa.googleapis.com,antigravity-pa.googleapis.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+antigravity-unleash.goog,antigravity-unleash.goog,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+antigravity.google,antigravity.google,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+antigravity.googleapis.com,antigravity.googleapis.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+api-sg-central.trae.ai,api-sg-central.trae.ai,/,0,2.16.56.48 2.16.56.200,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+api.cdnlibs.org,api.cdnlibs.org,/,0,190.115.16.86,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+api.fitbit.com,api.fitbit.com,/,0,172.217.114.4 172.217.119.4 172.217.113.4 172.217.112.4 172.217.116.4 172.217.118.4 172.217.115.4 172.217.117.4,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+api.groq.com,api.groq.com,/openai/v1/models,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=auth-required/auth-required,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+api.home-connect.com,api.home-connect.com,/,0,63.176.83.22 63.183.89.101 52.58.102.161,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+api.imgur.com,api.imgur.com,/,0,199.232.196.193 199.232.192.193,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+api.jetbrains.ai,api.jetbrains.ai,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+api.openai.com,api.openai.com,/v1/models,0,109.120.187.249,,,401,ERR28,ERR28,ERR28,109.120.187.249=auth-required/auth-required,,109.120.187.249,109.120.187.249,already verified
+api.radarr.video,api.radarr.video,/,0,188.114.97.1 188.114.96.1,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+api.trae.ai,api.trae.ai,/,0,2.16.56.198 2.16.56.216,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+api.workos.com,api.workos.com,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+api16-normal-alisg.mchost.guru,api16-normal-alisg.mchost.guru,/,0,2.16.56.204 2.16.56.213,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+api2.cursor.sh,api2.cursor.sh,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/error-28/response,,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+api3.cursor.sh,api3.cursor.sh,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+api4.cursor.sh,api4.cursor.sh,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+api5.cursor.sh,api5.cursor.sh,/,0,109.120.187.249,,,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-35/error-35,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+apis.google.com,apis.google.com,/,0,109.120.187.249,,,301,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+app.zerossl.com,app.zerossl.com,/,0,52.6.179.207 100.58.147.180 100.58.57.153,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+appcatalyst.pa.googleapis.com,appcatalyst.pa.googleapis.com,/,0,142.250.178.74,,,404,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+arduino.cc,arduino.cc,/,0,13.33.235.27 13.33.235.37 13.33.235.115 13.33.235.79,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+arkoselabs.com,arkoselabs.com,/,0,109.120.187.249,,,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-www.arkoselabs.com-200,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+arrow.com,arrow.com,/,0,20.82.28.58 20.245.104.207 20.205.146.106,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+assistant-s3-pa.googleapis.com,assistant-s3-pa.googleapis.com,/,0,172.217.118.4 172.217.117.4 172.217.114.4 172.217.115.4 172.217.116.4 172.217.119.4 172.217.113.4 172.217.112.4,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+astockcdn.net,astockcdn.net,/,0,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+atlassian.com,atlassian.com,/,0,52.85.154.112 52.85.154.58 52.85.154.4 52.85.154.110,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+audacy.com,audacy.com,/,0,151.101.66.132 151.101.194.132 151.101.2.132 151.101.130.132,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+auth.openai.com,auth.openai.com,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+auth.xboxlive.com,auth.xboxlive.com,/,0,109.120.187.249,,,ERR28,ERR28,ERR28,ERR28,109.120.187.249=error-28/unconfirmed,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+authenticate.cursor.sh,authenticate.cursor.sh,/,0,109.120.187.249,,,ERR28,ERR28,ERR28,ERR28,109.120.187.249=response/response,,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+authenticator.cursor.sh,authenticator.cursor.sh,/,0,109.120.187.249,,,403,ERR28,ERR28,ERR28,109.120.187.249=blocked/blocked,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+autocad.com,autocad.com,/,0,34.212.114.106 35.162.182.48,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+autodesk.ae,autodesk.ae,/,0,23.21.189.113 50.19.149.4,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+autodesk.be,autodesk.be,/,0,23.21.189.113 50.19.149.4,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+autodesk.com,autodesk.com,/,0,50.19.149.4 23.21.189.113,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+autodesk.eu,autodesk.eu,/,0,34.212.114.106 35.162.182.48,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+autodesk.net,autodesk.net,/,0,74.220.126.92,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+autodesk360.com,autodesk360.com,/,0,54.225.96.1 18.208.255.233,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+avast.com,avast.com,/,0,23.32.25.252,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+avast.ru,avast.ru,/,0,2.16.171.88 62.115.253.16,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+aybest.xyz,aybest.xyz,/,0,103.75.71.79,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+badoo.app,badoo.app,/,0,34.3.92.123,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+badoo.com,badoo.com,/,0,31.222.67.112,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+badoocdn.com,badoocdn.com,/,0,31.222.66.68,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+bard.google.com,bard.google.com,/,0,109.120.187.249,,,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-gemini.google.com-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+basecamp.com,basecamp.com,/,0,104.18.14.58 104.18.15.58,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+basecampapi.com,basecampapi.com,/,0,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+behance.net,behance.net,/,0,151.101.193.197 151.101.1.197 151.101.129.197 151.101.65.197,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+bestbuy.com,bestbuy.com,/,0,23.209.209.12,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+bike-components.de,bike-components.de,/,0,18.194.224.233,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+bike24.com,bike24.com,/,0,62.115.252.176 62.115.252.177,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+blogs.sap.com,blogs.sap.com,/,0,104.21.21.83 172.67.197.15,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+brave.com,brave.com,/,0,3.164.240.128 3.164.240.126 3.164.240.69 3.164.240.71,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+buf.build,buf.build,/,0,34.95.71.106,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+build.nvidia.com,build.nvidia.com,/,0,184.29.141.159 184.29.141.155 184.29.141.136 184.29.141.141 184.29.141.156,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+builds.parsec.app,builds.parsec.app,/,0,104.18.1.181 104.18.0.181,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+bumble.com,bumble.com,/,0,31.222.67.113,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+buymeacoffee.com,buymeacoffee.com,/,0,104.26.3.199 104.26.2.199 172.67.75.15,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+camelai.com,camelai.com,/,0,104.26.1.43 104.26.0.43 172.67.69.50,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+canva-apps.com,canva-apps.com,/,0,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+canva.com,canva.com,/,0,109.120.187.249,,,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=failed-canva.com-000,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+canva.dev,canva.dev,/,0,172.64.146.218 104.18.41.38,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+capcut.com,capcut.com,/,0,95.101.133.35 95.101.133.66 95.101.133.18,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+cdn.oaistatic.com,cdn.oaistatic.com,/,0,109.120.187.249,,,ERR28,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+cdn.web-platform.io,cdn.web-platform.io,/,0,13.33.235.39 13.33.235.74 13.33.235.76 13.33.235.126,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+cerebras.ai,cerebras.ai,/,0,76.76.21.21,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+chat.openai.com,chat.openai.com,/,0,109.120.187.249,,,308,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-chatgpt.com-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+chatgpt.com,chatgpt.com,/,0,109.120.187.249,,,ERR28,ERR28,ERR28,ERR28,109.120.187.249=response/response,,109.120.187.249,109.120.187.249,already verified
+chatgpt.site,chatgpt.site,/,0,104.18.23.186 104.18.22.186,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+chess.com,chess.com,/,0,104.18.140.67 104.18.139.67 104.18.137.67 104.18.141.67 104.18.138.67,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+cici.com,cici.com,/,0,2.16.56.50 2.16.56.214,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+ciscobinary.openh264.org,ciscobinary.openh264.org,/,0,3.174.113.68 3.174.113.46 3.174.113.12 3.174.113.62,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+claude.ai,claude.ai,/,0,109.120.187.249,,,403,ERR28,ERR28,ERR28,109.120.187.249=blocked/blocked,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+claude.com,claude.com,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+claudemcpclient.com,claudemcpclient.com,/,0,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+claudeusercontent.com,claudeusercontent.com,/,0,109.120.187.249,,,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-claude.com-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+clickup.com,clickup.com,/,0,3.164.68.103 3.164.68.68 3.164.68.94 3.164.68.51,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+cms-images.mmst.eu,cms-images.mmst.eu,/,0,104.18.40.223 172.64.147.33,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+codeium.com,codeium.com,/,0,109.120.187.249,,,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-devin.ai-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+codeiumdata.com,codeiumdata.com,/,0,109.120.187.249,,,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-35/error-35,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+community.sap.com,community.sap.com,/,0,104.21.21.83 172.67.197.15,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+consent.trustarc.com,consent.trustarc.com,/,0,52.85.154.11 52.85.154.61 52.85.154.10 52.85.154.21,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+console.groq.com,console.groq.com,/,0,109.120.187.249,,,307,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-console.groq.com-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+console.neon.tech,console.neon.tech,/,0,104.18.22.51 104.18.23.51,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+content-push.googleapis.com,content-push.googleapis.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+controlplane.tailscale.com,controlplane.tailscale.com,/,0,192.200.0.108 192.200.0.114 192.200.0.103 192.200.0.112 192.200.0.116 192.200.0.106 192.200.0.109 192.200.0.104,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+copilot.microsoft.com,copilot.microsoft.com,/,0,109.120.187.249,,,ERR28,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-copilot.com-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+coreweave.com,coreweave.com,/,0,104.18.38.179 172.64.149.77,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+corsair.com,corsair.com,/,0,104.18.25.228 104.18.24.228,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+crunchyroll.com,crunchyroll.com,/,0,104.18.34.202 172.64.153.54,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+cummins.com,cummins.com,/,0,192.124.249.180,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+cursor-cdn.com,cursor-cdn.com,/,0,104.18.2.46 104.18.3.46,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+cursor.com,cursor.com,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+cursorvm.com,cursorvm.com,/,0,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+daily-cloudcode-pa.googleapis.com,daily-cloudcode-pa.googleapis.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+datastudio.google.com,datastudio.google.com,/,0,172.217.20.174,,,302,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-datastudio.google.com-200,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+deepl.app,deepl.app,/,0,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+deepl.com,deepl.com,/,0,109.120.187.249,,,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-www.deepl.com-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+deepmind.com,deepmind.com,/,0,109.120.187.249,,,302,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-deepmind.google-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+deepmind.google,deepmind.google,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/error-28/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+deezer.com,deezer.com,/,0,18.165.122.73 18.165.122.68 18.165.122.9 18.165.122.77,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+dell.com,dell.com,/,0,143.166.30.172 143.166.136.12,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+dellcdn.com,dellcdn.com,/,0,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+deniko.xyz,deniko.xyz,/,0,188.114.96.1 188.114.97.1,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+designer.microsoft.com,designer.microsoft.com,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=error-28/response/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+designify.com,designify.com,/,0,172.64.148.112 104.18.39.144,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+developer.nvidia.com,developer.nvidia.com,/,0,95.100.107.72 95.100.107.88,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+developerprofiles-pa.googleapis.com,developerprofiles-pa.googleapis.com,/,0,172.217.116.4 172.217.113.4 172.217.114.4 172.217.118.4 172.217.117.4 172.217.112.4 172.217.115.4 172.217.119.4,,,404,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+digikey.com,digikey.com,/,0,204.221.76.76,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+digikeyassets.com,digikeyassets.com,/,0,204.221.76.76,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+dl.teamviewer.com,dl.teamviewer.com,/,0,104.17.22.111 104.17.23.111,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+dnsspeedtest.online,dnsspeedtest.online,/,0,172.67.204.231 104.21.69.53,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+dola.com,dola.com,/,0,23.53.32.201 23.53.32.219,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+download.teamviewer.com,download.teamviewer.com,/,0,104.17.22.111 104.17.23.111,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+download.todesktop.com,download.todesktop.com,/,0,104.18.13.243 104.18.12.243,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+dr.miromind.ai,dr.miromind.ai,/,0,217.198.191.75,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+dtm8.dinamicagenerale.com,dtm8.dinamicagenerale.com,/,0,20.50.64.5,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+dyson.com,dyson.com,/,0,162.159.142.173 172.66.2.169,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+dyson.de,dyson.de,/,0,172.66.2.169 162.159.142.173,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+dyson.se,dyson.se,/,0,172.66.2.169 162.159.142.173,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+ecosia.org,ecosia.org,/,0,77.73.113.1,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+ecs.office.com,ecs.office.com,/,0,109.120.187.249,,,400,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+edgeservices.bing.com,edgeservices.bing.com,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+efsanetv.xyz,efsanetv.xyz,/,0,103.75.71.79,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+elevenlabs.io,elevenlabs.io,/,0,109.120.187.249,,,ERR28,ERR28,ERR28,ERR28,109.120.187.249=response/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+elevenmusic.io,elevenmusic.io,/,0,35.190.88.92,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+elevenreader.io,elevenreader.io,/,0,34.117.39.235,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+elgato.com,elgato.com,/,0,108.156.22.12 108.156.22.60 108.156.22.118 108.156.22.62,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+elmastvnet.xyz,elmastvnet.xyz,/,0,103.75.71.79,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+eneba.com,eneba.com,/,0,172.66.167.85 104.20.31.209,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+enscape3d.com,enscape3d.com,/,0,34.149.157.193,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+etsy.com,etsy.com,/,0,151.101.65.224 151.101.193.224 151.101.129.224 151.101.1.224,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+eu.posthog.com,eu.posthog.com,/,0,3.40.5.181 3.40.4.209 3.40.5.191 3.40.4.213 3.40.5.180 3.40.5.185 3.40.5.187 3.40.5.184,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+euro.com.pl,euro.com.pl,/,0,2.22.145.88 2.22.145.85,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+evike.com,evike.com,/,0,104.16.210.16 104.17.7.38,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+evs.blue.mongodb.co,evs.blue.mongodb.co,/,3,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+eyyo.xyz,eyyo.xyz,/,0,188.114.97.1 188.114.96.1,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+f00.esfr.pl,f00.esfr.pl,/,0,2.22.145.75 2.22.145.77,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+files-s2pb.pbsync.com,files-s2pb.pbsync.com,/,0,159.69.171.121,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+files.manuscdn.com,files.manuscdn.com,/,0,52.85.154.117 52.85.154.115 52.85.154.100 52.85.154.41,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+files.oaiusercontent.com,files.oaiusercontent.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+fitbit-pa.googleapis.com,fitbit-pa.googleapis.com,/,0,172.217.113.4 172.217.116.4 172.217.119.4 172.217.114.4 172.217.117.4 172.217.115.4 172.217.112.4 172.217.118.4,,,401,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+fitbit.google.com,fitbit.google.com,/,0,142.250.178.46,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+fitbitvestibuleshim-pa.googleapis.com,fitbitvestibuleshim-pa.googleapis.com,/,0,172.217.119.4 172.217.113.4 172.217.114.4 172.217.118.4 172.217.117.4 172.217.116.4 172.217.115.4 172.217.112.4,,,401,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+flow.google,flow.google,/,0,109.120.187.249,,,ERR28,ERR28,ERR28,ERR28,109.120.187.249=redirect/error-28/error-28,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+flow.google.com,flow.google.com,/,0,109.120.187.249,,,ERR28,ERR28,ERR28,ERR28,109.120.187.249=error-28/response/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+flowmusic.app,flowmusic.app,/,0,104.26.3.189 172.67.68.145 104.26.2.189,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+fmhy.lol,fmhy.lol,/,2,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+fmhy.net,fmhy.net,/,0,188.114.97.1 188.114.96.1,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+formula1.com,formula1.com,/,0,99.83.136.94 75.2.124.44,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+framer.com,framer.com,/,0,3.174.113.3 3.174.113.22 3.174.113.80 3.174.113.90,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+freakhosting.com,freakhosting.com,/,0,104.26.7.183 104.26.6.183 172.67.68.34,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+g2a.com,g2a.com,/,0,104.20.21.201 172.66.164.157,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+game-assets.clashroyaleapp.com,game-assets.clashroyaleapp.com,/,0,3.164.68.45 3.164.68.107 3.164.68.25 3.164.68.15,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+game.clashroyaleapp.com,game.clashroyaleapp.com,/,0,34.217.20.195 44.251.3.143 34.212.139.212 35.92.194.160 34.216.223.152 44.255.84.199 16.145.47.191 54.203.159.133,,,ERR35,ERR28,ERR28,ERR28,,,81.17.20.82,81.17.20.82,preserved
+game8.co,game8.co,/,0,18.165.122.77 18.165.122.124 18.165.122.43 18.165.122.113,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+game8.co.jp,game8.co.jp,/,0,3.164.206.108 3.164.206.37 3.164.206.109 3.164.206.61,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+game8.jp,game8.jp,/,0,13.33.235.41 13.33.235.14 13.33.235.31 13.33.235.36,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+gamestop.com,gamestop.com,/,0,3.164.68.116 3.164.68.129 3.164.68.47 3.164.68.8,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+geller-pa.googleapis.com,geller-pa.googleapis.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+gemini.google,gemini.google,/,0,109.120.187.249,,,302,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-gemini.google.com-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+gemini.google.com,gemini.google.com,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,109.120.187.249,109.120.187.249,already verified
+geminiweb-pa.clients.google.com,geminiweb-pa.clients.google.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+geminiweb-pa.clients6.google.com,geminiweb-pa.clients6.google.com,/,0,109.120.187.249,,,ERR28,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+generativeai.google,generativeai.google,/,0,109.120.187.249,,,302,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-ai.google-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+generativelanguage.googleapis.com,generativelanguage.googleapis.com,/v1beta/models,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/error-28,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+genspark.ai,genspark.ai,/,0,109.120.187.249,,,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=failed-www.genspark.ai-403,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+geolocation.onetrust.com,geolocation.onetrust.com,/,0,0.0.0.0,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+gql.twitch.tv,gql.twitch.tv,/,0,151.101.194.214 151.101.2.214 151.101.130.214 151.101.66.214,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+grok.com,grok.com,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+grok.x.com,grok.x.com,/,0,162.159.140.229,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+gssv-play-prod.xboxlive.com,gssv-play-prod.xboxlive.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+guidedhacking.com,guidedhacking.com,/,0,104.26.5.19 104.26.4.19 172.67.69.76,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+guides.fmhy.lol,guides.fmhy.lol,/,2,,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+guilded.gg,guilded.gg,/,0,52.85.154.98 52.85.154.105 52.85.154.53 52.85.154.93,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+hapi.hentaicdn.org,hapi.hentaicdn.org,/,0,186.2.163.121,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+hume.ai,hume.ai,/,0,216.150.1.1,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+ikea.com,ikea.com,/,0,104.18.13.173 104.18.12.173,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+images.contentstack.io,images.contentstack.io,/,0,104.17.170.191 104.17.169.191,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+img.modivo.cloud,img.modivo.cloud,/,0,172.64.149.154 104.18.38.102,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+inceptionlabs.ai,inceptionlabs.ai,/,0,31.43.160.6 31.43.161.6,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+indeed.com,indeed.com,/,0,162.159.129.67 162.159.130.67,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+intel.com,intel.com,/,0,13.91.95.74,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+intel.de,intel.de,/,0,13.91.95.74,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+intel.se,intel.se,/,0,13.91.95.74,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+ios.chat.openai.com,ios.chat.openai.com,/,0,109.120.187.249,,,403,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+iperf3serverlist.net,iperf3serverlist.net,/,0,172.67.145.1 104.21.95.137,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+jetbrains.com,jetbrains.com,/,0,109.120.187.249,,,308,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-www.jetbrains.com-200,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+jetbrains.space,jetbrains.space,/,2,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+jules.google,jules.google,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+jules.google.com,jules.google.com,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+kaleido.ai,kaleido.ai,/,0,104.18.43.225 172.64.144.31,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+knowledge.broadcom.com,knowledge.broadcom.com,/,0,172.66.0.165 162.159.140.167,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+labs.google,labs.google,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+labs.google.com,labs.google.com,/,0,109.120.187.249,,,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-labs.google-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+labstailwind.pa.googleapis.com,labstailwind.pa.googleapis.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+last.fm,last.fm,/,0,34.96.123.111,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+lego.com,lego.com,/,0,143.204.238.78 143.204.238.37 143.204.238.26 143.204.238.69,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+linear.app,linear.app,/,0,172.64.147.211 104.18.40.45,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+linguee.com,linguee.com,/,0,109.120.187.249,,,302,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-www.linguee.com-200,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+lookerstudio.google.com,lookerstudio.google.com,/,0,142.250.178.110,,,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-datastudio.google.com-200,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+m3u.in,m3u.in,/,0,172.67.223.44 104.21.38.138,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+madmapper.com,madmapper.com,/,0,157.230.102.177,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+make.com,make.com,/,0,172.64.150.145 104.18.37.111,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+makersuite.google.com,makersuite.google.com,/,0,109.120.187.249,,,302,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-aistudio.google.com-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+makita.ca,makita.ca,/,0,104.26.0.113 104.26.1.113 172.67.68.138,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+makita.cl,makita.cl,/,0,35.168.54.230,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+makita.co.nz,makita.co.nz,/,0,180.92.195.10,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+makita.com.au,makita.com.au,/,0,104.20.35.18 172.66.145.208,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+makita.com.kh,makita.com.kh,/,0,188.114.96.1 188.114.97.1,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+makita.com.tw,makita.com.tw,/,0,188.114.97.1 188.114.96.1,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+makita.sk,makita.sk,/,0,195.181.248.173,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+makita.ua,makita.ua,/,0,5.79.99.4,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+makitalatinamerica.com,makitalatinamerica.com,/,0,72.167.227.146,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+malwarebytes.com,malwarebytes.com,/,0,192.0.66.233,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+manus.im,manus.im,/,0,3.164.68.84 3.164.68.73 3.164.68.57 3.164.68.58,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+manybooks.net,manybooks.net,/,0,104.26.12.6 104.26.13.6 172.67.75.139,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+marketplace.cursorapi.com,marketplace.cursorapi.com,/,0,172.67.204.117 104.21.77.42,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+mediaexpert.pl,mediaexpert.pl,/,0,104.18.43.43 172.64.144.213,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+mediamarkt.pl,mediamarkt.pl,/,0,141.101.90.96 141.101.90.99 141.101.90.97 141.101.90.98,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+meta.ai,meta.ai,/,0,157.240.205.1,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+microcenter.com,microcenter.com,/,0,104.18.10.120 104.18.11.120,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+microchip.com,microchip.com,/,0,96.17.7.164,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+minicircuits.com,minicircuits.com,/,0,18.227.59.39 18.190.57.28,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+miro.com,miro.com,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+misterfpga.org,misterfpga.org,/,0,104.21.74.88 172.67.168.1,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+modivo.pl,modivo.pl,/,0,104.17.251.184 104.17.250.184,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+mongodb.com,mongodb.com,/,0,3.33.132.188 15.197.135.80,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+monica.im,monica.im,/,0,13.33.235.123 13.33.235.13 13.33.235.80 13.33.235.79,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+mouser.com,mouser.com,/,0,12.5.163.52,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+my.chaos.com,my.chaos.com,/,0,34.120.120.42,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+myjetbrains.com,myjetbrains.com,/,0,52.85.154.128 52.85.154.87 52.85.154.86 52.85.154.50,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+n8n.cloud,n8n.cloud,/,0,172.67.72.185 104.26.13.13 104.26.12.13,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+naukimg.com,naukimg.com,/,0,161.58.185.13,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+naukri.com,naukri.com,/,0,23.194.190.68 23.194.190.87,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+ndi.tv,ndi.tv,/,0,,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+ndi.video,ndi.video,/,0,192.0.66.174,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+netapp.com,netapp.com,/,0,52.173.245.249,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+ngc.nvidia.com,ngc.nvidia.com,/,0,65.9.62.63 65.9.62.38 65.9.62.41 65.9.62.89,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+notebook-pa.googleapis.com,notebook-pa.googleapis.com,/,0,172.217.119.4 172.217.114.4 172.217.118.4 172.217.116.4 172.217.113.4 172.217.112.4 172.217.117.4 172.217.115.4,,,404,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+notebook.google,notebook.google,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+notebook.google.com,notebook.google.com,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+notebooklm-pa.googleapis.com,notebooklm-pa.googleapis.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+notebooklm.google,notebooklm.google,/,0,109.120.187.249,,,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-notebook.google-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+notebooklm.google.com,notebooklm.google.com,/,0,109.120.187.249,,,301,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-notebook.google.com-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+notion.com,notion.com,/,0,109.120.187.249,,,302,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-www.notion.com-200,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+notion.so,notion.so,/,0,109.120.187.249,,,301,ERR28,ERR28,ERR28,109.120.187.249=error-28/redirect/redirect,109.120.187.249=verified-www.notion.com-200,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+o.pki.goog,o.pki.goog,/,0,142.250.178.67,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+oaistatic.com,oaistatic.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+oaiusercontent.com,oaiusercontent.com,/,0,109.120.187.249,,,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-35/error-28,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+octanorm.com,octanorm.com,/,0,62.153.73.242,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+octanorm.expo.shop,octanorm.expo.shop,/,0,62.153.73.242,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+old.yummyani.me,old.yummyani.me,/,0,62.233.36.138 62.233.36.136 62.233.36.139 62.233.36.137,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+opal.google,opal.google,/,0,109.120.187.249,,,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-35/error-35,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+opal.google.com,opal.google.com,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+opal.withgoogle.com,opal.withgoogle.com,/,0,109.120.187.249,,,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-35/error-35,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+openai.com,openai.com,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=error-28/response/response,,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+opencode.ai,opencode.ai,/,0,104.18.11.66 104.18.10.66,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+openrouter.ai,openrouter.ai,/api/v1/models,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+oracle.com,oracle.com,/,0,138.1.33.162,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+padi.com,padi.com,/,0,54.218.241.98,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+pandasecurity.com,pandasecurity.com,/,0,91.216.218.44,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+panic.com,panic.com,/,0,104.26.3.172 104.26.2.172 172.67.68.104,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+pcmag.com,pcmag.com,/,0,104.16.21.118 104.16.20.118,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+people-pa.clients6.google.com,people-pa.clients6.google.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+pi.ai,pi.ai,/,0,104.18.39.132 172.64.148.124,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+platform.parallel.ai,platform.parallel.ai,/,0,216.150.16.129 216.150.1.129,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+play.date,play.date,/,0,172.66.148.240 104.20.47.109,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+playground.google,playground.google,/,0,216.239.32.27,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/error-28/response,,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+portal.anthropic.com,portal.anthropic.com,/verify,0,109.120.187.249,,,307,ERR28,ERR28,ERR28,109.120.187.249=redirect/error-28/redirect,109.120.187.249=verified-portal.anthropic.com-200,109.120.187.249,109.120.187.249,already verified
+powertoolsuk.co.uk,powertoolsuk.co.uk,/,0,104.26.8.10 104.26.9.10 172.67.74.97,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+ppkas.com,ppkas.com,/,3,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+pr0gramm.com,pr0gramm.com,/,0,195.201.207.45 88.198.134.233 88.198.134.234,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+proactivebackend-pa.googleapis.com,proactivebackend-pa.googleapis.com,/,0,109.120.187.249,,,ERR28,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+profile.broadcom.com,profile.broadcom.com,/,0,162.159.140.167 172.66.0.165,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+promods.net,promods.net,/,0,172.67.72.12 104.26.3.60 104.26.2.60,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+prowlarr.servarr.com,prowlarr.servarr.com,/,0,188.114.96.1 188.114.97.1,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+pubnubapi.com,pubnubapi.com,/,0,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+pump.fun,pump.fun,/,0,172.64.153.234 104.18.34.22,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+qoder.com,qoder.com,/,0,139.95.4.188 139.95.0.9,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+qualtrics.com,qualtrics.com,/,0,50.17.152.14 23.21.43.10,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+qwant.com,qwant.com,/,0,51.91.151.171,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+releases.openai.com,releases.openai.com,/codex/channels/latest,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,109.120.187.249,109.120.187.249,already verified
+remove.bg,remove.bg,/,0,104.18.34.156 172.64.153.100,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+repo42.cursor.sh,repo42.cursor.sh,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+res.cloudinary.com,res.cloudinary.com,/,0,104.16.79.6 104.16.78.6,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+reve.art,reve.art,/,0,34.102.145.198,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+reve.com,reve.com,/,0,34.111.54.145,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+rewards.bing.com,rewards.bing.com,/,0,109.120.187.249,,,302,ERR28,ERR28,ERR28,109.120.187.249=error-28/error-28,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+robinfrontend-pa.googleapis.com,robinfrontend-pa.googleapis.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+romsgames.net,romsgames.net,/,0,188.114.96.1 188.114.97.1,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+scdn.co,scdn.co,/,0,109.120.187.249,,,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-35/error-35,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+scribd.com,scribd.com,/,0,151.101.2.152 151.101.130.152 151.101.66.152 151.101.194.152,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+scribdassets.com,scribdassets.com,/,0,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+se.com,se.com,/,0,34.227.236.7,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+securitytrails.com,securitytrails.com,/,0,172.66.41.38 172.66.42.218,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+signaler-pa.clients6.google.com,signaler-pa.clients6.google.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+singlekey-id.com,singlekey-id.com,/,0,20.33.66.163,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+sketchup.com,sketchup.com,/,0,13.33.235.71 13.33.235.100 13.33.235.28 13.33.235.68,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+slack-core.com,slack-core.com,/,0,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+slack-edge.com,slack-edge.com,/,0,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+slack-files.com,slack-files.com,/,0,52.29.238.212 3.68.124.168 3.68.170.153 18.159.197.225 3.68.124.95 3.68.175.98,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+slack-imgs.com,slack-imgs.com,/,0,52.85.154.53 52.85.154.64 52.85.154.37 52.85.154.18,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+slack.com,slack.com,/,0,52.29.238.212 3.68.124.168 3.68.170.153 3.68.175.98 18.159.197.225 3.68.124.95,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+slackb.com,slackb.com,/,0,0.0.0.0,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+sora.com,sora.com,/,0,109.120.187.249,,,403,ERR28,ERR28,ERR28,109.120.187.249=blocked/blocked,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+spotify.com,spotify.com,/,0,35.186.224.24,,,301,ERR28,ERR28,ERR28,109.120.187.249=error-28/redirect/redirect,109.120.187.249=verified-www.spotify.com-200,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+spotify.dev,spotify.dev,/,0,35.186.224.24,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+squareup.com,squareup.com,/,0,162.159.136.66 162.159.137.66,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+ssooauth.chaos.com,ssooauth.chaos.com,/,0,35.241.43.115,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+stitch.withgoogle.com,stitch.withgoogle.com,/,0,109.120.187.249,,,ERR28,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-stitch.google.com-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+store.supercell.com,store.supercell.com,/,0,54.192.35.75 54.192.35.123 54.192.35.67 54.192.35.96,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+strava.com,strava.com,/,0,3.164.68.111 3.164.68.34 3.164.68.38 3.164.68.77,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+suggestqueries.google.com,suggestqueries.google.com,/,0,142.251.143.142,,,302,ERR28,ERR28,ERR28,109.120.187.249=redirect/error-28/error-28,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+superpharm.eu,superpharm.eu,/,0,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+superpharm.pl,superpharm.pl,/,0,104.18.7.92 104.18.6.92,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+support.broadcom.com,support.broadcom.com,/,0,172.66.0.165 162.159.140.167,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+sydney.bing.com,sydney.bing.com,/,0,109.120.187.249,,,400,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+tableau.com,tableau.com,/,0,95.100.104.133 95.100.104.160,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+ti.com,ti.com,/,0,198.47.23.159,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+titlestorage.xboxlive.com,titlestorage.xboxlive.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+tokenharbor.ai,tokenharbor.ai,/,0,104.26.5.107 104.26.4.107 172.67.74.33,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+trae-api-sg.mchost.guru,trae-api-sg.mchost.guru,/,0,2.16.56.216 2.16.56.197,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+tria.ge,tria.ge,/,0,8.47.69.0 8.6.112.0,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+trimble.com,trimble.com,/,0,3.33.186.135 15.197.167.90,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+trueachievements.com,trueachievements.com,/,0,172.66.148.149 104.20.47.71,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+truthsocial.com,truthsocial.com,/,0,172.64.148.163 104.18.39.93,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+tuta.com,tuta.com,/,0,185.205.69.12,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+tutanota.com,tutanota.com,/,0,185.205.69.12,,,ERR28,ERR28,ERR35,ERR35,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+uainvest.com.ua,uainvest.com.ua,/,0,46.101.168.144,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+ultimaker.com,ultimaker.com,/,0,172.66.170.108 104.20.21.157,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+unscreen.com,unscreen.com,/,0,104.18.35.211 172.64.152.45,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+us-asia.gcpp.cursor.sh,us-asia.gcpp.cursor.sh,/,0,109.120.187.249,,,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-28/error-35,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+us-eu.gcpp.cursor.sh,us-eu.gcpp.cursor.sh,/,0,109.120.187.249,,,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-35/error-35,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+us-only.gcpp.cursor.sh,us-only.gcpp.cursor.sh,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=unconfirmed/unconfirmed,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+users.wix.com,users.wix.com,/,0,34.149.206.255,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+usher.ttvnw.net,usher.ttvnw.net,/,0,52.85.154.52 52.85.154.19 52.85.154.78 52.85.154.65,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+vipvera.com,vipvera.com,/,0,203.188.174.43,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+w-x.co,w-x.co,/,0,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+waa-pa.clients6.google.com,waa-pa.clients6.google.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=error-28/unconfirmed,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+wbagora.com,wbagora.com,/,0,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+wbgames.com,wbgames.com,/,0,13.33.235.88 13.33.235.49 13.33.235.71 13.33.235.5,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+weather.com,weather.com,/,0,184.51.234.186,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+web-platform.io,web-platform.io,/,0,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+web.archive.org,web.archive.org,/,0,207.241.237.3,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+webchannel-alkalimakersuite-pa.clients6.google.com,webchannel-alkalimakersuite-pa.clients6.google.com,/,0,109.120.187.249,,,302,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=failed-webchannel-alkalimakersuite-pa.clients6.google.com-404,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+weborama.nl,weborama.nl,/,0,83.136.17.131,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+whimsical.com,whimsical.com,/,0,172.66.43.77 172.66.40.179,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+windguru.cz,windguru.cz,/,0,82.208.41.65,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+windsurf.com,windsurf.com,/,0,109.120.187.249,,,308,ERR28,ERR28,ERR28,109.120.187.249=redirect/redirect,109.120.187.249=verified-devin.ai-200,217.144.190.216 109.120.187.249,109.120.187.249,migrated
+wise.com,wise.com,/,0,172.64.148.140 104.18.39.116,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+ws.audioscrobbler.com,ws.audioscrobbler.com,/,0,34.49.30.2,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+wund.com,wund.com,/,0,18.158.212.228 54.160.9.107 3.129.94.189 54.71.163.27,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+wunderground.com,wunderground.com,/,0,184.51.234.186,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+www.antigravity.google,www.antigravity.google,/,0,109.120.187.249,,,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-35/error-35,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+www.autocad.com,www.autocad.com,/,0,35.162.182.48 34.212.114.106,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+www.autodesk.ae,www.autodesk.ae,/,0,104.103.66.92,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+www.autodesk.be,www.autodesk.be,/,0,104.103.66.92,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+www.autodesk.eu,www.autodesk.eu,/,0,104.103.66.92,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+www.autodesk360.com,www.autodesk360.com,/,0,54.225.96.1 18.208.255.233,,,ERR28,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+www.cgtrader.com,www.cgtrader.com,/,0,13.33.235.118 13.33.235.117 13.33.235.8 13.33.235.102,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+www.chaos.com,www.chaos.com,/,0,35.186.242.181,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+www.flow.google.com,www.flow.google.com,/,0,109.120.187.249,,,ERR35,ERR28,ERR28,ERR28,109.120.187.249=error-35/error-35,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+www.fmhy.lol,www.fmhy.lol,/,2,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+www.pubnubapi.com,www.pubnubapi.com,/,0,204.57.243.1 204.57.243.9,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+www.web-platform.io,www.web-platform.io,/,0,,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+wxug.com,wxug.com,/,0,54.71.163.27 18.158.212.228 54.160.9.107 3.129.94.189,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+x.ai,x.ai,/,0,109.120.187.249,,,403,ERR28,ERR28,ERR28,109.120.187.249=blocked/blocked,,217.144.190.216 109.120.187.249,217.144.190.216 109.120.187.249,preserved
+xboxdesignlab.xbox.com,xboxdesignlab.xbox.com,/,0,109.120.187.249,,,200,ERR28,ERR28,ERR28,109.120.187.249=response/response,,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+xerox.com,xerox.com,/,0,13.13.40.11 13.8.148.11,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+xgpuweb.gssv-play-prod.xboxlive.com,xgpuweb.gssv-play-prod.xboxlive.com,/,0,109.120.187.249,,,204,ERR28,ERR28,ERR28,109.120.187.249=response/error-28/response,,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+xgpuwebf2p.gssv-play-prod.xboxlive.com,xgpuwebf2p.gssv-play-prod.xboxlive.com,/,0,109.120.187.249,,,204,ERR28,ERR28,ERR28,109.120.187.249=response/response,,5.175.161.3 5.175.161.40,109.120.187.249,migrated
+xiaomi.eu,xiaomi.eu,/,0,78.129.218.159,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+xsts.auth.xboxlive.com,xsts.auth.xboxlive.com,/,0,109.120.187.249,,,404,ERR28,ERR28,ERR28,109.120.187.249=error-28/unconfirmed,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+yeggi.com,yeggi.com,/,0,172.66.144.108 104.20.34.222,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+yupp.ai,yupp.ai,/,0,216.150.1.1,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+zapier-deployment.com,zapier-deployment.com,/,0,64.239.123.65 64.239.109.65,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved
+zapier.com,zapier.com,/,0,108.156.22.94 108.156.22.50 108.156.22.100 108.156.22.109,,,ERR35,ERR28,ERR28,ERR28,,,5.175.161.3 5.175.161.40,5.175.161.3 5.175.161.40,preserved

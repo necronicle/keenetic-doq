@@ -79,7 +79,7 @@ func captureStdout(t *testing.T, run func() int) (string, int) {
 
 func TestHostsExportAndConfiguredStatus(t *testing.T) {
 	out, code := captureStdout(t, func() int { return Run([]string{"hosts", "export"}) })
-	if code != 0 || !strings.Contains(out, "217.144.190.216 *.openai.com\n109.120.187.249 *.openai.com\n") || !strings.Contains(out, "109.120.187.249 gemini.google.com\n") {
+	if code != 0 || !strings.Contains(out, "109.120.187.249 *.openai.com\n") || !strings.Contains(out, "109.120.187.249 gemini.google.com\n") {
 		t.Fatalf("invalid builtin export (code %d)", code)
 	}
 	hosts := filepath.Join(t.TempDir(), "hosts")

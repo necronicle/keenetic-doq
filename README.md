@@ -24,12 +24,9 @@ DNS-over-QUIC для **Keenetic** и **OpenWRT** с локальным SmartDNS.
 `releases.openai.com` для загрузки Codex и имена Clash Royale. Маски стоят
 только там, где сам GeoHide отвечает адресами прокси на любой поддомен; общие
 домены вроде `google.com`, `googleapis.com` и `microsoft.com` остаются точными
-именами. Поддерживаемые нейросети и их API/CDN, включая
-Google AI, ChatGPT/OpenAI/Sora, Claude, Windsurf, Copilot, Grok,
-ElevenLabs и DeepL, идут через MagicDNS `217.144.190.216` и `109.120.187.249`.
-Для `api.openai.com`, `chatgpt.com`, `gemini.google.com`, `portal.anthropic.com`, `releases.openai.com` возвращается только `109.120.187.249`.
-Записи, не прошедшие проверку новых прокси (включая Cursor, OpenRouter и Manus),
-и остальные сервисы сохраняют прежние адреса.
+именами. Для 85 проверенных правил doqd возвращает адрес MagicDNS `109.120.187.249`.
+Проверка охватила все 641 правило, включая Twitch. Таблица с ответами DNS,
+результатами HTTPS и выбранными адресами доступна в [отчёте](docs/verification/2026-11-24-magicdns-hosts.csv).
 Адреса прокси берутся из встроенного hosts. Cloudflare Zero Trust для этого не нужен.
 **Сторонние прокси по-прежнему нужны:** doqd подставляет адрес, а не создаёт
 зарубежный выход. Доступность каждого сервиса зависит от прокси и полноты списка.

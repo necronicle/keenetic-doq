@@ -106,47 +106,66 @@ func TestBuiltin(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	for _, name := range []string{"auth.openai.com", "cdn.oaistatic.com", "ios.chat.openai.com", "chat.openai.com", "files.oaiusercontent.com", "oaistatic.com"} {
-		t.Run(name, func(t *testing.T) {
+	for _, group := range []struct {
+		ips   []string
+		names []string
+	}{
+		{
+			ips: []string{"109.120.187.249"},
+			names: []string{
+				"aistudio.google.com", "api.anthropic.com", "api.openai.com",
+				"api2.cursor.sh", "auth.openai.com", "chat.openai.com",
+				"chatgpt.com", "copilot.microsoft.com", "cursor.com",
+				"deepl.com", "elevenlabs.io", "gemini.google.com",
+				"grok.com", "miro.com", "new.openrouter.ai",
+				"notebooklm.google.com", "openrouter.ai", "portal.anthropic.com",
+				"releases.openai.com", "windsurf.com", "ws.chatgpt.com",
+				"www.jetbrains.com", "xboxdesignlab.xbox.com",
+			},
+		},
+		{
+			ips: []string{"203.0.113.99"},
+			names: []string{
+				"unlisted.google.com",
+			},
+		},
+		{
+			ips: []string{"217.144.190.216", "109.120.187.249"},
+			names: []string{
+				"cdn.oaistatic.com", "content-push.googleapis.com", "files.oaiusercontent.com",
+				"generativelanguage.googleapis.com", "ios.chat.openai.com", "new.claude.ai",
+				"oaistatic.com",
+			},
+		},
+		{
+			ips: []string{"5.175.161.3", "5.175.161.40"},
+			names: []string{
+				"a.b.naukri.com", "accounts.supercell.com", "codeiumdata.com",
+				"files.manuscdn.com", "game-assets.clashroyaleapp.com", "geller-pa.googleapis.com",
+				"gql.twitch.tv", "manus.im", "oaiusercontent.com",
+				"store.supercell.com", "usher.ttvnw.net",
+			},
+		},
+		{
+			ips: []string{"81.17.20.82"},
+			names: []string{
+				"game.clashroyaleapp.com",
+			},
+		},
+	} {
+		for _, name := range group.names {
 			answer := query(r, name+".", dns.TypeA).Answer
-			if len(answer) != 2 {
-				t.Fatalf("got %d A answers, want 2", len(answer))
+			if len(answer) != len(group.ips) {
+				t.Errorf("%s: got %v, want %v", name, answer, group.ips)
+				continue
 			}
-			a, ok := answer[0].(*dns.A)
-			if !ok || a.A.String() != "217.144.190.216" || answer[1].(*dns.A).A.String() != "109.120.187.249" {
-				t.Fatalf("got %v, want 217.144.190.216 and 109.120.187.249", answer)
+			for i, ip := range group.ips {
+				a, ok := answer[i].(*dns.A)
+				if !ok || a.A.String() != ip {
+					t.Errorf("%s: got %v, want %v", name, answer, group.ips)
+					break
+				}
 			}
-		})
-	}
-	if answer := query(r, "game.clashroyaleapp.com.", dns.TypeA).Answer; len(answer) != 1 || answer[0].(*dns.A).A.String() != "81.17.20.82" {
-		t.Fatalf("clash royale game: %v", answer)
-	}
-	for _, name := range []string{"game-assets.clashroyaleapp.com", "accounts.supercell.com", "store.supercell.com"} {
-		answer := query(r, name+".", dns.TypeA).Answer
-		if len(answer) != 2 || answer[0].(*dns.A).A.String() != "5.175.161.3" || answer[1].(*dns.A).A.String() != "5.175.161.40" {
-			t.Fatalf("%s: %v", name, answer)
-		}
-	}
-	for _, name := range []string{"api.openai.com", "chatgpt.com", "gemini.google.com", "portal.anthropic.com", "releases.openai.com"} {
-		answer := query(r, name+".", dns.TypeA).Answer
-		if len(answer) != 1 || answer[0].(*dns.A).A.String() != "109.120.187.249" {
-			t.Fatalf("%s: %v", name, answer)
-		}
-	}
-	// Masks cover unlisted subdomains, but not the bare domain.
-	for _, name := range []string{"a.b.naukri.com", "api2.cursor.sh", "cursor.com", "openrouter.ai", "new.openrouter.ai", "manus.im", "files.manuscdn.com", "codeiumdata.com", "oaiusercontent.com", "geller-pa.googleapis.com"} {
-		answer := query(r, name+".", dns.TypeA).Answer
-		if len(answer) != 2 || answer[0].(*dns.A).A.String() != "5.175.161.3" || answer[1].(*dns.A).A.String() != "5.175.161.40" {
-			t.Fatalf("%s: %v", name, answer)
-		}
-	}
-	if query(r, "unlisted.google.com.", dns.TypeA).Answer[0].(*dns.A).A.String() != "203.0.113.99" {
-		t.Fatal("google.com must not be masked")
-	}
-	for _, name := range []string{"aistudio.google.com", "generativelanguage.googleapis.com", "notebooklm.google.com", "content-push.googleapis.com", "ws.chatgpt.com", "new.claude.ai", "api.anthropic.com", "windsurf.com", "copilot.microsoft.com", "grok.com", "elevenlabs.io", "deepl.com"} {
-		answer := query(r, name+".", dns.TypeA).Answer
-		if len(answer) != 2 || answer[0].(*dns.A).A.String() != "217.144.190.216" || answer[1].(*dns.A).A.String() != "109.120.187.249" {
-			t.Fatalf("%s: %v", name, answer)
 		}
 	}
 	b[0] = '!'

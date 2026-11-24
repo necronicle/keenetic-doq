@@ -25,10 +25,8 @@ masks** and **407 exact names**. It is based on the GeoHide EU hosts plus Sora
 names, `releases.openai.com` for Codex downloads, and Clash Royale names. Masks
 are used only where GeoHide itself answers proxy addresses for any subdomain;
 shared domains such as `google.com`, `googleapis.com` and `microsoft.com` stay
-exact names. Supported AI services and their API/CDN hosts, including Google AI, ChatGPT/OpenAI/Sora, Claude, Windsurf,
-Copilot, Grok, ElevenLabs and DeepL, use MagicDNS `217.144.190.216` and
-`109.120.187.249`. For `api.openai.com`, `chatgpt.com`, `gemini.google.com`, `portal.anthropic.com`, `releases.openai.com`, only `109.120.187.249` is returned. Entries that failed new-proxy checks (including Cursor,
-OpenRouter and Manus) and other services retain their existing addresses.
+exact names. For 85 verified rules, doqd returns the MagicDNS proxy `109.120.187.249`.
+The [audit](docs/verification/2026-11-24-magicdns-hosts.csv) covers all 641 rules, including Twitch, and records DNS answers, HTTPS results and the selected addresses.
 Proxy addresses come from the built-in hosts table. No Cloudflare Zero Trust
 account is required. **The third-party proxies are still required:** replacing
 DNS answers does not create a foreign network exit or guarantee service access.
